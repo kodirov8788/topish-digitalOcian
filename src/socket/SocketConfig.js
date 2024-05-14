@@ -41,16 +41,17 @@ const initSocketServer = (server) => {
     socket.on("adminLogin", async (userId) => {
       // Validate token and retrieve admin data
       const admin = await Users.findOne({ _id: userId, role: "Admin" });
-      console.log("admin: ", admin);
+      // console.log("admin: ", admin);
       if (admin) {
         const adminUser = {
           userId: admin.id,
           socketId: socket.id,
+          lastActive: new Date(),
           isAdmin: true,
           isAvailable: true,
         };
         onlineUsers.push(adminUser);
-        console.log(`Admin ${admin.phoneNumber} added to online users.`);
+        // console.log(`Admin ${admin.phoneNumber} added to online users.`);
       }
       setTimeout(() => {
         const adminUser = onlineUsers.find((user) => user.userId === userId);
@@ -62,7 +63,7 @@ const initSocketServer = (server) => {
           console.log(`Admin ${adminUser.userId} removed from online users.`);
         }
       }, 60000 * 10);
-      console.log("onlineUsers: ", onlineUsers);
+      // console.log("onlineUsers: ", onlineUsers);
     });
 
     socket.on("leaveRoom", ({ userId, chatRoomId }) => {
@@ -412,6 +413,62 @@ const initSocketServer = (server) => {
         });
       }
     });
+
+    socket.on("adminChatRoom", async ({ userId }) => {
+      try {
+        // Retrieve the chat room where both the user and the admin are present
+        const Rooms = await ChatRoom.find().populate("users", "avatar");
+        let chatRoom = Rooms.find((chat) => {
+          return (
+            (chat.users[0]?._id == userId.toString() &&
+              chat.isForAdmin == true) ||
+            (chat.users[1]?._id == userId.toString() && chat.isForAdmin == true)
+          );
+        });
+        // console.log("chatRoom: ", chatRoom);
+        if (!chatRoom) {
+          socket.emit("adminChatRoom", {
+            status: 404,
+            message: "No chat room found between you and the admin",
+            data: null,
+          });
+          return;
+        }
+
+        // Retrieve message history for the chat room
+        const messageHistory = await Message.find({ chatRoom: chatRoom._id })
+          .sort({ timestamp: 1 })
+          .populate("senderId", "avatar")
+          .exec();
+
+        // Update the message status to seen for the current user
+        await Message.updateMany(
+          { chatRoom: chatRoom._id, recipientId: userId, seen: false },
+          { $set: { seen: true } }
+        );
+
+        // Notify the recipient if they are online
+        const recipient = onlineUsers.find((user) => user.userId === userId);
+        if (recipient && recipient.socketId) {
+          socket.to(recipient.socketId).emit("seenUpdate", messageHistory);
+        }
+
+        // Send chat room details and message history back to the requester
+        socket.emit("adminChatRoom", {
+          status: 200,
+          message: "Admin chat room and message history retrieved successfully",
+          data: messageHistory,
+        });
+      } catch (error) {
+        // console.error("Error handling AdminChatRoom event:", error);
+        socket.emit("adminChatRoom", {
+          status: 500,
+          message: "Internal server error",
+          data: null,
+        });
+      }
+    });
+
     socket.on("deleteChatRoom", async ({ userId, chatRoomId }) => {
       if (!userId) {
         socket.emit("deleteChatRoomResponse", {
@@ -695,6 +752,7 @@ const initSocketServer = (server) => {
 
         // Emit message to admin dashboard (assuming admins are also connected via socket)
         const adminSocketId = findAdminSocketId(); // Implement this function based on your logic
+        console.log("adminSocketId: ", adminSocketId);
         io.to(adminSocketId).emit("newAdminMessage", {
           message: text,
           from: user.fullName,
@@ -714,7 +772,7 @@ const initSocketServer = (server) => {
       try {
         // Check if the user is registered and valid
         const user = await Users.findById(userId);
-        console.log("user: ", user);
+        // console.log("user: ", user);
         if (!user) {
           socket.emit("errorNotification", { error: "User not found" });
           return;
@@ -732,7 +790,7 @@ const initSocketServer = (server) => {
           });
           await userChatRoom.save();
         }
-        console.log("userChatRoom: ", userChatRoom);
+        // console.log("userChatRoom: ", userChatRoom);
 
         // Create a new message instance
         const message = new Message({
@@ -741,7 +799,7 @@ const initSocketServer = (server) => {
           chatRoom: userChatRoom._id,
           recipientId: userId, // Targeted user
         });
-        console.log("message: ", message);
+        // console.log("message: ", message);
 
         // Save message to database
         await message.save();
@@ -759,6 +817,81 @@ const initSocketServer = (server) => {
       } catch (error) {
         console.error("Error sending message from admin to user:", error);
         socket.emit("errorNotification", {
+          error: "Failed to send message to user.",
+        });
+      }
+    });
+    // message from admin to user route
+    socket.on("adminMessageToUser", async ({ senderId, userId, text }) => {
+      try {
+        // Check if the user is registered and valid
+        const user = await Users.findById(userId);
+        if (!user) {
+          socket.emit("adminMessageToUser", { error: "User not found" });
+          return;
+        }
+
+        // Check if the sender (admin) is registered and valid
+        const admin = await Users.findById(senderId);
+        if (!admin) {
+          socket.emit("adminMessageToUser", { error: "Admin not found" });
+          return;
+        }
+        // console.log("admin: ", admin);
+        // Find the existing chat room between any admin and the user
+        let chatRoom = await ChatRoom.findOne({
+          isForAdmin: true,
+          users: { $all: [userId] },
+        });
+        // console.log("chatRoom: ", chatRoom);
+        // If no chat room exists, create a new one
+        if (!chatRoom) {
+          chatRoom = new ChatRoom({
+            users: [senderId, userId],
+            isForAdmin: true,
+          });
+          await chatRoom.save();
+        } else {
+          // Ensure the admin is added to the chat room if not already
+          if (!chatRoom.users.includes(senderId)) {
+            chatRoom.users.push(senderId);
+            await chatRoom.save();
+          }
+        }
+
+        // Create a new message instance
+        const message = new Message({
+          text,
+          senderId,
+          chatRoom: chatRoom._id,
+          recipientId: userId,
+        });
+        await message.save();
+        console.log("message: ", message);
+
+        // Emit message to user (assuming users are also connected via socket)
+        const userSocketId = onlineUsers.find(
+          (user) => user.userId === userId
+        ).socketId;
+        if (userSocketId) {
+          console.log("userSocketId: ", userSocketId);
+          io.to(userSocketId).emit("adminMessageToUser", {
+            message: text,
+            from: "Admin",
+            chatRoomId: chatRoom._id,
+          });
+        }
+
+        // Confirm message sent to the admin
+        socket.emit("adminMessageToUser", {
+          success: true,
+          message: text,
+          from: "Admin",
+          chatRoomId: chatRoom._id,
+        });
+      } catch (error) {
+        console.error("Error sending message from admin to user:", error);
+        socket.emit("adminMessageToUser", {
           error: "Failed to send message to user.",
         });
       }
