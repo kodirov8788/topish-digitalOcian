@@ -1,39 +1,42 @@
 const mongoose = require("mongoose");
 
 // Create a Job model
-const QuickJob = new mongoose.Schema({
-  title: { type: String, default: "" },
-  hr_name: { type: String, default: "" },
-  hr_avatar: { type: String, default: "" },
-  description: { type: String, default: "" },
-  jobStatus: {
-    type: String,
-    default: "Open",
-    enum: ["Open", "Closed", "Expired"],
-  },
-  phoneNumber: { type: String, default: "" },
-  recommending: { type: Boolean, default: false },
-  likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
-  location: { type: String, default: "" },
-  createdAt: { type: Date, default: Date.now },
-  validUntil: {
-    type: Date,
-    validate: {
-      validator: function (value) {
-        // This validator simply checks if the date is in the future.
-        return value > new Date();
-      },
-      message: "Please choose a future date for validUntil."
+const QuickJob = new mongoose.Schema(
+  {
+    title: { type: String, default: "" },
+    hr_name: { type: String, default: "" },
+    hr_avatar: { type: String, default: "" },
+    description: { type: String, default: "" },
+    jobStatus: {
+      type: String,
+      default: "Open",
+      enum: ["Open", "Closed", "Expired"],
     },
+    phoneNumber: { type: String, default: "" },
+    recommending: { type: Boolean, default: false },
+    likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
+    location: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now },
+    validUntil: {
+      type: Date,
+      validate: {
+        validator: function (value) {
+          // This validator simply checks if the date is in the future.
+          return value > new Date();
+        },
+        message: "Please choose a future date for validUntil.",
+      },
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+    },
+    applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "JobSeeker" }],
+    callOnly: { type: Boolean, default: false },
   },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Users",
-    required: true,
-  },
-  applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "JobSeeker" }],
-}, { timestamps: true });
-
+  { timestamps: true }
+);
 
 QuickJob.pre("save", function (next) {
   if (this.validUntil <= new Date()) {

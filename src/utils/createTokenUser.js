@@ -1,6 +1,5 @@
 const createTokenUser = (user) => {
   return {
-    email: user.email,
     phoneNumber: user.phoneNumber,
     coins: user.coins,
     id: user._id,
@@ -11,6 +10,7 @@ const createTokenUser = (user) => {
     service: user.service,
     avatar: user.avatar,
     mobileToken: user.mobileToken,
+    fullName: user.fullName,
   };
 };
 

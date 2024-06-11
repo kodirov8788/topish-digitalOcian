@@ -31,7 +31,7 @@ const googlePlayRoute = require("./src/routes/googlePlay-route");
 const otherRoutes = require("./src/routes/other-routers");
 const reportUser = require("./src/routes/reportUser-routes");
 
-const { initSocketServer } = require("./src/socket/SocketConfig");
+const { initSocketServer } = require("./src/socket/Socket");
 const http = require("http");
 const server = http.createServer(app);
 initSocketServer(server);
@@ -67,7 +67,7 @@ app.use(express.static("public"));
 // ----------------- Rate Limiter and IP Blocking -----------------
 //routes
 app.get("/", (req, res) => {
-  res.send("<h1>Jobs API 12</h1>");
+  res.send("<h1>Jobs API 10</h1>");
 });
 // ----------------- Rate Limiter and IP Blocking -----------------
 let blockedIPs = {};
@@ -129,7 +129,7 @@ app.use("/api/v1/statistics", StatisticsCTRL);
 app.use("/api/v1/gallery", authMiddleware, GalleryRouter);
 app.use("/api/v1/banner", BannerRoutes);
 app.use("/api/v1/offices", authMiddleware, Offices);
-app.use("/api/v1/companies", authMiddleware, companyRouter);
+app.use("/api/v1/companies", companyRouter);
 app.use("/api/v1/others", authMiddleware, otherRoutes);
 app.use("/api/v1/report", authMiddleware, reportUser);
 

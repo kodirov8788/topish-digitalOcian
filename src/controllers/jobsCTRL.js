@@ -2,6 +2,7 @@ const Jobs = require("../models/job_model");
 const Users = require("../models/user_model");
 const QuickJob = require("../models/quickjob_model");
 const { handleResponse } = require("../utils/handleResponse");
+const Company = require("../models/company_model");
 
 class JobsCTRL {
   async createJobs(req, res) {
@@ -52,7 +53,7 @@ class JobsCTRL {
         ...req.body,
         createdBy: user.id,
         hr_avatar: user.avatar,
-        hr_name: user.employer.fullName,
+        hr_name: user.fullName,
       };
 
       const job = await Jobs.create(jobDetails);
@@ -69,14 +70,7 @@ class JobsCTRL {
       );
     } catch (error) {
       // console.error("Error in createJobs function:", error);
-      return handleResponse(
-        res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
-      );
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
   async deleteJobs(req, res, next) {
@@ -122,14 +116,7 @@ class JobsCTRL {
         1
       );
     } catch (error) {
-      return handleResponse(
-        res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
-      );
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
   async getSearchTitle(req, res) {
@@ -140,10 +127,19 @@ class JobsCTRL {
 
       const { jobTitle, page = 1, limit = 10 } = req.query;
       if (!jobTitle.trim()) {
-        return handleResponse(res, 200, "error", "Job title is required", [], 0);
+        return handleResponse(
+          res,
+          200,
+          "error",
+          "Job title is required",
+          [],
+          0
+        );
       }
 
-      let queryObject = { jobTitle: { $regex: jobTitle.trim(), $options: "i" } };
+      let queryObject = {
+        jobTitle: { $regex: jobTitle.trim(), $options: "i" },
+      };
 
       // Execute queries on both collections
       const jobsPromise = Jobs.find(queryObject)
@@ -153,7 +149,10 @@ class JobsCTRL {
         .skip((page - 1) * limit)
         .limit(parseInt(limit));
 
-      const [searchedJobs, searchedQuickJobs] = await Promise.all([jobsPromise, quickJobsPromise]);
+      const [searchedJobs, searchedQuickJobs] = await Promise.all([
+        jobsPromise,
+        quickJobsPromise,
+      ]);
       const combinedResults = [...searchedJobs, ...searchedQuickJobs];
 
       // Total count for pagination metadata
@@ -166,26 +165,44 @@ class JobsCTRL {
       }
 
       // Fetch user details for createdBy in bulk
-      const userIds = combinedResults.map(job => job.createdBy);
+      const userIds = combinedResults.map((job) => job.createdBy);
       const users = await Users.find({ _id: { $in: userIds } });
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
       }, {});
 
-      const NewSearchedJob = combinedResults.map(job => {
-        const user = userMap[job.createdBy.toString()];
+      // Fetch companies with workers matching the user IDs
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJob = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
         if (!user) {
           return {
-            ...job._doc,
-            hr_name: "deleted user",
-            hr_avatar: "deleted user",
+            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
+            hr_name: "deleted user", // Fallback if user is not found
+            hr_avatar: "default_avatar.png", // Fallback avatar image path
+            issuedBy: null, // Fallback to null if company not found
           };
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer ? user.employer.fullName : "No employer name",
-            hr_avatar: user.avatar || "default_avatar.png",
+            hr_name: user.employer
+              ? user.employer.fullName
+              : "No employer name", // Check if employer exists
+            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
+            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
         }
       });
@@ -207,25 +224,25 @@ class JobsCTRL {
         pagination
       );
     } catch (error) {
-      return handleResponse(
-        res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
-      );
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
   async getAllJobs(req, res) {
     try {
-      // if (!req.user) {
-      //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      // }
-
       const {
-        education, experience, workingtype, recommended, salary,
-        jobTitle, sort, location, recentjob, numericFilters, jobType, page = 1, limit = 10
+        education,
+        experience,
+        workingtype,
+        recommended,
+        salary,
+        jobTitle,
+        sort,
+        location,
+        recentjob,
+        numericFilters,
+        jobType,
+        page = 1,
+        limit = 10,
       } = req.query;
 
       let queryObject = {};
@@ -241,14 +258,15 @@ class JobsCTRL {
       if (salary) {
         queryObject.salaryRange = salary;
       }
-      console.log("salary: ", salary)
+      // console.log("salary: ", salary);
 
       if (workingtype) {
         queryObject.workingType = workingtype; // Fixed field to workingType
       }
 
       if (jobTitle) {
-        queryObject.jobTitle = jobTitle.trim() === "" ? {} : { $regex: jobTitle, $options: "i" };
+        queryObject.jobTitle =
+          jobTitle.trim() === "" ? {} : { $regex: jobTitle, $options: "i" };
       }
 
       if (recentjob === "true") {
@@ -258,13 +276,23 @@ class JobsCTRL {
 
       if (numericFilters) {
         const operatorMap = {
-          ">": "$gt", ">=": "$gte", "=": "$eq", "<": "$lt", "<=": "$lte",
+          ">": "$gt",
+          ">=": "$gte",
+          "=": "$eq",
+          "<": "$lt",
+          "<=": "$lte",
         };
-        let filters = numericFilters.replace(/\b(<|>|>=|=|<|<=)\b/g, match => `-${operatorMap[match]}-`);
-        filters.split(",").forEach(item => {
+        let filters = numericFilters.replace(
+          /\b(<|>|>=|=|<|<=)\b/g,
+          (match) => `-${operatorMap[match]}-`
+        );
+        filters.split(",").forEach((item) => {
           const [field, operator, value] = item.split("-");
           if (queryObject[field]) {
-            queryObject[field] = { ...queryObject[field], [operator]: Number(value) };
+            queryObject[field] = {
+              ...queryObject[field],
+              [operator]: Number(value),
+            };
           } else {
             queryObject[field] = { [operator]: Number(value) };
           }
@@ -294,27 +322,44 @@ class JobsCTRL {
       }
 
       // Fetch user details for createdBy in bulk to minimize database queries
-      const userIds = resultJobs.map(job => job.createdBy);
+      const userIds = resultJobs.map((job) => job.createdBy);
       const users = await Users.find({ _id: { $in: userIds } });
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
       }, {});
 
+      // Fetch companies with workers matching the user IDs
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
 
-      let NewSearchedJob = resultJobs.map(job => {
-        const user = userMap[job.createdBy.toString()];  // Get the user based on job's createdBy field
+      let NewSearchedJob = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
         if (!user) {
           return {
             ...job._doc, // Assuming you're using Mongoose and want to spread the job document
             hr_name: "deleted user", // Fallback if user is not found
             hr_avatar: "default_avatar.png", // Fallback avatar image path
+            issuedBy: null, // Fallback to null if company not found
           };
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer ? user.employer.fullName : "No employer name", // Check if employer exists
+            hr_name: user.employer
+              ? user.employer.fullName
+              : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
+            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
         }
       });
@@ -326,16 +371,17 @@ class JobsCTRL {
         totalDocuments: totalJobs,
       };
 
-      return handleResponse(res, 200, "success", "Jobs retrieved successfully", NewSearchedJob, NewSearchedJob.length, pagination);
-    } catch (error) {
       return handleResponse(
         res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
+        200,
+        "success",
+        "Jobs retrieved successfully",
+        NewSearchedJob,
+        NewSearchedJob.length,
+        pagination
       );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
   async getEmployerPosts(req, res) {
@@ -377,11 +423,26 @@ class JobsCTRL {
         );
       }
 
-      let NewSearchedJob = allJobs.map(job => {
+      // Fetch companies with workers matching the user IDs
+      const companies = await Company.find({
+        "workers.userId": { $in: req.user.id },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJob = allJobs.map((job) => {
         return {
           ...job._doc, // Assuming you're using Mongoose and want to spread the job document
           hr_name: req.user.employer.fullName, // Directly use req.user information
           hr_avatar: req.user.avatar, // Directly use req.user information
+          issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
         };
       });
 
@@ -403,14 +464,7 @@ class JobsCTRL {
         pagination
       );
     } catch (error) {
-      return handleResponse(
-        res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
-      );
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
   async getSingleJob(req, res) {
@@ -420,45 +474,68 @@ class JobsCTRL {
       // }
 
       const { id: jobID } = req.params; // Simplified destructuring
-
-      if (!jobID || !ObjectId.isValid(jobID)) {
+      if (!jobID) {
         return handleResponse(res, 400, "error", "Invalid job ID", null, 0);
       }
 
       const singleJob = await Jobs.findOne({ _id: jobID });
 
       if (!singleJob) {
-        return handleResponse(res, 404, "error", `Job not found with ID: ${jobID}`, null, 0);
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Job not found with ID: ${jobID}`,
+          null,
+          0
+        );
       }
 
       let NewUser = await Users.findOne({ _id: singleJob.createdBy });
+      const companies = await Company.find({
+        "workers.userId": { $in: singleJob.createdBy },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
       let NewSearchedJob;
 
       if (!NewUser) {
         // Provide fallback values when the user (job creator) is not found
         NewSearchedJob = {
           ...singleJob.toObject(), // Convert Mongoose document to plain object
-          hr_name: "deleted user", // Fallback name when user not found
-          hr_avatar: "default_avatar.png", // Fallback to a default image if user avatar not found
+          hr_name: "deleted user", // Fallback if user is not found
+          hr_avatar: "default_avatar.png", // Fallback avatar image path
+          issuedBy: null, // Fallback to null if company not found
         };
       } else {
         NewSearchedJob = {
           ...singleJob.toObject(), // Convert Mongoose document to plain object
-          hr_name: NewUser.employer ? NewUser.employer.fullName : 'No employer name provided', // Fallback if employer's name is not available
-          hr_avatar: NewUser.avatar || 'default_avatar.png', // Fallback to a default image if user avatar not found
+          hr_name: NewUser.employer
+            ? NewUser.employer.fullName
+            : "No employer name", // Check if employer exists
+          hr_avatar: NewUser.avatar || "default_avatar.png", // Use default avatar if none is provided
+          issuedBy: companyMap[singleJob.createdBy.toString()] || null, // Get company details if available
         };
       }
 
-      return handleResponse(res, 200, "success", "Job retrieved successfully", NewSearchedJob, 1);
-    } catch (error) {
       return handleResponse(
         res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
+        200,
+        "success",
+        "Job retrieved successfully",
+        NewSearchedJob,
+        1
       );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
   async updateJobs(req, res) {
@@ -500,19 +577,24 @@ class JobsCTRL {
         );
       }
 
-
-
       let NewUser = await Users.findOne({ _id: updatedJob.createdBy });
 
       if (!NewUser) {
         // Handle the case where the user (job creator) is not found
-        return handleResponse(res, 404, "error", `User not found for job with ID: ${jobID}`, null, 0);
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `User not found for job with ID: ${jobID}`,
+          null,
+          0
+        );
       }
 
       // Construct NewSearchedJob with user details included
       let NewSearchedJob = {
         ...updatedJob.toObject(), // Convert Mongoose document to plain object
-        hr_name: NewUser.employer ? NewUser.employer.fullName : '', // Check for null and provide default value
+        hr_name: NewUser.employer ? NewUser.employer.fullName : "", // Check for null and provide default value
         hr_avatar: NewUser.avatar,
       };
 
@@ -525,14 +607,7 @@ class JobsCTRL {
         1
       );
     } catch (error) {
-      return handleResponse(
-        res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
-      );
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
   async getRecentJobs(req, res) {
@@ -554,8 +629,11 @@ class JobsCTRL {
           "<=": "$lte",
         };
         const regEx = /\b(>|>=|=|<|<=)\b/g; // Fixed duplicate '<' in regex
-        let filters = numericFilters.replace(regEx, match => `-${operatorMap[match]}-`);
-        filters.split(",").forEach(item => {
+        let filters = numericFilters.replace(
+          regEx,
+          (match) => `-${operatorMap[match]}-`
+        );
+        filters.split(",").forEach((item) => {
           const [field, operator, value] = item.split("-");
           queryObject[field] = { [operator]: Number(value) };
         });
@@ -591,20 +669,45 @@ class JobsCTRL {
       }
 
       // Fetching user details for the 'createdBy' field
-      const userIds = searchedJobs.map(job => job.createdBy);
+      const userIds = searchedJobs.map((job) => job.createdBy);
       const users = await Users.find({ _id: { $in: userIds } });
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
       }, {});
 
-      let NewSearchedJobs = searchedJobs.map(job => {
-        const user = userMap[job.createdBy.toString()];
-        return {
-          ...job.toObject(), // Assuming you're using Mongoose and want to spread the job document
-          hr_name: user ? user.employer.fullName : 'N/A',  // Correct fallback logic
-          hr_avatar: user ? user.avatar : 'default_avatar.png' // Correct fallback for avatar
-        };
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJobs = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
+        if (!user) {
+          return {
+            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
+            hr_name: "deleted user", // Fallback if user is not found
+            hr_avatar: "default_avatar.png", // Fallback avatar image path
+            issuedBy: null, // Fallback to null if company not found
+          };
+        } else {
+          return {
+            ...job._doc,
+            hr_name: user.employer
+              ? user.employer.fullName
+              : "No employer name", // Check if employer exists
+            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
+            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
+          };
+        }
       });
 
       // Prepare pagination data
@@ -615,16 +718,17 @@ class JobsCTRL {
         totalDocuments: totalJobs,
       };
 
-      return handleResponse(res, 200, "success", "Jobs retrieved successfully", NewSearchedJobs, NewSearchedJobs.length, pagination);
-    } catch (error) {
       return handleResponse(
         res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
+        200,
+        "success",
+        "Jobs retrieved successfully",
+        NewSearchedJobs,
+        NewSearchedJobs.length,
+        pagination
       );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
   async getRecommendedJobs(req, res) {
@@ -699,23 +803,46 @@ class JobsCTRL {
         return handleResponse(res, 200, "success", "No jobs found", [], 0);
       }
       // Fetching user details for the 'createdBy' field
-      const userIds = searchedJobs.map(job => job.createdBy);
+      const userIds = searchedJobs.map((job) => job.createdBy);
       const users = await Users.find({ _id: { $in: userIds } });
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
       }, {});
 
-      let NewSearchedJobs = searchedJobs.map(job => {
-        const user = userMap[job.createdBy.toString()];
-        return {
-          ...job.toObject(), // Assuming you're using Mongoose and want to spread the job document
-          hr_name: user ? user.employer.fullName : 'N/A', // Fallback to 'N/A' if user not found
-          hr_avatar: user ? user.avatar : 'N/A', // Fallback to 'N/A' if user not found
-        };
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
       });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
 
-
+      let NewSearchedJobs = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
+        if (!user) {
+          return {
+            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
+            hr_name: "deleted user", // Fallback if user is not found
+            hr_avatar: "default_avatar.png", // Fallback avatar image path
+            issuedBy: null, // Fallback to null if company not found
+          };
+        } else {
+          return {
+            ...job._doc,
+            hr_name: user.employer
+              ? user.employer.fullName
+              : "No employer name", // Check if employer exists
+            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
+            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
+          };
+        }
+      });
 
       // Prepare pagination data
       const pagination = {
@@ -735,14 +862,7 @@ class JobsCTRL {
         pagination
       );
     } catch (error) {
-      return handleResponse(
-        res,
-        500,
-        "error",
-        error.message,
-        null,
-        0
-      );
+      return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
 }

@@ -1,5 +1,9 @@
 const Users = require("../models/user_model");
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
 const multer = require("multer");
 const sharp = require("sharp");
 require("dotenv").config();
@@ -29,7 +33,7 @@ const uploadFileToS3 = async (buffer, name, type) => {
     Key: name,
     Body: buffer,
     ContentType: type,
-    ACL: 'public-read', // Optional: Adjust according to your S3 bucket policies
+    ACL: "public-read", // Optional: Adjust according to your S3 bucket policies
   };
 
   await s3.send(new PutObjectCommand(uploadParams));
@@ -56,16 +60,16 @@ const updateUserAvatarUrl = async (userId, url) => {
       throw new Error(`User with ID ${userId} not found.`);
     }
 
-    console.log('Updated user avatar URL:', result);
+    console.log("Updated user avatar URL:", result);
     return result; // This will contain the updated user document.
   } catch (error) {
-    console.error('Error updating user avatar URL:', error);
+    console.error("Error updating user avatar URL:", error);
     throw error; // Rethrow or handle as needed
   }
 };
-router.post('/', upload.single('avatar'), async (req, res) => {
+router.post("/", upload.single("avatar"), async (req, res) => {
   try {
-    if (!req.file) throw new Error('Please upload a file.');
+    if (!req.file) throw new Error("Please upload a file.");
 
     const compressedImage = await sharp(req.file.buffer)
       .resize(500) // Example: resize to a max width of 500px, keeping aspect ratio
@@ -73,27 +77,31 @@ router.post('/', upload.single('avatar'), async (req, res) => {
       .toBuffer();
     const filename = `avatar/avatar-${req.user.id}-${Date.now()}.jpeg`;
 
-    const fileUrl = await uploadFileToS3(compressedImage, filename, 'image/jpeg');
+    const fileUrl = await uploadFileToS3(
+      compressedImage,
+      filename,
+      "image/jpeg"
+    );
     await updateUserAvatarUrl(req.user.id, fileUrl);
     res.status(200).json({
-      message: 'Avatar uploaded successfully',
+      message: "Avatar uploaded successfully",
       url: fileUrl,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-router.put('/', upload.single('avatar'), async (req, res) => {
+router.put("/", upload.single("avatar"), async (req, res) => {
   try {
-    if (!req.file) throw new Error('Please upload a file.');
+    if (!req.file) throw new Error("Please upload a file.");
 
     // Retrieve the user's current avatar URL from the database
     const user = await Users.findById(req.user.id);
-    if (!user) throw new Error('User not found.');
+    if (!user) throw new Error("User not found.");
 
     if (user.avatar) {
       // Extract the file key from the URL and delete the old avatar from S3
-      const oldFileKey = user.avatar.split('/').pop(); // Adjust this line according to your URL structure
+      const oldFileKey = user.avatar.split("/").pop(); // Adjust this line according to your URL structure
       await deleteFileFromS3(`avatar/${oldFileKey}`);
     }
 
@@ -104,42 +112,45 @@ router.put('/', upload.single('avatar'), async (req, res) => {
       .toBuffer();
 
     const filename = `avatar/avatar-${req.user.id}-${Date.now()}.jpeg`;
-    const fileUrl = await uploadFileToS3(compressedImage, filename, 'image/jpeg');
+    const fileUrl = await uploadFileToS3(
+      compressedImage,
+      filename,
+      "image/jpeg"
+    );
 
     // Update the user's avatar URL in the database
     await updateUserAvatarUrl(req.user.id, fileUrl);
 
     res.status(200).json({
-      message: 'Avatar updated successfully',
+      message: "Avatar updated successfully",
       url: fileUrl,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-router.delete('/', async (req, res) => {
+router.delete("/", async (req, res) => {
   try {
     // Retrieve the user's current avatar URL from the database
     const user = await Users.findById(req.user.id);
-    if (!user) throw new Error('User not found.');
+    if (!user) throw new Error("User not found.");
 
     if (user.avatar) {
       // Extract the file key from the URL and delete the old avatar from S3
-      const fileKey = user.avatar.split('/').pop(); // Adjust this line according to your URL structure
+      const fileKey = user.avatar.split("/").pop(); // Adjust this line according to your URL structure
       await deleteFileFromS3(`avatar/${fileKey}`);
 
       // Update the user's record to remove the avatar URL
       await Users.findByIdAndUpdate(req.user.id, { $unset: { avatar: "" } });
 
-      res.status(200).json({ message: 'Avatar deleted successfully' });
+      res.status(200).json({ message: "Avatar deleted successfully" });
     } else {
-      throw new Error('No avatar to delete.');
+      throw new Error("No avatar to delete.");
     }
   } catch (error) {
-    console.error('Error deleting avatar:', error);
+    console.error("Error deleting avatar:", error);
     res.status(500).json({ error: error.message });
   }
 });
-
 
 module.exports = router;

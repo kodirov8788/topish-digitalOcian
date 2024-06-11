@@ -11,7 +11,6 @@ const authMiddleware = async (req, res, next) => {
   }
   try {
     const {
-      email,
       phoneNumber,
       employer,
       favorites,
@@ -21,9 +20,9 @@ const authMiddleware = async (req, res, next) => {
       role,
       avatar,
       mobileToken,
+      fullName,
     } = isTokenValid({ token });
     req.user = {
-      email,
       phoneNumber,
       employer,
       favorites,
@@ -33,6 +32,7 @@ const authMiddleware = async (req, res, next) => {
       role,
       avatar,
       mobileToken,
+      fullName,
     };
     next();
   } catch (error) {

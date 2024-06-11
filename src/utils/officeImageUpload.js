@@ -59,16 +59,12 @@ const uploadFiles = (req, res, next) => {
       return res.status(500).json({ error: "File upload error." });
     }
     // No files to upload
-    console.log("req.files: ", req.files)
     if (!req.files || req.files.length === 0) {
-      console.log("No files were uploaded.");
       req.files = []; // Ensure req.files is an empty array to indicate no files were processed
-      console.log("req.files in function: ", req.files)
       return next();
     }
 
     try {
-      console.log("req.files in try catch: ", req.files)
       const uploadPromises = req.files.map(file => uploadFile(file));
       const results = await Promise.allSettled(uploadPromises);
       // Filter out the successfully uploaded files and map to their URLs

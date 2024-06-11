@@ -1,3 +1,4 @@
+const Company = require("../models/company_model");
 const Users = require("../models/user_model");
 const { attachCookiesToResponse, createTokenUser } = require("../utils");
 const { handleResponse } = require("../utils/handleResponse");
@@ -20,7 +21,7 @@ class UserCTRL {
       const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items
       const skip = (page - 1) * limit; // Calculate the number of documents to skip
 
-      let resultUsers = await Users.find(query)
+      let resultUsers = await Users.find()
         .select("phoneNumber role email jobSeeker employer")
         .skip(skip) // Skip documents for pagination
         .limit(limit) // Limit the number of documents
@@ -73,26 +74,76 @@ class UserCTRL {
       );
     }
   }
-
   //  GET CURRENT USER
   async showCurrentUser(req, res) {
-    const userId = req.user.id;
     try {
-      if (
-        !req.user ||
-        !userId ||
-        userId === "" ||
-        userId === null ||
-        userId === undefined ||
-        userId === "undefined" ||
-        userId === "null"
-      ) {
+      if (!req.user || !req.user.id) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById({ _id: userId })
-        .populate({ path: "resumeId" })
-        .select("-password");
-      if (user) {
+
+      const userId = req.user.id;
+      const user = await Users.findById(userId).select("-password");
+
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+
+      if (user.role === "Employer") {
+        const company = await Company.findOne({ "workers.userId": userId });
+
+        if (company) {
+          const newWorkers = await Promise.all(
+            company.workers.map(async (workerData) => {
+              const worker = await Users.findById(workerData.userId);
+              if (worker) {
+                return {
+                  avatar: worker.avatar,
+                  phoneNumber: worker.phoneNumber,
+                  fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
+                  isAdmin: workerData.isAdmin,
+                  userId: worker.id,
+                };
+              }
+              return null; // Return null if user is not found
+            })
+          );
+
+          const filteredWorkers = newWorkers.filter(
+            (worker) => worker !== null
+          ); // Filter out any null values
+
+          const newUser = {
+            ...user.toObject(),
+            company: {
+              ...company.toObject(),
+              workers: filteredWorkers,
+            },
+          };
+
+          return handleResponse(
+            res,
+            200,
+            "success",
+            "User retrieved successfully",
+            newUser,
+            1
+          );
+        }
+
+        const newUser = {
+          ...user.toObject(),
+          company: null,
+        };
+
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "User retrieved successfully",
+          newUser,
+          1
+        );
+      } else {
         return handleResponse(
           res,
           200,
@@ -101,10 +152,9 @@ class UserCTRL {
           user,
           1
         );
-      } else {
-        return handleResponse(res, 401, "error", "User not found", null, 0);
       }
     } catch (error) {
+      console.error("Error in showCurrentUser function:", error);
       return handleResponse(
         res,
         500,
@@ -123,21 +173,10 @@ class UserCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      // Define the target role based on the requester's role
-      let targetRole;
-      if (req.user.role === "Employer") {
-        targetRole = "JobSeeker";
-      } else if (req.user.role === "JobSeeker") {
-        targetRole = "Employer";
-      } else {
-        // Handle unexpected roles
-        return handleResponse(res, 400, "error", "Invalid user role", null, 0);
-      }
-
       // Query for a user with the target role and the specified ID
-      const user = await Users.findOne({ _id: userId, role: targetRole })
-        .populate({ path: "resumeId" })
-        .select("-password");
+      const user = await Users.findOne({
+        _id: userId,
+      }).select("-password");
 
       if (!user) {
         return handleResponse(
@@ -396,9 +435,10 @@ class UserCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const userId = req.user.id;
+      const user = await Users.findOne({ _id: req.user.id });
+
       const {
-        jobtitle,
+        jobTitle,
         fullName,
         gender,
         birthday,
@@ -411,17 +451,17 @@ class UserCTRL {
         employmentType,
       } = req.body;
 
-      if (req.user.role === "JobSeeker") {
+      if (user.role === "JobSeeker") {
         // Update the job seeker's profile
         const updatedUser = await Users.findByIdAndUpdate(
-          userId,
+          user._id,
           {
             $set: {
-              "jobSeeker.jobtitle": jobtitle,
-              "jobSeeker.fullName": fullName,
-              "jobSeeker.gender": gender,
-              "jobSeeker.birthday": birthday,
-              "jobSeeker.location": location,
+              "jobSeeker.jobTitle": jobTitle,
+              fullName: fullName,
+              gender: gender,
+              birthday: birthday,
+              location: location,
               "jobSeeker.expectedSalary": expectedSalary,
               "jobSeeker.skills": skills,
               "jobSeeker.professions": professions,
@@ -472,28 +512,31 @@ class UserCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const userId = req.user.id;
+
+      const user = await Users.findOne({ _id: req.user.id });
+
       const {
         fullName,
         companyName,
         industry,
         location,
-        aboutcompany,
+        aboutCompany,
         number,
         email,
       } = req.body;
+      // console.log(user);
 
-      if (req.user.role === "Employer") {
+      if (user.role === "Employer") {
         // Update the job seeker's profile
         const updatedUser = await Users.findByIdAndUpdate(
-          userId,
+          user._id,
           {
             $set: {
               "employer.companyName": companyName,
-              "employer.fullName": fullName,
+              fullName,
               "employer.industry": industry,
-              "employer.aboutcompany": aboutcompany,
-              "employer.location": location,
+              "employer.aboutCompany": aboutCompany,
+              location,
               "employer.contactNumber": number,
               "employer.contactEmail": email,
             },
@@ -540,18 +583,17 @@ class UserCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const userId = req.user.id;
+      const user = await Users.findOne({ _id: req.user.id });
       const { fullName, gender, location, email } = req.body;
-
-      if (req.user.role === "Service") {
+      if (user.role === "Service") {
         // Update the job seeker's profile
         const updatedUser = await Users.findByIdAndUpdate(
-          userId,
+          user._id,
           {
             $set: {
-              "service.fullName": fullName,
-              "service.gender": gender,
-              "service.location": location,
+              fullName: fullName,
+              gender: gender,
+              location: location,
               "service.contactEmail": email,
             },
           },
@@ -581,6 +623,55 @@ class UserCTRL {
           0
         );
       }
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  // write function for update role of user
+  async updateRole(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      const userId = req.user.id;
+      const { role } = req.body;
+
+      if (!role) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Please provide all values",
+          null,
+          0
+        );
+      }
+
+      if (role !== "JobSeeker" && role !== "Employer" && role !== "Service") {
+        return handleResponse(res, 400, "error", "Invalid role", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: userId });
+      // console.log(role);
+      user.role = role;
+
+      let savedUser = await user.save();
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Information updated successfully",
+        savedUser,
+        1
+      );
     } catch (error) {
       return handleResponse(
         res,
