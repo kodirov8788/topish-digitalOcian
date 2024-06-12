@@ -8,6 +8,7 @@ const sharp = require("sharp");
 require("dotenv/config");
 
 const s3 = new S3Client({
+  endpoint: process.env.AWS_S3_ENDPOINT,
   region: process.env.AWS_S3_BUCKET_REGION,
   credentials: {
     accessKeyId: process.env.AWS_S3_ACCESS_KEY,
@@ -58,7 +59,7 @@ const uploadFile = async (file) => {
       })
     );
 
-    return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_S3_BUCKET_REGION}.amazonaws.com/${key}`;
+    return `https://${process.env.AWS_BUCKET_NAME}.${process.env.AWS_S3_BUCKET_REGION}.digitaloceanspaces.com/${key}`;
   } catch (error) {
     console.error("Error uploading file:", error);
     throw error;

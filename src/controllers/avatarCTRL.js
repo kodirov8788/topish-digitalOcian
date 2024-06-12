@@ -12,6 +12,7 @@ require("dotenv").config();
 
 // Initialize S3 client
 const s3 = new S3Client({
+  endpoint: process.env.AWS_S3_ENDPOINT,
   region: process.env.AWS_S3_BUCKET_REGION,
   credentials: {
     accessKeyId: process.env.AWS_S3_ACCESS_KEY,
@@ -46,7 +47,7 @@ const uploadFileToS3 = async (buffer, name, type) => {
   };
 
   await s3.send(new PutObjectCommand(uploadParams));
-  return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_S3_BUCKET_REGION}.amazonaws.com/avatar/${name}`;
+  return `https://${process.env.AWS_BUCKET_NAME}.${process.env.AWS_S3_BUCKET_REGION}.digitaloceanspaces.com/${name}`;
 };
 
 const deleteUserAvatar = async (userId) => {

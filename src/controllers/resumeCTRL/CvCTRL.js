@@ -10,6 +10,7 @@ const multerS3 = require("multer-s3");
 const { handleResponse } = require("../../utils/handleResponse");
 require("dotenv/config");
 const s3 = new S3Client({
+  endpoint: process.env.AWS_S3_ENDPOINT,
   region: process.env.AWS_S3_BUCKET_REGION,
   credentials: {
     accessKeyId: process.env.AWS_S3_ACCESS_KEY,
@@ -103,7 +104,7 @@ class Cv {
           return handleResponse(res, 404, "error", "User not found", null, 0);
         }
 
-        const resume = await Resume.findById(user.resumeId);
+        const resume = await Resume.findById(user.resume);
         const newFileDetails = {
           path: req.file.location,
           filename: req.file.originalname,
@@ -131,7 +132,7 @@ class Cv {
             cv: newFileDetails,
           });
           await newResume.save();
-          user.resumeId = newResume._id;
+          user.resume = newResume._id;
           await user.save();
           return handleResponse(
             res,

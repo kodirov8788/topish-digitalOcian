@@ -11,6 +11,7 @@ const { handleResponse } = require("../utils/handleResponse");
 require("dotenv/config");
 
 const s3 = new S3Client({
+  endpoint: process.env.AWS_S3_ENDPOINT,
   region: process.env.AWS_S3_BUCKET_REGION,
   credentials: {
     accessKeyId: process.env.AWS_S3_ACCESS_KEY,
