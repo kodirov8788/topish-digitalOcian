@@ -68,7 +68,7 @@ const UsersSchema = new Schema(
     role: {
       type: String,
       required: true,
-      enum: ["JobSeeker", "Employer", "Service"],
+      enum: ["JobSeeker", "Employer", "Service", "Admin"],
     },
     password: { type: String, required: true, minlength: 8 },
     root: { type: Boolean, default: false },
