@@ -740,14 +740,14 @@ const JobSeekersEndpoint = {
           schema: { type: "string" },
         },
         {
-          name: "worktype",
+          name: "workType",
           in: "query",
           description: "Type of work to filter the job seekers",
           required: false,
           schema: { type: "string" },
         },
         {
-          name: "jobtitle",
+          name: "jobTitle",
           in: "query",
           description: "Job title to filter the job seekers",
           required: false,

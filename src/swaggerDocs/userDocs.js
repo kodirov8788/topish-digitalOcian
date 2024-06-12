@@ -893,7 +893,7 @@ const UsersEndpoint = {
                 companyName: { type: "string", example: "Google" },
                 fullName: { type: "string", example: "John Doe" },
                 industry: { type: "string", example: "IT" },
-                aboutcompany: {
+                aboutCompany: {
                   type: "string",
                   example: "Google is a multinational technology company",
                 },
@@ -1011,8 +1011,7 @@ const UsersEndpoint = {
   "/users/updateServiceProfile": {
     put: {
       summary: "Update Service profile",
-      description:
-        "Update Service profile based on user role (JobSeeker or Employer,Service)",
+      description: "Update Service profile based on user role  Service",
       tags: ["Users"],
       requestBody: {
         required: true,
@@ -1021,8 +1020,6 @@ const UsersEndpoint = {
             schema: {
               type: "object",
               properties: {
-                fullName: { type: "string", example: "John Doe" },
-                location: { type: "string", example: "Andijon" },
                 gender: {
                   type: "string",
                   required: false,
@@ -1032,102 +1029,102 @@ const UsersEndpoint = {
             },
           },
         },
-        responses: {
-          200: {
-            description: "Profile updated successfully",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    result: { type: "string", example: "success" },
-                    msg: {
-                      type: "string",
-                      example: "Profile updated successfully",
-                    },
-                    data: { $ref: "#/components/schemas/Users" },
-                    totalCount: { type: "integer", example: 1 },
+      },
+      responses: {
+        200: {
+          description: "Profile updated successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Profile updated successfully",
                   },
+                  data: { $ref: "#/components/schemas/Users" },
+                  totalCount: { type: "integer", example: 1 },
                 },
               },
             },
           },
-          400: {
-            description: "Update operation is not supported for this user role",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    result: { type: "string", example: "error" },
-                    msg: {
-                      type: "string",
-                      example:
-                        "Update operation is not supported for this user role.",
-                    },
-                    data: {
-                      type: "null",
-                      example: null,
-                    },
-                    totalCount: { type: "integer", example: 0 },
+        },
+        400: {
+          description: "Update operation is not supported for this user role",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Update operation is not supported for this user role.",
                   },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "integer", example: 0 },
                 },
               },
             },
           },
-          401: {
-            description: "Unauthorized",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    result: { type: "string", example: "error" },
-                    msg: { type: "string", example: "Unauthorized" },
-                    data: {
-                      type: "null",
-                      example: null,
-                    },
-                    totalCount: { type: "integer", example: 0 },
+        },
+        401: {
+          description: "Unauthorized",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                  data: {
+                    type: "null",
+                    example: null,
                   },
+                  totalCount: { type: "integer", example: 0 },
                 },
               },
             },
           },
-          404: {
-            description: "User not found",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    result: { type: "string", example: "error" },
-                    msg: { type: "string", example: "User not found" },
-                    data: {
-                      type: "null",
-                      example: null,
-                    },
-                    totalCount: { type: "integer", example: 0 },
+        },
+        404: {
+          description: "User not found",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "User not found" },
+                  data: {
+                    type: "null",
+                    example: null,
                   },
+                  totalCount: { type: "integer", example: 0 },
                 },
               },
             },
           },
-          500: {
-            description: "Internal server error",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    result: { type: "string", example: "error" },
-                    msg: { type: "string", example: "Internal server error" },
-                    data: {
-                      type: "null",
-                      example: null,
-                    },
-                    totalCount: { type: "integer", example: 0 },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Internal server error" },
+                  data: {
+                    type: "null",
+                    example: null,
                   },
+                  totalCount: { type: "integer", example: 0 },
                 },
               },
             },

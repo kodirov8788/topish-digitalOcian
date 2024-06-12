@@ -15,7 +15,7 @@ const {
   getFavoriteJobs,
   deleteFavoriteJob,
   // getJobSeekersQuery,
-} = require("../controllers/jobseekersCTRL");
+} = require("../controllers/jobSeekersCTRL");
 const {
   getAllEmployers,
   searchEmployers,

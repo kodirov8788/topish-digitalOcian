@@ -700,8 +700,8 @@ class JobSeekerCTRL {
     let {
       skills,
       location,
-      worktype,
-      jobtitle,
+      workType,
+      jobTitle,
       employmentType,
       experience,
       education,
@@ -730,7 +730,7 @@ class JobSeekerCTRL {
         userQueryObject["createdAt"] = { $gte: new Date(newJobSeekers) };
       }
       if (sortByAlphabet) {
-        userQueryObject["jobSeeker.fullName"] = {
+        userQueryObject["fullName"] = {
           $regex: "^[A-Z]",
           $options: "i",
         };
@@ -738,19 +738,19 @@ class JobSeekerCTRL {
       if (expectedSalary) {
         userQueryObject["jobSeeker.expectedSalary"] = { $lte: expectedSalary };
       }
-      if (location) userQueryObject["jobSeeker.location"] = location;
+      if (location) userQueryObject["location"] = location;
       if (education)
         userQueryObject["jobSeeker.educationalBackground"] = education;
       if (skills)
         userQueryObject["jobSeeker.skills"] = { $in: skills.split(",") };
-      if (jobtitle)
-        userQueryObject["jobSeeker.jobtitle"] = {
-          $regex: jobtitle,
+      if (jobTitle)
+        userQueryObject["jobSeeker.jobTitle"] = {
+          $regex: jobTitle,
           $options: "i",
         };
       if (experience)
         userQueryObject["jobSeeker.workingExperience"] = experience;
-      if (worktype) userQueryObject["jobSeeker.employmentType"] = worktype;
+      if (workType) userQueryObject["jobSeeker.employmentType"] = workType;
       if (employmentType)
         userQueryObject["jobSeeker.employmentType"] = employmentType;
 
@@ -762,11 +762,7 @@ class JobSeekerCTRL {
 
       const total = await Users.countDocuments(userQueryObject);
 
-      const resultUsers = matchedUsers.filter(
-        (user) => user.resumeId && Object.keys(user.resumeId).length > 0
-      );
-
-      if (resultUsers.length === 0) {
+      if (matchedUsers.length === 0) {
         return handleResponse(
           res,
           200,
@@ -789,8 +785,8 @@ class JobSeekerCTRL {
         200,
         "success",
         "Job seekers retrieved successfully",
-        resultUsers,
-        resultUsers.length,
+        matchedUsers,
+        matchedUsers.length,
         pagination
       );
     } catch (error) {

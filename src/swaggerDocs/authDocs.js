@@ -826,6 +826,23 @@ const AuthEndpoints = {
           cookieAuth: [], // Assuming you are using cookie-based authentication
         },
       ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                mobileToken: {
+                  type: "string",
+                  description: "The mobile token of the user",
+                  example: "fcmToken",
+                },
+              },
+            },
+          },
+        },
+      },
       responses: {
         200: {
           description: "User logged out successfully.",
