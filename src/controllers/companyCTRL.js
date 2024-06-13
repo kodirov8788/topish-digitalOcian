@@ -445,16 +445,16 @@ class CompanyCTRL {
       let hrAdmin = company.workers.find(
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
-      // if (!hrAdmin && user.role !== "Admin") {
-      //   return handleResponse(
-      //     res,
-      //     401,
-      //     "error",
-      //     "You are not authorized",
-      //     null,
-      //     0
-      //   );
-      // }
+      if (!hrAdmin && user.role !== "Admin") {
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "You are not authorized",
+          null,
+          0
+        );
+      }
 
       // Update only the provided fields
       const updatableFields = [
