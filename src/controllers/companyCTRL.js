@@ -414,6 +414,7 @@ class CompanyCTRL {
 
       const user = await Users.findOne({ _id: req.user.id });
       const allowedRoles = ["Admin", "Employer"];
+      // console.log("user: ", user);
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
@@ -444,16 +445,17 @@ class CompanyCTRL {
       let hrAdmin = company.workers.find(
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
-      if (!hrAdmin && req.user.role !== "Admin") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not authorized",
-          null,
-          0
-        );
-      }
+      // if (!hrAdmin && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not authorized",
+      //     null,
+      //     0
+      //   );
+      // }
+
       // Update only the provided fields
       const updatableFields = [
         "name",
@@ -464,7 +466,6 @@ class CompanyCTRL {
         "working_time",
         "working_days",
         "overtime",
-        "benefits",
         "info.legal_representative",
         "info.registration_capital",
         "info.date_of_establishment",
@@ -482,6 +483,12 @@ class CompanyCTRL {
         }
       });
 
+      // Special handling for benefits as an array of strings
+      if (body.benefits) {
+        company.benefits = body.benefits
+          .split(" ")
+          .map((benefit) => String(benefit));
+      }
       await company.save();
 
       return handleResponse(

@@ -62,13 +62,7 @@ const companySchema = new mongoose.Schema(
       required: false,
       default: "",
     },
-    benefits: [
-      {
-        type: String,
-        required: false,
-        default: "",
-      },
-    ],
+    benefits: [],
     location: {
       type: String,
       required: [true, "Company location is required"],
