@@ -10,9 +10,9 @@ class JobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-
+      const user = await Users.findOne({ _id: req.user.id });
       const coins = req.user.coins;
-      if (req.user.role !== "Employer") {
+      if (user.role !== "Employer") {
         return handleResponse(
           res,
           403,
@@ -37,8 +37,6 @@ class JobsCTRL {
       if (coins < 5) {
         return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
       }
-      const userId = req.user.id;
-      const user = await Users.findOne({ _id: userId });
       if (!user || !user.employer) {
         return handleResponse(
           res,
@@ -51,14 +49,14 @@ class JobsCTRL {
       }
       const jobDetails = {
         ...req.body,
-        createdBy: user.id,
+        createdBy: user._id,
         hr_avatar: user.avatar,
         hr_name: user.fullName,
       };
 
       const job = await Jobs.create(jobDetails);
 
-      await Users.findByIdAndUpdate(userId, { $inc: { coins: -1 } });
+      await Users.findByIdAndUpdate(user._id, { $inc: { coins: -1 } });
 
       return handleResponse(
         res,

@@ -15,9 +15,11 @@ class CompanyCTRL {
       }
       // console.log("req.body", req.body)
       // console.log("req.files ctrl: ", req.files)
-      const coins = req.user.coins;
+
+      const user = await Users.findOne({ _id: req.user.id });
+      const coins = user.coins;
       const allowedRoles = ["Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -42,15 +44,12 @@ class CompanyCTRL {
       if (coins < 5) {
         return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
       }
-
-      const userId = req.user.id;
-      const user = await Users.findOne({ _id: userId });
       if (!user) {
         return handleResponse(res, 400, "error", "User not found.", null, 0);
       }
       const companyDetails = {
         ...req.body,
-        createdBy: user.id,
+        createdBy: user._id,
       };
       // console.log(req.body)
       // console.log("req.files => ", req.files);
@@ -60,7 +59,7 @@ class CompanyCTRL {
       }
       const company = await Company.create(companyDetails);
       // console.log("company: ", company)
-      await Users.findByIdAndUpdate(userId, { $inc: { coins: -1 } });
+      await Users.findByIdAndUpdate(user._id, { $inc: { coins: -1 } });
 
       return handleResponse(
         res,
@@ -88,9 +87,11 @@ class CompanyCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+
+      const user = await Users.findOne({ _id: req.user.id });
       // Check if the user role is Employer
       const allowedRoles = ["Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -306,8 +307,10 @@ class CompanyCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+
       const allowedRoles = ["Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      const user = await Users.findOne({ _id: req.user.id });
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -337,7 +340,7 @@ class CompanyCTRL {
       let hrAdmin = company.workers.find(
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
-      if (!hrAdmin && req.user.role !== "Admin") {
+      if (!hrAdmin && user.role !== "Admin") {
         return handleResponse(
           res,
           401,
@@ -409,8 +412,9 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
+      const user = await Users.findOne({ _id: req.user.id });
       const allowedRoles = ["Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -510,7 +514,8 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      const user = await Users.findOne({ _id: req.user.id });
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -526,8 +531,8 @@ class CompanyCTRL {
         return handleResponse(res, 404, "error", "Company not found", null, 0);
       }
       // console.log("userId: ", userId);
-      const user = await Users.findById(userId);
-      if (!user) {
+      const newUser = await Users.findById(userId);
+      if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
@@ -549,7 +554,7 @@ class CompanyCTRL {
       await company.save();
 
       // Fetch device tokens for the user
-      const userDeviceTokens = user.mobileToken || []; // Assuming user object has a mobileToken array
+      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
       if (userDeviceTokens.length > 0) {
         const notification = {
@@ -592,9 +597,9 @@ class CompanyCTRL {
 
       const { id: companyId } = req.params;
       const { userId } = req.body;
-
+      const user = await Users.findOne({ _id: req.user.id });
       const allowedRoles = ["Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -610,8 +615,8 @@ class CompanyCTRL {
         return handleResponse(res, 404, "error", "Company not found", null, 0);
       }
 
-      const user = await Users.findById(userId);
-      if (!user) {
+      const newUser = await Users.findById(userId);
+      if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
@@ -638,7 +643,7 @@ class CompanyCTRL {
       await company.save();
 
       // Fetch device tokens for the user
-      const userDeviceTokens = user.mobileToken || []; // Assuming user object has a mobileToken array
+      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
       if (userDeviceTokens.length > 0) {
         const notification = {
@@ -681,7 +686,8 @@ class CompanyCTRL {
       }
 
       const { id: companyId } = req.params;
-      const user = req.user;
+
+      const user = await Users.findOne({ _id: req.user.id });
       const allowedRoles = ["Employer"];
 
       if (!allowedRoles.includes(user.role)) {
@@ -696,7 +702,7 @@ class CompanyCTRL {
       }
 
       // Check if the user is already employed in any company
-      const isEmployed = await Company.findOne({ "workers.userId": user.id });
+      const isEmployed = await Company.findOne({ "workers.userId": user._id });
       if (isEmployed) {
         return handleResponse(
           res,
@@ -714,7 +720,7 @@ class CompanyCTRL {
       }
 
       const existingRequest = await CompanyEmploymentReq.findOne({
-        requesterId: user.id,
+        requesterId: user_.id,
         companyId: companyId,
       });
 
@@ -730,7 +736,7 @@ class CompanyCTRL {
       }
 
       const newReq = await CompanyEmploymentReq.create({
-        requesterId: user.id,
+        requesterId: user._id,
         companyId: companyId,
       });
 
@@ -751,7 +757,7 @@ class CompanyCTRL {
         };
         const info = {
           companyId: companyId,
-          requesterId: user.id,
+          requesterId: user._id,
         };
 
         sendNotification(adminDeviceTokens, notification, info);
@@ -786,8 +792,8 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-
-      if (!allowedRoles.includes(req.user.role)) {
+      const user = await Users.findOne({ _id: req.user.id });
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -804,9 +810,9 @@ class CompanyCTRL {
       }
 
       let hrAdmin = company.workers.find(
-        (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
+        (worker) => worker.userId.toString() === user._id && worker.isAdmin
       );
-      if (!hrAdmin && req.user.role !== "Admin") {
+      if (!hrAdmin && user.role !== "Admin") {
         return handleResponse(
           res,
           401,
@@ -817,8 +823,8 @@ class CompanyCTRL {
         );
       }
 
-      const user = await Users.findById(userId);
-      if (!user) {
+      const newUser = await Users.findById(userId);
+      if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
@@ -842,7 +848,7 @@ class CompanyCTRL {
       await CompanyEmploymentReq.findByIdAndDelete(newReq.id);
 
       // Fetch device tokens for the user
-      const userDeviceTokens = user.mobileToken || []; // Assuming user object has a mobileToken array
+      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
       if (userDeviceTokens.length > 0) {
         const notification = {
@@ -886,8 +892,8 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-
-      if (!allowedRoles.includes(req.user.role)) {
+      const user = await Users.findOne({ _id: req.user.id });
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -916,8 +922,8 @@ class CompanyCTRL {
         );
       }
 
-      const user = await Users.findById(userId);
-      if (!user) {
+      const newUser = await Users.findById(userId);
+      if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
@@ -941,7 +947,7 @@ class CompanyCTRL {
       });
 
       // Fetch device tokens for the user
-      const userDeviceTokens = user.mobileToken || []; // Assuming user object has a mobileToken array
+      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
       if (userDeviceTokens.length > 0) {
         const notification = {
@@ -983,8 +989,8 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const { id: companyId } = req.params;
-
-      if ((req.user.role !== "Employer", "Admin")) {
+      const user = await Users.findOne({ _id: req.user.id });
+      if ((user.role !== "Employer", "Admin")) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
@@ -1031,8 +1037,8 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-
-      if (!allowedRoles.includes(req.user.role)) {
+      const user = await Users.findOne({ _id: req.user.id });
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -1062,8 +1068,8 @@ class CompanyCTRL {
         );
       }
 
-      const user = await Users.findById(userId);
-      if (!user) {
+      const newUser = await Users.findById(userId);
+      if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
@@ -1085,7 +1091,7 @@ class CompanyCTRL {
       await company.save();
 
       // Fetch device tokens for the user
-      const userDeviceTokens = user.mobileToken || []; // Assuming user object has a mobileToken array
+      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
       if (userDeviceTokens.length > 0) {
         const notification = {
@@ -1129,8 +1135,8 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-
-      if (!allowedRoles.includes(req.user.role)) {
+      const user = await Users.findOne({ _id: req.user.id });
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -1160,8 +1166,8 @@ class CompanyCTRL {
         );
       }
 
-      const user = await Users.findById(userId);
-      if (!user) {
+      const newUser = await Users.findById(userId);
+      if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
@@ -1185,7 +1191,7 @@ class CompanyCTRL {
       await company.save();
 
       // Fetch device tokens for the user
-      const userDeviceTokens = user.mobileToken || []; // Assuming user object has a mobileToken array
+      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
       if (userDeviceTokens.length > 0) {
         const notification = {

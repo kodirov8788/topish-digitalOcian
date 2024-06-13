@@ -63,8 +63,8 @@ class JobSeekerCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-
-      if (req.user.role !== "Employer") {
+      const user = await Users.findOne({ _id: req.user.id });
+      if (user.role !== "Employer") {
         return handleResponse(
           res,
           401,
@@ -132,12 +132,12 @@ class JobSeekerCTRL {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
-
-    if (!req.user.jobSeeker) {
+    const user = await Users.findOne({ _id: req.user.id });
+    if (!user.role == "JobSeeker") {
       return handleResponse(res, 401, "error", "Job Seeker only", null, 0);
     }
 
-    const jobSeekerId = req.user.id; // Assuming this is the correct path to the job seeker's _id
+    const jobSeekerId = user.id; // Assuming this is the correct path to the job seeker's _id
 
     try {
       // Run both queries in parallel
@@ -196,7 +196,9 @@ class JobSeekerCTRL {
     }
   }
   async deleteSavedJob(req, res) {
-    if (!req.user || !req.user.jobSeeker) {
+    const user = await Users.findOne({ _id: req.user.id });
+
+    if (!req.user || !user.role == "JobSeeker") {
       return handleResponse(
         res,
         401,
@@ -280,7 +282,8 @@ class JobSeekerCTRL {
       const user = await Users.findById(userID);
 
       // Check if the user or user's jobSeeker data exists
-      if (!user || !user.jobSeeker) {
+
+      if (!user || !user.role == "JobSeeker") {
         return handleResponse(
           res,
           400,
@@ -348,7 +351,7 @@ class JobSeekerCTRL {
       const user = await Users.findById(userID);
       // console.log("user: ", user.id)
       // Check if the user or user's jobSeeker data exists
-      if (!user || !user.jobSeeker) {
+      if (!user || !user.role == "JobSeeker") {
         return handleResponse(
           res,
           400,
@@ -414,10 +417,10 @@ class JobSeekerCTRL {
 
       const userID = req.user.id;
 
-      const user = await Users.findById(userID).populate("jobSeeker");
+      const user = await Users.findById(userID);
 
       // Check if the user or user's jobSeeker data exists
-      if (!user || !user.jobSeeker) {
+      if (!user || !user.role == "JobSeeker") {
         return handleResponse(
           res,
           400,
@@ -470,7 +473,7 @@ class JobSeekerCTRL {
 
       const user = await Users.findById(userID);
 
-      if (!user || !user.jobSeeker) {
+      if (!user || !user.role == "JobSeeker") {
         return handleResponse(
           res,
           400,
@@ -611,9 +614,9 @@ class JobSeekerCTRL {
     }
   }
   async getJobSeekersByName(req, res) {
-    let { fullname, page = 1, limit = 10 } = req.query; // Include default pagination parameters
+    let { fullName, page = 1, limit = 10 } = req.query; // Include default pagination parameters
 
-    if (!fullname) {
+    if (!fullName) {
       return handleResponse(
         res,
         400,
