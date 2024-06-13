@@ -488,7 +488,7 @@ class CompanyCTRL {
         company.benefits = [];
       } else {
         company.benefits = body.benefits
-          .split(" ")
+          .split(",")
           .map((benefit) => String(benefit));
       }
       await company.save();
