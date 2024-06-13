@@ -373,13 +373,22 @@ class CompanyCTRL {
       company.working_time = body.working_time || company.working_time;
       company.working_days = body.working_days || company.working_days;
       company.overtime = body.overtime || company.overtime;
-      company.benefits = body.benefits || company.benefits;
+
       company.info.legal_representative =
         body.legal_representative || company.info.legal_representative;
       company.info.registration_capital =
         body.registration_capital || company.info.registration_capital;
       company.info.date_of_establishment =
         body.date_of_establishment || company.info.date_of_establishment;
+
+      // Special handling for benefits as an array of strings
+      if (body.benefits === "" || body.benefits === undefined) {
+        company.benefits = [];
+      } else {
+        company.benefits = body.benefits
+          .split(",")
+          .map((benefit) => String(benefit));
+      }
 
       await company.save();
 
