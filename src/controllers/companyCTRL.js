@@ -1016,10 +1016,10 @@ class CompanyCTRL {
       if (!company) {
         return handleResponse(res, 404, "error", "Company not found", null, 0);
       }
-      let Admin = company.workers.find(
+      let hrAdmin = company.workers.find(
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
-      if (!Admin)
+      if (!hrAdmin)
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
 
       const employmentRequests = await CompanyEmploymentReq.find({
