@@ -738,7 +738,7 @@ class CompanyCTRL {
       }
 
       const existingRequest = await CompanyEmploymentReq.findOne({
-        requesterId: user_.id,
+        requesterId: user._id,
         companyId: companyId,
       });
 
