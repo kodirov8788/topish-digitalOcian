@@ -828,8 +828,10 @@ class CompanyCTRL {
       }
 
       let hrAdmin = company.workers.find(
-        (worker) => worker.userId === user._id && worker.isAdmin
+        (worker) => worker.userId.toString() == user._id && worker.isAdmin
       );
+      console.log("hrAdmin: ", hrAdmin);
+      console.log("company.workers: ", company.workers);
       if (!hrAdmin && user.role !== "Admin") {
         return handleResponse(
           res,
