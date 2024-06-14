@@ -119,12 +119,9 @@ class JobsCTRL {
   }
   async getSearchTitle(req, res) {
     try {
-      // if (!req.user) {
-      //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      // }
-
       const { jobTitle, page = 1, limit = 10 } = req.query;
-      if (!jobTitle.trim()) {
+
+      if (!jobTitle || !jobTitle.trim()) {
         return handleResponse(
           res,
           200,
@@ -135,8 +132,9 @@ class JobsCTRL {
         );
       }
 
+      // Create query object with case-insensitive regex for jobTitle
       let queryObject = {
-        jobTitle: { $regex: jobTitle.trim(), $options: "i" },
+        jobTitle: { $regex: jobTitle, $options: "i" },
       };
 
       // Execute queries on both collections
@@ -151,6 +149,7 @@ class JobsCTRL {
         jobsPromise,
         quickJobsPromise,
       ]);
+
       const combinedResults = [...searchedJobs, ...searchedQuickJobs];
 
       // Total count for pagination metadata
@@ -184,7 +183,7 @@ class JobsCTRL {
         return acc;
       }, {});
 
-      let NewSearchedJob = resultJobs.map((job) => {
+      let NewSearchedJob = combinedResults.map((job) => {
         const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
         if (!user) {
           return {
@@ -225,6 +224,7 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
+
   async getAllJobs(req, res) {
     try {
       const {
@@ -384,9 +384,10 @@ class JobsCTRL {
   }
   async getEmployerPosts(req, res) {
     try {
+      const user = await Users.findOne({ _id: req.user.id });
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      } else if (req.user.role !== "Employer") {
+      } else if (user.role !== "Employer") {
         return handleResponse(
           res,
           401,
@@ -538,9 +539,10 @@ class JobsCTRL {
   }
   async updateJobs(req, res) {
     try {
+      const user = await Users.findOne({ _id: req.user.id });
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      } else if (req.user.role !== "Employer") {
+      } else if (user.role !== "Employer") {
         return handleResponse(
           res,
           401,
