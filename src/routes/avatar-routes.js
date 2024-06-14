@@ -92,7 +92,7 @@ router.post("/", upload.single("avatar"), async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-router.put("/", upload.single("avatar"), async (req, res) => {
+router.patch("/", upload.single("avatar"), async (req, res) => {
   try {
     if (!req.file) throw new Error("Please upload a file.");
 
