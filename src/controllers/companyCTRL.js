@@ -1024,7 +1024,7 @@ class CompanyCTRL {
 
       const employmentRequests = await CompanyEmploymentReq.find({
         companyId: companyId,
-      }).populate("requesterId");
+      });
 
       return handleResponse(
         res,
