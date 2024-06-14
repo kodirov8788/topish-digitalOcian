@@ -1008,7 +1008,7 @@ class CompanyCTRL {
       }
       const { id: companyId } = req.params;
       const user = await Users.findOne({ _id: req.user.id });
-      if ((user.role !== "Employer", "Admin")) {
+      if (user.role !== "Employer" && user.role !== "Admin") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
