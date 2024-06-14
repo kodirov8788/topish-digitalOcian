@@ -61,7 +61,7 @@ const updateUserAvatarUrl = async (userId, url) => {
       throw new Error(`User with ID ${userId} not found.`);
     }
 
-    console.log("Updated user avatar URL:", result);
+    // console.log("Updated user avatar URL:", result);
     return result; // This will contain the updated user document.
   } catch (error) {
     console.error("Error updating user avatar URL:", error);
