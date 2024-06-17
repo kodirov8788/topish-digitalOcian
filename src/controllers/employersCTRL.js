@@ -137,7 +137,20 @@ class EmployersCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+
       const { fullName, page = 1, limit = 10 } = req.query;
+
+      // Ensure fullName is provided
+      if (!fullName) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Full name is required",
+          null,
+          0
+        );
+      }
 
       // Remove spaces from the search query and create a regex pattern
       const sanitizedQuery = fullName.replace(/\s+/g, "");
@@ -146,22 +159,29 @@ class EmployersCTRL {
 
       const skip = (page - 1) * limit;
 
+      // Log the query parameters for debugging
+      console.log(
+        `Search Query: ${regexPattern}, Page: ${page}, Limit: ${limit}`
+      );
+
+      // Find employers with pagination
       const searchedUsers = await Users.find({
-        "employer.fullName": { $regex: regex },
+        fullName: { $regex: regex },
       })
         .skip(skip)
         .limit(parseInt(limit));
 
       const total = await Users.countDocuments({
-        "employer.fullName": { $regex: regex },
+        fullName: { $regex: regex },
       });
 
+      // Check if no employers found
       if (searchedUsers.length === 0) {
         return handleResponse(
           res,
           200,
           "success",
-          "No employers found with the provided company name",
+          "No employers found with the provided full name",
           [],
           0
         );
@@ -185,6 +205,7 @@ class EmployersCTRL {
         );
       }
     } catch (error) {
+      console.error(`Error occurred: ${error.message}`);
       return handleResponse(
         res,
         error.status || 500,
