@@ -688,6 +688,7 @@ const initSocketServer = (server) => {
         console.error("Error handling typing event:", error);
       }
     });
+
     // message to admin route
     socket.on("messageToAdmin", async ({ senderId, text }) => {
       try {
@@ -743,18 +744,20 @@ const initSocketServer = (server) => {
           socket.emit("adminChatRoom", { error: "User not found" });
           return;
         }
-
+        console.log("user", user);
         // Check if the sender (admin) is registered and valid
         const admin = await Users.findById(senderId);
         if (!admin) {
           socket.emit("adminChatRoom", { error: "Admin not found" });
           return;
         }
+        console.log("admin", admin);
         // Find the existing chat room between any admin and the user
         let chatRoom = await ChatRoom.findOne({
           isForAdmin: true,
           users: { $all: [userId] },
         });
+        console.log("chatRoom", chatRoom);
         // If no chat room exists, create a new one
         if (!chatRoom) {
           chatRoom = new ChatRoom({
@@ -779,6 +782,7 @@ const initSocketServer = (server) => {
         });
         await message.save();
 
+        console.log("message", message);
         // Emit message to user (assuming users are also connected via socket)
         // Emit message to user (assuming users are also connected via socket)
         const userSocket = onlineUsers.find((user) => user.userId === userId);
