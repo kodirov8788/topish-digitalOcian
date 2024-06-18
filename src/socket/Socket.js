@@ -16,7 +16,6 @@ const {
   handleAdminLogin,
   handleDisconnect,
 } = require("./socketHandlers");
-const { findAdminSocketId } = require("./utils/socketUtils");
 
 let io = null;
 let onlineUsers = [];

@@ -65,10 +65,7 @@ const handleSingleChatRoom = async (
       .exec();
 
     let otherUserData = {
-      fullName:
-        userRole === "JobSeeker"
-          ? otherUser.employer.fullName
-          : otherUser.jobSeeker.fullName,
+      fullName: otherUser.fullName,
       avatar: otherUser.avatar,
       _id: otherUser._id,
     };

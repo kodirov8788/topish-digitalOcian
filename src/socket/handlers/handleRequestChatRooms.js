@@ -54,16 +54,14 @@ const handleRequestChatRooms = async (socket, { userId, userRole }) => {
           seen: false,
         });
 
-        const roleNameMap = {
-          JobSeeker: "jobSeeker",
-          Employer: "employer",
-          Service: "service",
-        };
-        const roleField = roleNameMap[otherUser.role];
+        // const roleNameMap = {
+        //   JobSeeker: "jobSeeker",
+        //   Employer: "employer",
+        //   Service: "service",
+        // };
+        // const roleField = roleNameMap[otherUser.role];
         const fullName =
-          otherUser[roleField] && otherUser[roleField].fullName
-            ? otherUser[roleField].fullName
-            : "Unknown User";
+          otherUser && otherUser.fullName ? otherUser.fullName : "Unknown User";
 
         return {
           _id: chatRoom._id,

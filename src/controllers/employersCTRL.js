@@ -205,7 +205,6 @@ class EmployersCTRL {
         );
       }
     } catch (error) {
-      console.error(`Error occurred: ${error.message}`);
       return handleResponse(
         res,
         error.status || 500,

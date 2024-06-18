@@ -3,7 +3,6 @@ const Users = require("../../models/user_model");
 const Message = require("../../models/message_model");
 const Notification = require("../../utils/Notification");
 const userChatRoomMap = require("../utils/userChatRoomMap");
-const socketUserMap = require("../utils/socketUserMap");
 
 const handleSendMessage = async (
   socket,
@@ -75,16 +74,9 @@ const handleSendMessage = async (
       socket.to(recipient.socketId).emit("getMessage", messageToSend);
     }
     socket.emit("getMessage", messageToSend);
-
-    const roleNameMap = {
-      JobSeeker: "jobSeeker",
-      Employer: "employer",
-      Service: "service",
-    };
-    const roleField = roleNameMap[senderFromStorage.role];
     const fullName =
-      senderFromStorage[roleField] && senderFromStorage[roleField].fullName
-        ? senderFromStorage[roleField].fullName
+      senderFromStorage && senderFromStorage.fullName
+        ? senderFromStorage.fullName
         : "Unknown User";
 
     socket.emit("messageSentConfirmation", {
