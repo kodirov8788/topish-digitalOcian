@@ -203,8 +203,10 @@ const initSocketServer = (server) => {
       }
     });
     socket.on("sendMessage", async ({ text, recipientId, senderId }) => {
+      console.log(onlineUsers, "onlineUsers");
+
       try {
-        const sender = onlineUsers.find((user) => user.userId === senderId);
+        const sender = onlineUsers.find((user) => user.userId == senderId);
         if (!sender) {
           socket.emit("errorNotification", { error: "Sender not found" });
           return;
@@ -259,15 +261,15 @@ const initSocketServer = (server) => {
           seen: message.seen,
           chatRoomId: chatRoom._id,
           senderId: {
-            _id: sender.userId,
-            avatar: senderfromStorage.avatar,
+            _id: sender?.userId,
+            avatar: senderfromStorage?.avatar,
           },
           deleted: message.deleted,
           recipientId: message.recipientId,
         };
 
         const recipient = onlineUsers.find(
-          (user) => user.userId === recipientId
+          (user) => user.userId == recipientId
         );
 
         if (recipient && recipient.socketId) {
