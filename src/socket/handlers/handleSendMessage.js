@@ -3,7 +3,7 @@ const Users = require("../../models/user_model");
 const Message = require("../../models/message_model");
 const Notification = require("../../utils/Notification");
 const userChatRoomMap = require("../utils/userChatRoomMap");
-const { onlineUsers } = require("../Socket");
+const { onlineUsers } = require("../newSocket");
 
 const handleSendMessage = async (
   socket,
