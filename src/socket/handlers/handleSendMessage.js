@@ -11,6 +11,7 @@ const handleSendMessage = async (
   io
 ) => {
   try {
+    console.log("onlineUsers", onlineUsers);
     const sender = onlineUsers.find((user) => user.userId === senderId);
     if (!sender) {
       socket.emit("errorNotification", { error: "Sender not found" });
