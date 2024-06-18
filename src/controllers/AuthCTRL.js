@@ -1,5 +1,4 @@
 const Users = require("../models/user_model");
-const Resume = require("../models/resume_model");
 const { attachCookiesToResponse, createTokenUser } = require("../utils");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteUserAvatar } = require("./avatarCTRL");
@@ -509,18 +508,6 @@ class AuthCTRL {
       const user = await Users.findById(userID);
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
-      }
-      if (user.resumeId) {
-        const resume = await Resume.findById(user.resumeId);
-        if (resume) {
-          // Assuming avatarCTRL.deleteAvatar() and deleteCvFile() return Promises
-          // Also assuming they need user or resume info to delete specific files
-          await Promise.all([
-            deleteUserAvatar(req.user.id),
-            deleteUserCv(req.user.id),
-          ]);
-          await resume.deleteOne();
-        }
       }
 
       await user.deleteOne();

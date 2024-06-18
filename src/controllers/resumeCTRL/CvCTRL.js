@@ -1,14 +1,10 @@
-const Resume = require("../../models/resume_model"); // Update with the correct path to your model file
-const Users = require("../../models/user_model"); // Update
-const {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} = require("@aws-sdk/client-s3");
+const Users = require("../../models/user_model"); // Update with the correct path to your model file
+const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const { handleResponse } = require("../../utils/handleResponse");
 require("dotenv/config");
+
 const s3 = new S3Client({
   endpoint: process.env.AWS_S3_ENDPOINT,
   region: process.env.AWS_S3_BUCKET_REGION,
@@ -17,10 +13,12 @@ const s3 = new S3Client({
     secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
   },
 });
-upload = multer({
+
+const upload = multer({
   storage: multerS3({
     s3,
     bucket: process.env.AWS_BUCKET_NAME,
+    acl: "public-read",
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
@@ -30,44 +28,10 @@ upload = multer({
     },
     contentType: multerS3.AUTO_CONTENT_TYPE,
   }),
-  fileFilter: this.fileFilter,
-}).single("cv");
-
-class Cv {
-  async deleteUserCv(userId) {
-    const user = await Users.findById(userId);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    const resume = await Resume.findById(user.resumeId);
-    if (!resume || !resume.cv || !resume.cv.key) {
-      console.log("CV not found");
-      return true;
-    }
-
-    // Delete the CV from S3
-    const deleteParams = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: resume.cv.key,
-    };
-
-    try {
-      await s3.send(new DeleteObjectCommand(deleteParams));
-    } catch (deleteError) {
-      console.error("Error deleting CV from S3:", deleteError);
-      // Handle the error as needed, possibly re-throwing it or logging it
-    }
-
-    // Remove the CV field from the resume document
-    resume.cv = { path: null, filename: null, size: null, key: null };
-    await resume.save();
-  }
-
-  fileFilter(req, file, cb) {
+  fileFilter: (req, file, cb) => {
     const allowedMimeTypes = [
       "image/jpeg",
+      "image/jpg",
       "image/png",
       "image/gif",
       "application/pdf",
@@ -84,9 +48,41 @@ class Cv {
         )
       );
     }
-  }
+  },
+}).single("cv");
 
-  async addAndUpdateCvFile(req, res) {
+class Cv {
+  deleteUserCv = async (userId) => {
+    const user = await Users.findById(userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!user.resume || !user.resume.cv || !user.resume.cv.key) {
+      console.log("CV not found");
+      return true;
+    }
+
+    // Delete the CV from S3
+    const deleteParams = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: user.resume.cv.key,
+    };
+
+    try {
+      await s3.send(new DeleteObjectCommand(deleteParams));
+    } catch (deleteError) {
+      console.error("Error deleting CV from S3:", deleteError);
+      throw new Error("Error deleting CV from S3");
+    }
+
+    // Remove the CV field from the resume document
+    user.resume.cv = { path: null, filename: null, size: null, key: null };
+    await user.save();
+  };
+
+  addAndUpdateCvFile = async (req, res) => {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
@@ -104,7 +100,6 @@ class Cv {
           return handleResponse(res, 404, "error", "User not found", null, 0);
         }
 
-        const resume = await Resume.findById(user.resume);
         const newFileDetails = {
           path: req.file.location,
           filename: req.file.originalname,
@@ -112,11 +107,11 @@ class Cv {
           key: req.file.key,
         };
 
-        if (resume && resume.cv && resume.cv.key) {
+        if (user.resume && user.resume.cv && user.resume.cv.key) {
           // Delete the old CV from S3
           const deleteParams = {
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: resume.cv.key,
+            Key: user.resume.cv.key,
           };
 
           try {
@@ -126,34 +121,21 @@ class Cv {
           }
         }
 
-        if (!resume) {
+        if (!user.resume) {
           // If the resume doesn't exist, create a new one and link it to the user
-          const newResume = new Resume({
-            cv: newFileDetails,
-          });
-          await newResume.save();
-          user.resume = newResume._id;
-          await user.save();
-          return handleResponse(
-            res,
-            201,
-            "success",
-            "New CV added successfully",
-            newResume.cv,
-            1
-          );
+          user.resume = { cv: newFileDetails };
+        } else {
+          // Update the CV field with the new file details
+          user.resume.cv = newFileDetails;
         }
 
-        // Update the CV field with the new file details
-        resume.cv = newFileDetails;
-        await resume.save();
-
+        await user.save();
         return handleResponse(
           res,
           200,
           "success",
-          "CV updated successfully",
-          resume.cv,
+          user.resume ? "CV updated successfully" : "New CV added successfully",
+          user.resume.cv,
           1
         );
       } catch (error) {
@@ -168,9 +150,10 @@ class Cv {
         );
       }
     });
-  }
+  };
+
   // GET - Retrieve the CV file path for a user
-  async getCvFile(req, res) {
+  getCvFile = async (req, res) => {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
@@ -181,12 +164,11 @@ class Cv {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
+      if (!user.resume) {
         return handleResponse(res, 404, "error", "Resume not found", null, 0);
       }
 
-      if (!resume.cv || resume.cv.length === 0) {
+      if (!user.resume.cv || !user.resume.cv.key) {
         return handleResponse(res, 404, "error", "CV files not found", null, 0);
       }
 
@@ -195,8 +177,8 @@ class Cv {
         200,
         "success",
         "CV files retrieved successfully",
-        resume.cv,
-        resume.cv.length
+        user.resume.cv,
+        1
       );
     } catch (error) {
       console.error(error);
@@ -209,9 +191,9 @@ class Cv {
         0
       );
     }
-  }
+  };
 
-  async deleteCvFile(req, res) {
+  deleteCvFile = async (req, res) => {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
@@ -230,14 +212,14 @@ class Cv {
       console.error("Error in deleteCvFile function:", error);
       return handleResponse(
         res,
-        error.status || 500,
+        500,
         "error",
-        error.message || "Something went wrong",
+        "An error occurred while deleting the CV file",
         null,
         0
       );
     }
-  }
+  };
 }
 
 module.exports = new Cv();

@@ -1,20 +1,23 @@
-const Resume = require("../../models/resume_model"); // Update with the correct path to your model file
 const Users = require("../../models/user_model"); // Update with the correct path to your model file
 const { v4: uuidv4 } = require("uuid");
 const Joi = require("joi");
 const { handleResponse } = require("../../utils/handleResponse");
+
 const awardSchema = Joi.object({
   title: Joi.string().required(),
   issuer: Joi.string().required(),
   dateAwarded: Joi.date().iso().required(),
   description: Joi.string().allow("", null),
 });
-validateAddAward = (data) => {
+
+const validateAddAward = (data) => {
   return awardSchema.validate(data);
 };
-validateUpdateAward = (data) => {
+
+const validateUpdateAward = (data) => {
   return awardSchema.validate(data);
 };
+
 class Award {
   // POST - Create a new award entry
   async addAward(req, res) {
@@ -25,24 +28,6 @@ class Award {
       const user = await Users.findById(req.user.id);
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
-      }
-
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        const newResume = new Resume({
-          awards: [{ ...req.body, id: uuidv4() }],
-        });
-        await newResume.save();
-        user.resumeId = newResume._id;
-        await user.save();
-        return handleResponse(
-          res,
-          201,
-          "success",
-          "New resume created with awards",
-          newResume.awards,
-          newResume.awards.length
-        );
       }
 
       const { error } = validateAddAward(req.body);
@@ -57,15 +42,22 @@ class Award {
         );
       }
 
-      resume.awards.push({ ...req.body, id: uuidv4() });
-      await resume.save();
+      const newAward = { ...req.body, id: uuidv4() };
+
+      if (!user.resume) {
+        user.resume = { awards: [newAward] };
+      } else {
+        user.resume.awards.push(newAward);
+      }
+
+      await user.save();
       return handleResponse(
         res,
         201,
         "success",
         "Award added successfully",
-        resume.awards,
-        resume.awards.length
+        newAward,
+        1
       );
     } catch (error) {
       console.error(error);
@@ -79,6 +71,7 @@ class Award {
       );
     }
   }
+
   // GET - Retrieve award entries for a user
   async getAwards(req, res) {
     if (!req.user) {
@@ -91,19 +84,17 @@ class Award {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found", null, 0);
+      if (!user.resume || !user.resume.awards) {
+        return handleResponse(res, 404, "error", "Awards not found", null, 0);
       }
 
-      // Send the awards array as the response
       return handleResponse(
         res,
         200,
         "success",
         "Awards retrieved successfully",
-        resume.awards,
-        resume.awards.length
+        user.resume.awards,
+        user.resume.awards.length
       );
     } catch (error) {
       console.error(error);
@@ -117,6 +108,7 @@ class Award {
       );
     }
   }
+
   // PUT - Update a specific award entry
   async updateAward(req, res) {
     if (!req.user) {
@@ -131,12 +123,13 @@ class Award {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found", null, 0);
+      if (!user.resume || !user.resume.awards) {
+        return handleResponse(res, 404, "error", "Awards not found", null, 0);
       }
 
-      const awardIndex = resume.awards.findIndex((award) => award.id === id);
+      const awardIndex = user.resume.awards.findIndex(
+        (award) => award.id === id
+      );
       if (awardIndex === -1) {
         return handleResponse(res, 404, "error", "Award not found", null, 0);
       }
@@ -154,18 +147,18 @@ class Award {
         );
       }
 
-      resume.awards[awardIndex] = {
-        ...resume.awards[awardIndex],
+      user.resume.awards[awardIndex] = {
+        ...user.resume.awards[awardIndex],
         ...updateData,
       };
-      await resume.save();
+      await user.save();
 
       return handleResponse(
         res,
         200,
         "success",
         "Award updated successfully",
-        resume.awards[awardIndex],
+        user.resume.awards[awardIndex],
         1
       );
     } catch (error) {
@@ -180,6 +173,7 @@ class Award {
       );
     }
   }
+
   // DELETE - Remove a specific award entry
   async deleteAward(req, res) {
     if (!req.user) {
@@ -193,18 +187,19 @@ class Award {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found", null, 0);
+      if (!user.resume || !user.resume.awards) {
+        return handleResponse(res, 404, "error", "Awards not found", null, 0);
       }
 
-      const awardIndex = resume.awards.findIndex((award) => award.id === id);
+      const awardIndex = user.resume.awards.findIndex(
+        (award) => award.id === id
+      );
       if (awardIndex === -1) {
         return handleResponse(res, 404, "error", "Award not found", null, 0);
       }
 
-      resume.awards.splice(awardIndex, 1);
-      await resume.save();
+      user.resume.awards.splice(awardIndex, 1);
+      await user.save();
 
       return handleResponse(
         res,

@@ -58,7 +58,6 @@ const initSocketServer = (server) => {
         }
       }, 60000 * 10);
     });
-
     socket.on("leaveRoom", ({ userId, chatRoomId }) => {
       if (userChatRoomMap[userId] === chatRoomId) {
         // Clean up user from room and socket maps
@@ -74,7 +73,6 @@ const initSocketServer = (server) => {
         socket.emit("error", { message: "You are not in the specified room." });
       }
     });
-
     socket.on("heartbeat", (userId) => {
       const existingUser = onlineUsers.find((user) => user.userId === userId);
       if (existingUser) {
@@ -390,7 +388,6 @@ const initSocketServer = (server) => {
         });
       }
     });
-
     socket.on("adminChatRoom", async ({ userId }) => {
       try {
         // Retrieve the chat room where both the user and the admin are present
@@ -444,7 +441,6 @@ const initSocketServer = (server) => {
         });
       }
     });
-
     socket.on("deleteChatRoom", async ({ userId, chatRoomId }) => {
       if (!userId) {
         socket.emit("deleteChatRoomResponse", {
@@ -688,7 +684,6 @@ const initSocketServer = (server) => {
         console.error("Error handling typing event:", error);
       }
     });
-
     // message to admin route
     socket.on("messageToAdmin", async ({ senderId, text }) => {
       try {
@@ -744,20 +739,17 @@ const initSocketServer = (server) => {
           socket.emit("adminChatRoom", { error: "User not found" });
           return;
         }
-        console.log("user", user);
         // Check if the sender (admin) is registered and valid
         const admin = await Users.findById(senderId);
         if (!admin) {
           socket.emit("adminChatRoom", { error: "Admin not found" });
           return;
         }
-        console.log("admin", admin);
         // Find the existing chat room between any admin and the user
         let chatRoom = await ChatRoom.findOne({
           isForAdmin: true,
           users: { $all: [userId] },
         });
-        console.log("chatRoom", chatRoom);
         // If no chat room exists, create a new one
         if (!chatRoom) {
           chatRoom = new ChatRoom({
@@ -832,7 +824,6 @@ const initSocketServer = (server) => {
         });
       }
     });
-
     socket.on("disconnect", () => {
       // Use the socket ID to find the corresponding user ID and chat room
       const userId = socketUserMap[socket.id];

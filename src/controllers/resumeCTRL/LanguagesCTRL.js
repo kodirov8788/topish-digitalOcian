@@ -1,4 +1,3 @@
-const Resume = require("../../models/resume_model"); // Update with the correct path to your model file
 const Users = require("../../models/user_model"); // Update with the correct path to your model file
 const { v4: uuidv4 } = require("uuid");
 const Joi = require("joi");
@@ -33,33 +32,19 @@ class Language {
         return handleResponse(res, 404, "error", "User not found");
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
-
-      if (!resume) {
-        // If the resume doesn't exist, create a new one and link it to the user
-        const newResume = new Resume({
-          languages: [{ id, language, proficiency }],
-        });
-        await newResume.save();
-        user.resumeId = newResume._id;
-        await user.save();
-        return handleResponse(
-          res,
-          201,
-          "success",
-          "Language added",
-          newResume.languages
-        );
-      }
+      const newLanguageEntry = { id, language, proficiency };
 
       // Add the new language entry with a UUID to the user's resume
-      resume.languages.push({ id, language, proficiency });
+      if (!user.resume) {
+        user.resume = { languages: [newLanguageEntry] };
+      } else {
+        user.resume.languages.push(newLanguageEntry);
+      }
 
-      // Save the resume with the updated languages
-      await resume.save();
+      // Save the user with the updated languages
+      await user.save();
 
-      handleResponse(res, 201, "success", "Language added", resume.languages);
+      handleResponse(res, 201, "success", "Language added", newLanguageEntry);
     } catch (error) {
       handleResponse(res, 500, "error", error.message);
     }
@@ -79,10 +64,7 @@ class Language {
         return handleResponse(res, 404, "error", "User not found");
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
-
-      if (!resume || !resume.languages) {
+      if (!user.resume || !user.resume.languages) {
         return handleResponse(res, 404, "error", "Languages not found");
       }
 
@@ -91,8 +73,8 @@ class Language {
         200,
         "success",
         "Languages retrieved",
-        resume.languages,
-        resume.languages.length
+        user.resume.languages,
+        user.resume.languages.length
       );
     } catch (error) {
       handleResponse(res, 500, "error", error.message);
@@ -105,7 +87,6 @@ class Language {
       return handleResponse(res, 401, "error", "Unauthorized");
     }
     const { id } = req.params;
-    // console.log(req.params)
     const { language, proficiency } = req.body; // The updated language data
 
     try {
@@ -122,15 +103,12 @@ class Language {
         return handleResponse(res, 404, "error", "User not found");
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
-
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found");
+      if (!user.resume || !user.resume.languages) {
+        return handleResponse(res, 404, "error", "Languages not found");
       }
 
       // Find the specific language entry by UUID and update it
-      const languageEntryIndex = resume.languages.findIndex(
+      const languageEntryIndex = user.resume.languages.findIndex(
         (entry) => entry.id === id
       );
 
@@ -139,21 +117,21 @@ class Language {
       }
 
       // Update the fields of the language entry
-      resume.languages[languageEntryIndex] = {
-        ...resume.languages[languageEntryIndex],
+      user.resume.languages[languageEntryIndex] = {
+        ...user.resume.languages[languageEntryIndex],
         language,
         proficiency,
       };
 
-      // Save the updated resume
-      await resume.save();
+      // Save the updated user
+      await user.save();
       // Send the updated language entry as the response
       handleResponse(
         res,
         200,
         "success",
         "Language updated",
-        resume.languages[languageEntryIndex]
+        user.resume.languages[languageEntryIndex]
       );
     } catch (error) {
       handleResponse(res, 500, "error", error.message);
@@ -175,15 +153,12 @@ class Language {
         return handleResponse(res, 404, "error", "User not found");
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
-
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found");
+      if (!user.resume || !user.resume.languages) {
+        return handleResponse(res, 404, "error", "Languages not found");
       }
 
       // Find the specific language entry by UUID and remove it
-      const languageEntryIndex = resume.languages.findIndex(
+      const languageEntryIndex = user.resume.languages.findIndex(
         (entry) => entry.id === id
       );
       if (languageEntryIndex === -1) {
@@ -191,10 +166,10 @@ class Language {
       }
 
       // Remove the language entry from the array
-      resume.languages.splice(languageEntryIndex, 1);
+      user.resume.languages.splice(languageEntryIndex, 1);
 
-      // Save the resume with the language entry removed
-      await resume.save();
+      // Save the user with the language entry removed
+      await user.save();
       handleResponse(res, 200, "success", "Language entry deleted");
     } catch (error) {
       handleResponse(res, 500, "error", error.message);

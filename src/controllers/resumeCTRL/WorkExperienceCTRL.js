@@ -1,4 +1,3 @@
-const Resume = require("../../models/resume_model"); // Update with the correct path to your model file
 const Users = require("../../models/user_model"); // Update with the correct path to your model file
 const { v4: uuidv4 } = require("uuid");
 const Joi = require("joi");
@@ -19,6 +18,7 @@ const workExperienceSchema = Joi.object({
   employmentType: Joi.string().required(),
   location: Joi.string().required(),
 });
+
 function validateWorkExperience(data) {
   return workExperienceSchema.validate(data);
 }
@@ -44,43 +44,30 @@ class WorkExperience {
         return handleResponse(res, 404, "error", "User not found");
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
+      const newWorkExperience = { ...req.body, id: uuidv4() };
 
-      if (!resume) {
-        // If the resume doesn't exist, create a new one and link it to the user
-        const newResume = new Resume({
-          workExperience: [{ ...req.body, id: uuidv4() }], // Add a UUID to the new work experience entry
-        });
-        await newResume.save();
-        user.resumeId = newResume._id;
-        await user.save();
-        handleResponse(
-          res,
-          201,
-          "success",
-          "Work experience added",
-          newResume.workExperience
-        );
+      // Add the new work experience with a UUID to the user's resume
+      if (!user.resume) {
+        user.resume = { workExperience: [newWorkExperience] };
       } else {
-        // Add the new work experience with a UUID to the user's resume
-        resume.workExperience.push({ ...req.body, id: uuidv4() });
-
-        // Save the resume with the updated work experience
-        await resume.save();
-
-        handleResponse(
-          res,
-          201,
-          "success",
-          "Work experience added",
-          resume.workExperience
-        );
+        user.resume.workExperience.push(newWorkExperience);
       }
+
+      // Save the user with the updated work experience
+      await user.save();
+
+      handleResponse(
+        res,
+        201,
+        "success",
+        "Work experience added",
+        newWorkExperience
+      );
     } catch (error) {
       handleResponse(res, 500, "error", error.message);
     }
   }
+
   async getWorkExperience(req, res) {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized");
@@ -94,11 +81,8 @@ class WorkExperience {
         return handleResponse(res, 404, "error", "User not found");
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
-
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found");
+      if (!user.resume || !user.resume.workExperience) {
+        return handleResponse(res, 404, "error", "Work experience not found");
       }
 
       // Send the workExperience array as the response
@@ -107,26 +91,27 @@ class WorkExperience {
         200,
         "success",
         "Work experience retrieved",
-        resume.workExperience
+        user.resume.workExperience
       );
     } catch (error) {
       handleResponse(res, 500, "error", error.message);
     }
   }
+
   async updateWorkExperience(req, res) {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized");
     }
     const { id } = req.params;
     const updateData = req.body; // The updated data for the work experience
-    // console.log("updateData=> ", updateData);
+
+    // Validate the updateData using the schema
+    const { error } = workExperienceSchema.validate(updateData);
+    if (error) {
+      return handleResponse(res, 400, "error", error.details[0].message);
+    }
+
     try {
-      // Validate the updateData using the schema
-      const { error } = workExperienceSchema.validate(updateData);
-      if (error) {
-        return handleResponse(res, 400, "error", error.details[0].message);
-      }
-      // console.log("error=> ", error);
       // Find the user by ID
       const user = await Users.findById(req.user.id);
 
@@ -134,15 +119,12 @@ class WorkExperience {
         return handleResponse(res, 404, "error", "User not found");
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
-
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found");
+      if (!user.resume || !user.resume.workExperience) {
+        return handleResponse(res, 404, "error", "Work experience not found");
       }
 
       // Find the specific work experience entry by UUID and update it
-      const workExperienceEntryIndex = resume.workExperience.findIndex(
+      const workExperienceEntryIndex = user.resume.workExperience.findIndex(
         (entry) => entry.id === id
       );
       if (workExperienceEntryIndex === -1) {
@@ -155,13 +137,13 @@ class WorkExperience {
       }
 
       // Update the fields of the work experience entry
-      resume.workExperience[workExperienceEntryIndex] = {
-        ...resume.workExperience[workExperienceEntryIndex],
+      user.resume.workExperience[workExperienceEntryIndex] = {
+        ...user.resume.workExperience[workExperienceEntryIndex],
         ...updateData,
       };
 
-      // Save the updated resume
-      await resume.save();
+      // Save the updated user
+      await user.save();
 
       // Send the updated workExperience entry as the response
       handleResponse(
@@ -169,7 +151,7 @@ class WorkExperience {
         200,
         "success",
         "Work experience updated",
-        resume.workExperience[workExperienceEntryIndex]
+        user.resume.workExperience[workExperienceEntryIndex]
       );
     } catch (error) {
       handleResponse(res, 500, "error", error.message);
@@ -189,15 +171,12 @@ class WorkExperience {
         return handleResponse(res, 404, "error", "User not found");
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
-
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found");
+      if (!user.resume || !user.resume.workExperience) {
+        return handleResponse(res, 404, "error", "Work experience not found");
       }
 
       // Find the index of the specific work experience entry by UUID
-      const workExperienceEntryIndex = resume.workExperience.findIndex(
+      const workExperienceEntryIndex = user.resume.workExperience.findIndex(
         (entry) => entry.id === id
       );
       if (workExperienceEntryIndex === -1) {
@@ -210,10 +189,10 @@ class WorkExperience {
       }
 
       // Remove the work experience entry from the array
-      resume.workExperience.splice(workExperienceEntryIndex, 1);
+      user.resume.workExperience.splice(workExperienceEntryIndex, 1);
 
-      // Save the updated resume
-      await resume.save();
+      // Save the updated user
+      await user.save();
 
       // Send a success response
       handleResponse(
@@ -221,7 +200,9 @@ class WorkExperience {
         200,
         "success",
         "Work experience entry successfully deleted",
-        { message: "Work experience entry successfully deleted" }
+        {
+          message: "Work experience entry successfully deleted",
+        }
       );
     } catch (error) {
       handleResponse(res, 500, "error", error.message);

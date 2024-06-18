@@ -1,4 +1,3 @@
-const Resume = require("../../models/resume_model"); // Update with the correct path to your model file
 const Users = require("../../models/user_model"); // Ensure this is the correct path to your models
 const { v4: uuidv4 } = require("uuid");
 const Joi = require("joi"); // Import Joi for validation
@@ -10,9 +9,9 @@ const addEducationExperienceSchema = Joi.object({
   fieldOfStudy: Joi.string().required(),
   startDate: Joi.date().required(),
   endDate: Joi.when("graduated", {
-    is: false, // Only require endDate when current is false
+    is: false, // Only require endDate when graduated is false
     then: Joi.date().iso().required(),
-    otherwise: Joi.optional(), // Make endDate optional when current is true
+    otherwise: Joi.optional(), // Make endDate optional when graduated is true
   }),
   graduated: Joi.boolean().required(),
   description: Joi.string().allow("", null), // Make "description" optional
@@ -42,33 +41,22 @@ class Education {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        const newResume = new Resume({
-          education: [{ ...req.body, id: uuidv4() }], // Add a UUID to the new education experience entry
-        });
-        await newResume.save();
-        user.resumeId = newResume._id;
-        await user.save();
-        return handleResponse(
-          res,
-          201,
-          "success",
-          "New education experience added",
-          newResume.education,
-          newResume.education.length
-        );
+      const newEducationExperience = { ...req.body, id: uuidv4() };
+
+      if (!user.resume) {
+        user.resume = { education: [newEducationExperience] };
+      } else {
+        user.resume.education.push(newEducationExperience);
       }
 
-      resume.education.push({ ...req.body, id: uuidv4() }); // Add the new education experience
-      await resume.save();
+      await user.save();
       return handleResponse(
         res,
         201,
         "success",
         "Education experience added successfully",
-        resume.education,
-        resume.education.length
+        newEducationExperience,
+        1
       );
     } catch (error) {
       console.error(error);
@@ -95,9 +83,15 @@ class Education {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found", null, 0);
+      if (!user.resume || !user.resume.education) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "Education experiences not found",
+          null,
+          0
+        );
       }
 
       // Send the education array as the response
@@ -106,8 +100,8 @@ class Education {
         200,
         "success",
         "Education experience retrieved successfully",
-        resume.education,
-        resume.education.length
+        user.resume.education,
+        user.resume.education.length
       );
     } catch (error) {
       console.error(error);
@@ -122,6 +116,7 @@ class Education {
     }
   }
 
+  // PUT - Update a specific education experience entry
   async updateEducationExperience(req, res) {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
@@ -148,12 +143,18 @@ class Education {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found", null, 0);
+      if (!user.resume || !user.resume.education) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "Education experiences not found",
+          null,
+          0
+        );
       }
 
-      const educationExperienceEntryIndex = resume.education.findIndex(
+      const educationExperienceEntryIndex = user.resume.education.findIndex(
         (entry) => entry.id === id
       );
       if (educationExperienceEntryIndex === -1) {
@@ -167,18 +168,18 @@ class Education {
         );
       }
 
-      resume.education[educationExperienceEntryIndex] = {
-        ...resume.education[educationExperienceEntryIndex],
+      user.resume.education[educationExperienceEntryIndex] = {
+        ...user.resume.education[educationExperienceEntryIndex],
         ...updateData,
       };
-      await resume.save();
+      await user.save();
 
       return handleResponse(
         res,
         200,
         "success",
         "Education experience updated successfully",
-        resume.education[educationExperienceEntryIndex],
+        user.resume.education[educationExperienceEntryIndex],
         1
       );
     } catch (error) {
@@ -193,6 +194,7 @@ class Education {
       );
     }
   }
+
   // DELETE - Remove a specific education experience entry by UUID
   async deleteEducationExperience(req, res) {
     if (!req.user) {
@@ -207,12 +209,18 @@ class Education {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found", null, 0);
+      if (!user.resume || !user.resume.education) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "Education experiences not found",
+          null,
+          0
+        );
       }
 
-      const educationExperienceEntryIndex = resume.education.findIndex(
+      const educationExperienceEntryIndex = user.resume.education.findIndex(
         (entry) => entry.id === id
       );
       if (educationExperienceEntryIndex === -1) {
@@ -226,8 +234,8 @@ class Education {
         );
       }
 
-      resume.education.splice(educationExperienceEntryIndex, 1);
-      await resume.save();
+      user.resume.education.splice(educationExperienceEntryIndex, 1);
+      await user.save();
 
       return handleResponse(
         res,

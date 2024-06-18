@@ -1,8 +1,8 @@
-const Resume = require("../../models/resume_model"); // Update with the correct path to your model file
 const Users = require("../../models/user_model"); // Update with the correct path to your model file
 const { v4: uuidv4 } = require("uuid");
 const Joi = require("joi");
 const { handleResponse } = require("../../utils/handleResponse");
+
 // Define a Joi schema for validating the certificate data
 const addCertificateSchema = Joi.object({
   title: Joi.string().required(),
@@ -19,13 +19,14 @@ const addCertificateSchema = Joi.object({
 });
 
 class Certificates {
+  // POST - Create a new certificate entry
   async addCertificate(req, res) {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
-    // Validate the request body against the certificate schema
-    const { error, value } = addCertificateSchema.validate(req.body); // Changed to validateAddCertificate
 
+    // Validate the request body against the certificate schema
+    const { error, value } = addCertificateSchema.validate(req.body);
     if (error) {
       return handleResponse(
         res,
@@ -43,33 +44,22 @@ class Certificates {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        const newResume = new Resume({
-          certificates: [{ ...value, id: uuidv4() }],
-        });
-        await newResume.save();
-        user.resumeId = newResume._id;
-        await user.save();
-        return handleResponse(
-          res,
-          201,
-          "success",
-          "New resume created with certificate",
-          newResume.certificates,
-          newResume.certificates.length
-        );
+      const newCertificate = { ...value, id: uuidv4() };
+
+      if (!user.resume) {
+        user.resume = { certificates: [newCertificate] };
+      } else {
+        user.resume.certificates.push(newCertificate);
       }
 
-      resume.certificates.push({ ...value, id: uuidv4() });
-      await resume.save();
+      await user.save();
       return handleResponse(
         res,
         201,
         "success",
         "Certificate added successfully",
-        resume.certificates,
-        resume.certificates.length
+        newCertificate,
+        1
       );
     } catch (error) {
       console.error(error);
@@ -87,41 +77,57 @@ class Certificates {
   // GET - Retrieve certificate entries for a user
   async getCertificates(req, res) {
     if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
 
     try {
-      // Find the user by ID
       const user = await Users.findById(req.user.id);
-
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      // Find the resume by resumeId
-      const resume = await Resume.findById(user.resumeId);
-
-      if (!resume) {
-        return res.status(404).json({ error: "Resume not found" });
+      if (!user.resume || !user.resume.certificates) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "Certificates not found",
+          null,
+          0
+        );
       }
 
-      // Send the certificates array as the response
-      res.status(200).json(resume.certificates);
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Certificates retrieved successfully",
+        user.resume.certificates,
+        user.resume.certificates.length
+      );
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error(error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "An error occurred while retrieving certificates",
+        null,
+        0
+      );
     }
   }
 
+  // PUT - Update a specific certificate entry
   async updateCertificate(req, res) {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
     const { id } = req.params;
-    const updateData = req.body; // The updated data for the certificate
+    const updateData = req.body;
 
     // Validate the request body against the certificate schema
-    const { error, value } = addCertificateSchema.validate(updateData); // Changed to validateUpdateCertificate
-
+    const { error, value } = addCertificateSchema.validate(updateData);
     if (error) {
       return handleResponse(
         res,
@@ -139,12 +145,18 @@ class Certificates {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found", null, 0);
+      if (!user.resume || !user.resume.certificates) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "Certificates not found",
+          null,
+          0
+        );
       }
 
-      const certificateIndex = resume.certificates.findIndex(
+      const certificateIndex = user.resume.certificates.findIndex(
         (certificate) => certificate.id === id
       );
       if (certificateIndex === -1) {
@@ -158,18 +170,18 @@ class Certificates {
         );
       }
 
-      resume.certificates[certificateIndex] = {
-        ...resume.certificates[certificateIndex],
+      user.resume.certificates[certificateIndex] = {
+        ...user.resume.certificates[certificateIndex],
         ...value,
       };
-      await resume.save();
+      await user.save();
 
       return handleResponse(
         res,
         200,
         "success",
         "Certificate updated successfully",
-        resume.certificates[certificateIndex],
+        user.resume.certificates[certificateIndex],
         1
       );
     } catch (error) {
@@ -198,12 +210,18 @@ class Certificates {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const resume = await Resume.findById(user.resumeId);
-      if (!resume) {
-        return handleResponse(res, 404, "error", "Resume not found", null, 0);
+      if (!user.resume || !user.resume.certificates) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "Certificates not found",
+          null,
+          0
+        );
       }
 
-      const certificateIndex = resume.certificates.findIndex(
+      const certificateIndex = user.resume.certificates.findIndex(
         (certificate) => certificate.id === id
       );
       if (certificateIndex === -1) {
@@ -217,8 +235,8 @@ class Certificates {
         );
       }
 
-      resume.certificates.splice(certificateIndex, 1);
-      await resume.save();
+      user.resume.certificates.splice(certificateIndex, 1);
+      await user.save();
 
       return handleResponse(
         res,
