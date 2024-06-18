@@ -94,7 +94,7 @@ const initSocketServer = (server) => {
 
       io.emit("getOnlineUsers", onlineUsers);
     });
-    socket.on("requestChatRooms", async ({ userId, userRole }) => {
+    socket.on("requestChatRooms", async ({ userId }) => {
       try {
         if (!userId) {
           socket.emit("chatRoomsResponse", {
@@ -310,14 +310,12 @@ const initSocketServer = (server) => {
         });
       }
     });
-    socket.on("singleChatRoom", async ({ userId, chatRoomId, userRole }) => {
+    socket.on("singleChatRoom", async ({ userId, chatRoomId }) => {
       try {
-        // Ensure the user is part of the chat room
         const chatRoom = await ChatRoom.findOne({
           _id: chatRoomId,
           users: userId,
         }).populate("users", "avatar"); // Assuming 'users' is an array of user IDs
-
         if (!chatRoom) {
           socket.emit("chatRoomResponse", {
             status: 404,
@@ -326,7 +324,6 @@ const initSocketServer = (server) => {
           });
           return;
         }
-
         // Find the other user in the chat room
         const otherUserId = chatRoom.users.find(
           (user) => user._id.toString() !== userId
@@ -339,17 +336,9 @@ const initSocketServer = (server) => {
           });
           return;
         }
-        let otherUser;
-        // Fetch other user's details based on the role
-        if (userRole === "JobSeeker") {
-          otherUser = await Users.findById(otherUserId)
-            .select("avatar employer.fullName")
-            .exec();
-        } else {
-          otherUser = await Users.findById(otherUserId)
-            .select("avatar jobSeeker.fullName")
-            .exec();
-        }
+        let otherUser = await Users.findById(otherUserId)
+          .select("avatar fullName")
+          .exec();
 
         if (!otherUser) {
           socket.emit("chatRoomResponse", {
