@@ -131,7 +131,7 @@ const EmployersEndpoint = {
         {
           in: "query",
           name: "fullName",
-          required: true,
+          required: false,
           schema: {
             type: "string",
           },

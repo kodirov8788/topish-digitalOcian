@@ -58,9 +58,12 @@ const upload = multer({
 class GalleryCTRL {
   async createGalleryPost(req, res) {
     try {
+
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      } else if (req.user.role !== "JobSeeker") {
+      }
+      const user = await Users.findById(req.user.id).select("-password");
+      if (user.role !== "JobSeeker") {
         return handleResponse(
           res,
           401,
@@ -70,10 +73,6 @@ class GalleryCTRL {
           0
         );
       }
-
-      const UserId = req.user.id;
-      const user = await Users.findOne({ _id: UserId });
-
       if (!user || !user.jobSeeker) {
         return handleResponse(
           res,
@@ -208,7 +207,10 @@ class GalleryCTRL {
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      } else if (req.user.role !== "JobSeeker") {
+      }
+
+      const user = await Users.findById(req.user.id).select("-password");
+      if (user.role !== "JobSeeker") {
         return handleResponse(
           res,
           401,
@@ -296,9 +298,9 @@ class GalleryCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-
+      const user = await Users.findById(req.user.id).select("-password");
       // Check if the user is an Employer
-      if (req.user.role !== "Employer") {
+      if (user.role !== "Employer") {
         return handleResponse(
           res,
           403,

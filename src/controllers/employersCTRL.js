@@ -140,40 +140,21 @@ class EmployersCTRL {
 
       const { fullName, page = 1, limit = 10 } = req.query;
 
-      // Ensure fullName is provided
-      if (!fullName) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "Full name is required",
-          null,
-          0
-        );
-      }
-
-      // Remove spaces from the search query and create a regex pattern
-      const sanitizedQuery = fullName.replace(/\s+/g, "");
-      const regexPattern = sanitizedQuery.split("").join(".*");
-      const regex = new RegExp(regexPattern, "i");
-
       const skip = (page - 1) * limit;
+      let searchCriteria = { role: "Employer" };
 
-      // Log the query parameters for debugging
-      console.log(
-        `Search Query: ${regexPattern}, Page: ${page}, Limit: ${limit}`
-      );
-
-      // Find employers with pagination
-      const searchedUsers = await Users.find({
-        fullName: { $regex: regex },
-      })
+      if (fullName) {
+        // Remove spaces from the search query and create a regex pattern
+        const sanitizedQuery = fullName.replace(/\s+/g, "");
+        const regexPattern = sanitizedQuery.split("").join(".*");
+        const regex = new RegExp(regexPattern, "i");
+        searchCriteria.fullName = { $regex: regex };
+      }
+      const searchedUsers = await Users.find(searchCriteria)
         .skip(skip)
         .limit(parseInt(limit));
 
-      const total = await Users.countDocuments({
-        fullName: { $regex: regex },
-      });
+      const total = await Users.countDocuments(searchCriteria);
 
       // Check if no employers found
       if (searchedUsers.length === 0) {
@@ -181,7 +162,7 @@ class EmployersCTRL {
           res,
           200,
           "success",
-          "No employers found with the provided full name",
+          "No employers found with the provided criteria",
           [],
           0
         );
@@ -215,6 +196,7 @@ class EmployersCTRL {
       );
     }
   }
+
 }
 
 module.exports = new EmployersCTRL();

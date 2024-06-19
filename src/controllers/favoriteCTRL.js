@@ -8,10 +8,6 @@ class FavoriteCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      // if (req.user.role === "JobSeeker") {
-      //     return handleResponse(res, 400, 'error', "JobSeeker can't add to favorites", null, 0);
-      // }
-
       const currentUser = await Users.findById(req.user.id);
 
       const favoriteId = req.params.favoriteId;
@@ -121,7 +117,8 @@ class FavoriteCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       // Assuming you want to restrict this action to a specific role, ensure this matches your application logic
-      if (req.user.role === "JobSeeker") {
+      const user = await Users.findById(req.user.id).select("-password");
+      if (user.role === "JobSeeker") {
         return handleResponse(
           res,
           400,

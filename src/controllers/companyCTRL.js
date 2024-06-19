@@ -912,7 +912,7 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findById(req.user.id).select("-password");
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
@@ -931,7 +931,7 @@ class CompanyCTRL {
       let hrAdmin = company.workers.find(
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
-      if (!hrAdmin && req.user.role !== "Admin") {
+      if (!hrAdmin && user.role !== "Admin") {
         return handleResponse(
           res,
           401,

@@ -4,10 +4,17 @@ const { handleResponse } = require("../utils/handleResponse");
 
 class ReportUserCTRL {
   async makeReport(req, res) {
+
+
+    if (!req.user) {
+      return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+    }
+
+    const user = await Users.findById(req.user.id).select("-password");
     if (
-      !req.user.role === "Employer" ||
-      !req.user.role === "JobSeeker" ||
-      !req.user.role === "Service"
+      !user.role === "Employer" ||
+      !user.role === "JobSeeker" ||
+      !user.role === "Service"
     ) {
       return handleResponse(
         res,

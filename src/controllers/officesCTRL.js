@@ -8,11 +8,10 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      // console.log("req.body", req.body)
-      // console.log("req.files ctrl: ", req.files)
+      const user = await Users.findById(req.user.id).select("-password");
       const coins = req.user.coins;
       const allowedRoles = ["Service", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -37,15 +36,12 @@ class OfficesCTRL {
       if (coins < 5) {
         return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
       }
-
-      const userId = req.user.id;
-      const user = await Users.findOne({ _id: userId });
       if (!user) {
         return handleResponse(res, 400, "error", "User not found.", null, 0);
       }
       const officeDetails = {
         ...req.body,
-        createdBy: user.id,
+        createdBy: user._id,
       };
       // console.log(req.body)
       if (req.files && req.files.length > 0) {
@@ -53,7 +49,7 @@ class OfficesCTRL {
         officeDetails.images = req.files;
       }
       const Office = await Offices.create(officeDetails);
-      await Users.findByIdAndUpdate(userId, { $inc: { coins: -1 } });
+      await Users.findByIdAndUpdate(user._id, { $inc: { coins: -1 } });
 
       return handleResponse(
         res,
@@ -81,8 +77,9 @@ class OfficesCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       // Check if the user role is Employer
+      const user = await Users.findById(req.user.id).select("-password");
       const allowedRoles = ["Service", "Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -157,11 +154,11 @@ class OfficesCTRL {
       if (recent) {
         recent === true
           ? (queryObject.createdAt = {
-              $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-            })
+            $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+          })
           : (queryObject.createdAt = {
-              $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-            });
+            $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+          });
       }
 
       if (title) {
@@ -234,9 +231,9 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-
+      const user = await Users.findById(req.user.id).select("-password");
       const allowedRoles = ["Service", "Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,
@@ -345,8 +342,9 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+      const user = await Users.findById(req.user.id).select("-password");
       const allowedRoles = ["Service", "Admin", "Employer"];
-      if (!allowedRoles.includes(req.user.role)) {
+      if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
           401,

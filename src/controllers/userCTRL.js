@@ -10,9 +10,9 @@ class UserCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-
+      const user = await Users.findById(req.user.id).select("-password");
       // Determine the target role for searching based on the requester's role
-      let targetRole = req.user.role === "Employer" ? "JobSeeker" : "Employer";
+      let targetRole = user.role === "Employer" ? "JobSeeker" : "Employer";
 
       let query = { role: targetRole }; // Filter users based on the target role
 
@@ -211,11 +211,13 @@ class UserCTRL {
   }
   async getRecommendedUsers(req, res) {
     try {
+
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+      const user = await Users.findById(req.user.id).select("-password");
 
-      if (req.user.role !== "Employer") {
+      if (user.role !== "Employer") {
         // Fixed the role check logic
         return handleResponse(
           res,

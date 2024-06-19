@@ -75,7 +75,10 @@ class JobsCTRL {
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      } else if (req.user.role !== "Employer") {
+      }
+      const user = await Users.findById(req.user.id).select("-password");
+
+      if (user.role !== "Employer") {
         return handleResponse(
           res,
           401,
