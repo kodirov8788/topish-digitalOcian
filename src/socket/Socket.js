@@ -90,6 +90,7 @@ const initSocketServer = (server) => {
         (user) => (new Date() - user.lastActive) / 60000 < timeoutMinutes
       );
 
+      // console.log(onlineUsers, "onlineUsers");
       io.emit("getOnlineUsers", onlineUsers);
     });
     socket.on("requestChatRooms", async ({ userId }) => {
@@ -167,14 +168,14 @@ const initSocketServer = (server) => {
               },
               lastMessage: lastMessage
                 ? {
-                    text: lastMessage.text,
-                    timestamp: lastMessage.timestamp,
-                    senderId: lastMessage.senderId._id,
-                    recipientId:
-                      lastMessage.senderId._id.toString() === userId.toString()
-                        ? otherUserId
-                        : userId,
-                  }
+                  text: lastMessage.text,
+                  timestamp: lastMessage.timestamp,
+                  senderId: lastMessage.senderId._id,
+                  recipientId:
+                    lastMessage.senderId._id.toString() === userId.toString()
+                      ? otherUserId
+                      : userId,
+                }
                 : null,
               unreadMessagesCount,
             };
@@ -201,8 +202,6 @@ const initSocketServer = (server) => {
       }
     });
     socket.on("sendMessage", async ({ text, recipientId, senderId }) => {
-      console.log(onlineUsers, "onlineUsers");
-
       try {
         const sender = onlineUsers.find((user) => user.userId == senderId);
         if (!sender) {
@@ -231,17 +230,10 @@ const initSocketServer = (server) => {
           chatRoom: chatRoom._id,
         });
         const senderChatRoom = userChatRoomMap[senderId];
-
         const recipientChatRoom = userChatRoomMap[recipientId];
 
-        if (
-          senderChatRoom &&
-          recipientChatRoom &&
-          senderChatRoom === recipientChatRoom
-        ) {
-          // If both are in the same room, set the message as read
+        if (senderChatRoom && recipientChatRoom && senderChatRoom === recipientChatRoom) {
           message.read = true;
-          // Emit an event to the sender to notify that the message was read
           io.to(senderChatRoom).emit("messageRead", {
             messageId: message._id,
             chatRoomId: senderChatRoom,
@@ -266,20 +258,12 @@ const initSocketServer = (server) => {
           recipientId: message.recipientId,
         };
 
-        const recipient = onlineUsers.find(
-          (user) => user.userId == recipientId
-        );
+        const recipient = onlineUsers.find((user) => user.userId == recipientId);
 
         if (recipient && recipient.socketId) {
           socket.to(recipient.socketId).emit("getMessage", messageToSend);
         }
         socket.emit("getMessage", messageToSend);
-        // const roleNameMap = {
-        //   JobSeeker: "jobSeeker",
-        //   Employer: "employer",
-        //   Service: "service",
-        // };
-        // const roleField = roleNameMap[senderfromStorage.role];
         const fullName =
           senderfromStorage && senderfromStorage.fullName
             ? senderfromStorage.fullName

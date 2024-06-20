@@ -29,7 +29,7 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(
       new Error(
-        "Invalid file format. Only images (jpeg, jpg, png) are allowed."
+        "Invalid file format. Only images ( png) are allowed."
       ),
       false
     );
