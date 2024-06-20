@@ -2,6 +2,7 @@ const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const Jobs = require("../models/job_model");
 const Quickjobs = require("../models/quickjob_model");
+const Company = require("../models/company_model");
 
 class EmployersCTRL {
   // it shows all employers
@@ -61,24 +62,82 @@ class EmployersCTRL {
       }
       // Extract the user ID from the request parameters
       const userId = req.params.id;
+
       // Find the user by ID
-      const user = await Users.findById(userId); // Assuming you want to populate the 'resumeId' as in the previous function
+      const user = await Users.findById(userId).select("-password");
 
       // Check if the user was found
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      // User found, return the user data
-      return handleResponse(
-        res,
-        200,
-        "success",
-        "User retrieved successfully",
-        user,
-        1
-      );
+      if (user.role === "Employer") {
+        const company = await Company.findOne({ "workers.userId": userId });
+
+        if (company) {
+          const newWorkers = await Promise.all(
+            company.workers.map(async (workerData) => {
+              const worker = await Users.findById(workerData.userId);
+              if (worker) {
+                return {
+                  avatar: worker.avatar,
+                  phoneNumber: worker.phoneNumber,
+                  fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
+                  isAdmin: workerData.isAdmin,
+                  userId: worker.id,
+                };
+              }
+              return null; // Return null if user is not found
+            })
+          );
+
+          const filteredWorkers = newWorkers.filter(
+            (worker) => worker !== null
+          ); // Filter out any null values
+
+          const newUser = {
+            ...user.toObject(),
+            company: {
+              ...company.toObject(),
+              workers: filteredWorkers,
+            },
+          };
+
+          return handleResponse(
+            res,
+            200,
+            "success",
+            "User retrieved successfully",
+            newUser,
+            1
+          );
+        }
+
+        const newUser = {
+          ...user.toObject(),
+          company: null,
+        };
+
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "User retrieved successfully",
+          newUser,
+          1
+        );
+      } else {
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "User retrieved successfully",
+          user,
+          1
+        );
+      }
     } catch (error) {
+      console.error("Error in getEmployer function:", error);
       return handleResponse(
         res,
         500,
@@ -89,6 +148,7 @@ class EmployersCTRL {
       );
     }
   }
+
   async getJobMaker(req, res) {
     try {
       // Check if user is authenticated
