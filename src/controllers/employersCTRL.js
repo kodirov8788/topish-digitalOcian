@@ -70,52 +70,35 @@ class EmployersCTRL {
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
+      const company = await Company.findOne({ "workers.userId": userId });
 
-      if (user.role === "Employer") {
-        const company = await Company.findOne({ "workers.userId": userId });
+      if (company) {
+        const newWorkers = await Promise.all(
+          company.workers.map(async (workerData) => {
+            const worker = await Users.findById(workerData.userId);
+            if (worker) {
+              return {
+                avatar: worker.avatar,
+                phoneNumber: worker.phoneNumber,
+                fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
+                isAdmin: workerData.isAdmin,
+                userId: worker.id,
+              };
+            }
+            return null; // Return null if user is not found
+          })
+        );
 
-        if (company) {
-          const newWorkers = await Promise.all(
-            company.workers.map(async (workerData) => {
-              const worker = await Users.findById(workerData.userId);
-              if (worker) {
-                return {
-                  avatar: worker.avatar,
-                  phoneNumber: worker.phoneNumber,
-                  fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
-                  isAdmin: workerData.isAdmin,
-                  userId: worker.id,
-                };
-              }
-              return null; // Return null if user is not found
-            })
-          );
-
-          const filteredWorkers = newWorkers.filter(
-            (worker) => worker !== null
-          ); // Filter out any null values
-
-          const newUser = {
-            ...user.toObject(),
-            company: {
-              ...company.toObject(),
-              workers: filteredWorkers,
-            },
-          };
-
-          return handleResponse(
-            res,
-            200,
-            "success",
-            "User retrieved successfully",
-            newUser,
-            1
-          );
-        }
+        const filteredWorkers = newWorkers.filter(
+          (worker) => worker !== null
+        ); // Filter out any null values
 
         const newUser = {
           ...user.toObject(),
-          company: null,
+          company: {
+            ...company.toObject(),
+            workers: filteredWorkers,
+          },
         };
 
         return handleResponse(
@@ -126,16 +109,22 @@ class EmployersCTRL {
           newUser,
           1
         );
-      } else {
-        return handleResponse(
-          res,
-          200,
-          "success",
-          "User retrieved successfully",
-          user,
-          1
-        );
       }
+
+      const newUser = {
+        ...user.toObject(),
+        company: null,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "User retrieved successfully",
+        newUser,
+        1
+      );
+
     } catch (error) {
       console.error("Error in getEmployer function:", error);
       return handleResponse(

@@ -4,12 +4,9 @@ const { handleResponse } = require("../utils/handleResponse");
 
 class ReportUserCTRL {
   async makeReport(req, res) {
-
-
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
-
     const user = await Users.findById(req.user.id).select("-password");
     if (
       !user.role === "Employer" ||
@@ -33,7 +30,8 @@ class ReportUserCTRL {
         jobPostId,
         details,
       };
-
+      console.log('req.user: ', req.user, 'req.body: ', req.body)
+      console.log(first)
       // validate the report data
       if (!reportedUserId || !reportReason) {
         return handleResponse(
@@ -46,8 +44,10 @@ class ReportUserCTRL {
         );
       }
 
+
       // add the reporter id
       reportData.reportedBy = req.user.id;
+
 
       // ReportUserModel is the model for the report
       const report = new ReportUserModel({
@@ -56,9 +56,11 @@ class ReportUserCTRL {
 
       // create a new report
       const user = await Users.findById(reportedUserId);
+      console.log("user: ", user)
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
+
       // save report
       const newReport = await report.save();
       return handleResponse(
