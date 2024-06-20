@@ -32,6 +32,7 @@ const { OfficesEndpoint } = require('../swaggerDocs/officesDocs');
 const { AdminEndpoint } = require('../swaggerDocs/AdminDocs');
 const { CompanyEndpoint } = require('../swaggerDocs/companyDocs');
 const { reportUserEndPoint } = require('../swaggerDocs/reportUserDocs');
+const { tournamentsEndpoint } = require('../swaggerDocs/tournamentsDocs');
 
 
 const SecuritySchemes = {
@@ -100,7 +101,8 @@ const swaggerOptions = {
             ...OfficesEndpoint,
             ...AdminEndpoint,
             ...CompanyEndpoint,
-            ...reportUserEndPoint
+            ...reportUserEndPoint,
+            ...tournamentsEndpoint
         },
     },
     apis: ["./routes/*.js"],
