@@ -129,8 +129,6 @@ const reportUserEndPoint = {
         },
       },
     },
-  },
-  "/reports": {
     get: {
       summary: "Get all reports",
       tags: ["reportUser"],
@@ -234,8 +232,9 @@ const reportUserEndPoint = {
       },
     },
   },
+
   "/report/{reportId}": {
-    put: {
+    patch: {
       summary: "Change the status of the report to resolved",
       tags: ["reportUser"],
       description: "Change the status of the report to resolved",
@@ -250,6 +249,27 @@ const reportUserEndPoint = {
           },
         },
       ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                status: {
+                  type: "string",
+                  required: true,
+                  example: "resolved",
+                },
+
+              },
+              required: [
+                "status"
+              ],
+            },
+          },
+        },
+      },
       responses: {
         200: {
           description: "Report resolved successfully.",

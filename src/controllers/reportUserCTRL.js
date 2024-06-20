@@ -82,6 +82,7 @@ class ReportUserCTRL {
   }
   // write get request to get all reports and add filter open and resolved
   async getReports(req, res) {
+    console.log(req.query, "query")
     try {
       const { status } = req.query;
       // if (req.user.role !== 'admin') {
