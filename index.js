@@ -68,7 +68,7 @@ app.use(express.static("public"));
 // ----------------- Rate Limiter and IP Blocking -----------------
 //routes
 app.get("/", (req, res) => {
-  res.send("<h1>Jobs API 10</h1>");
+  res.send("<h1>Jobs API 11</h1>");
 });
 // ----------------- Rate Limiter and IP Blocking -----------------
 let blockedIPs = {};
