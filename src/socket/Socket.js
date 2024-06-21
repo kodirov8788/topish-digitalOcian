@@ -243,7 +243,7 @@ const initSocketServer = (server) => {
         }
         await message.save();
 
-        const senderfromStorage = await Users.findById(senderId);
+        const senderFromStorage = await Users.findById(senderId);
         const messageToSend = {
           _id: message._id,
           text: message.text,
@@ -252,7 +252,7 @@ const initSocketServer = (server) => {
           chatRoomId: chatRoom._id,
           senderId: {
             _id: sender?.userId,
-            avatar: senderfromStorage?.avatar,
+            avatar: senderFromStorage?.avatar,
           },
           deleted: message.deleted,
           recipientId: message.recipientId,
@@ -265,8 +265,8 @@ const initSocketServer = (server) => {
         }
         // socket.emit("getMessage", messageToSend);
         const fullName =
-          senderfromStorage && senderfromStorage.fullName
-            ? senderfromStorage.fullName
+          senderFromStorage && senderFromStorage.fullName
+            ? senderFromStorage.fullName
             : "Unknown User";
         socket.emit("messageSentConfirmation", {
           success: true,
@@ -277,7 +277,7 @@ const initSocketServer = (server) => {
           messageId: message._id.toString(),
           timestamp: new Date().toISOString(),
           senderId: sender.userId,
-          senderAvatar: senderfromStorage.avatar,
+          senderAvatar: senderFromStorage.avatar,
           recipientId: message.recipientId.toString(),
         };
         Notification(
