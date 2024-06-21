@@ -30,8 +30,6 @@ class ReportUserCTRL {
         jobPostId,
         details,
       };
-      console.log('req.user: ', req.user, 'req.body: ', req.body)
-      console.log(first)
       // validate the report data
       if (!reportedUserId || !reportReason) {
         return handleResponse(
@@ -43,24 +41,18 @@ class ReportUserCTRL {
           0
         );
       }
-
-
       // add the reporter id
       reportData.reportedBy = req.user.id;
-
-
       // ReportUserModel is the model for the report
       const report = new ReportUserModel({
         ...reportData,
       });
-
       // create a new report
       const user = await Users.findById(reportedUserId);
       console.log("user: ", user)
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
-
       // save report
       const newReport = await report.save();
       return handleResponse(

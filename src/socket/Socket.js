@@ -85,11 +85,11 @@ const initSocketServer = (server) => {
         });
       }
 
+      // console.count("Heartbeat");
       const timeoutMinutes = 60;
       onlineUsers = onlineUsers.filter(
         (user) => (new Date() - user.lastActive) / 60000 < timeoutMinutes
       );
-
       // console.log(onlineUsers, "onlineUsers");
       io.emit("getOnlineUsers", onlineUsers);
     });
@@ -263,7 +263,7 @@ const initSocketServer = (server) => {
         if (recipient && recipient.socketId) {
           socket.to(recipient.socketId).emit("getMessage", messageToSend);
         }
-        socket.emit("getMessage", messageToSend);
+        // socket.emit("getMessage", messageToSend);
         const fullName =
           senderfromStorage && senderfromStorage.fullName
             ? senderfromStorage.fullName
@@ -758,7 +758,7 @@ const initSocketServer = (server) => {
         });
         await message.save();
 
-        console.log("message", message);
+        // console.log("message", message);
         // Emit message to user (assuming users are also connected via socket)
         // Emit message to user (assuming users are also connected via socket)
         const userSocket = onlineUsers.find((user) => user.userId === userId);
