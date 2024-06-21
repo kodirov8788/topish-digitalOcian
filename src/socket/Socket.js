@@ -202,6 +202,9 @@ const initSocketServer = (server) => {
       }
     });
     socket.on("sendMessage", async ({ text, recipientId, senderId }) => {
+      console.count("sendMessage event received");
+      console.log("sendMessage payload:", { text, recipientId, senderId });
+
       try {
         const sender = onlineUsers.find((user) => user.userId == senderId);
         if (!sender) {
@@ -261,9 +264,13 @@ const initSocketServer = (server) => {
         const recipient = onlineUsers.find((user) => user.userId == recipientId);
 
         if (recipient && recipient.socketId) {
-          socket.to(recipient.socketId).emit("getMessage", messageToSend);
+          console.count("getMessage event emitted to recipient");
+          io.to(recipient.socketId).emit("getMessage", messageToSend);
+        } else {
+          console.count("getMessage event emitted to sender (recipient not online)");
+          socket.emit("getMessage", messageToSend); // Emit to sender
         }
-        // socket.emit("getMessage", messageToSend);
+
         const fullName =
           senderFromStorage && senderFromStorage.fullName
             ? senderFromStorage.fullName
@@ -292,6 +299,7 @@ const initSocketServer = (server) => {
         });
       }
     });
+
     socket.on("singleChatRoom", async ({ userId, chatRoomId }) => {
       try {
         const chatRoom = await ChatRoom.findOne({
