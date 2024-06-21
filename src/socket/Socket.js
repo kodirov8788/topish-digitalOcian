@@ -267,6 +267,7 @@ const initSocketServer = (server) => {
         if (recipient && recipient.socketId) {
           console.count("getMessage event emitted to recipient");
           io.to(recipient.socketId).emit("getMessage", messageToSend);
+          socket.emit("getMessage", messageToSend); // Emit to sender
         } else {
           console.count("getMessage event emitted to sender (recipient not online)");
           socket.emit("getMessage", messageToSend); // Emit to sender
