@@ -1128,6 +1128,71 @@ class CompanyCTRL {
       );
     }
   }
+  async getAllRequestsStatusForUser(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { userId } = req.params;
+
+      // Find all employment requests made by the user
+      const employmentRequests = await CompanyEmploymentReq.find({ requesterId: userId });
+
+      if (!employmentRequests || employmentRequests.length === 0) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "No employment requests found for this user",
+          null,
+          0
+        );
+      }
+
+      // Prepare the response data
+      const requestsStatus = employmentRequests.map(request => {
+        const rejectionDate = request.rejectionDate;
+        let additionalInfo = null;
+        if (request.status === "rejected" && rejectionDate) {
+          const canReapplyDate = new Date(rejectionDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+          const currentDate = new Date();
+          const canReapply = currentDate >= canReapplyDate;
+
+          additionalInfo = {
+            canReapply,
+            canReapplyDate,
+          };
+        }
+        return {
+          companyId: request.companyId,
+          status: request.status,
+          additionalInfo
+        };
+      });
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Employment requests status fetched successfully",
+        requestsStatus,
+        requestsStatus.length
+      );
+    } catch (error) {
+      console.error("Error in getAllRequestsStatusForUser function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+
+
 
   async addingEmployerManually(req, res) {
     try {

@@ -1534,6 +1534,169 @@ const CompanyEndpoint = {
       }
     }
   },
+  "/companies/{userId}/requests/status": {
+    "get": {
+      "summary": "Get the status of all employment requests for a user",
+      "tags": ["Hr Company"],
+      "description": "Fetches the status of all employment requests made by a user to different companies.",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the user.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Employment requests status fetched successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "success"
+                  },
+                  "msg": {
+                    "type": "string",
+                    "example": "Employment requests status fetched successfully"
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "companyId": {
+                          "type": "string",
+                          "example": "60d0fe4f5311236168a109ca"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "accepted"
+                        },
+                        "additionalInfo": {
+                          "type": "object",
+                          "properties": {
+                            "canReapply": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "canReapplyDate": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2023-07-21T17:32:28Z"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized - User not logged in or not allowed.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
+                  },
+                  "msg": {
+                    "type": "string",
+                    "example": "Unauthorized or You are not allowed!"
+                  },
+                  "data": {
+                    "type": "null",
+                    "example": null
+                  },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Not Found - No employment requests found for this user.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
+                  },
+                  "msg": {
+                    "type": "string",
+                    "example": "No employment requests found for this user."
+                  },
+                  "data": {
+                    "type": "null",
+                    "example": null
+                  },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Internal Server Error - Error in processing the request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
+                  },
+                  "msg": {
+                    "type": "string",
+                    "example": "Internal Server Error"
+                  },
+                  "data": {
+                    "type": "null",
+                    "example": null
+                  },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "/companies/{id}/users/{userId}/status": {
     "get": {
       "summary": "Get the status of an employer request",

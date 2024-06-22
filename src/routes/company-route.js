@@ -14,7 +14,8 @@ const {
   removeEmployerFromCompany,
   getCompanyJobPosts,
   updateCompanyMinorChange,
-  getStatusOfEmployerRequest
+  getStatusOfEmployerRequest,
+  getAllRequestsStatusForUser
 } = require("../controllers/companyCTRL");
 const authMiddleware = require("../middleware/auth-middleware");
 const router = require("express").Router();
@@ -39,6 +40,8 @@ router.route("/:id/rejectEmployer").post(authMiddleware, rejectEmployerToComp);
 router
   .route("/:id/users/:userId/status")
   .get(authMiddleware, getStatusOfEmployerRequest);
+router.route("/:userId/requests/status").get(authMiddleware, getAllRequestsStatusForUser);
+
 router
   .route("/:id/employmentRequests")
   .get(authMiddleware, getCompanyEmploymentRequests);
