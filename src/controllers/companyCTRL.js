@@ -696,7 +696,6 @@ class CompanyCTRL {
       );
     }
   }
-
   async sendingReqToCompEmployer(req, res) {
     try {
       if (!req.user) {
@@ -727,6 +726,25 @@ class CompanyCTRL {
           400,
           "error",
           "You are already employed in a company, you should give up your job first.",
+          null,
+          0
+        );
+      }
+
+      // Check if the user has recently been rejected from this company
+      const recentRejection = await CompanyEmploymentReq.findOne({
+        requesterId: user._id,
+        companyId: companyId,
+        status: "rejected",
+        rejectionDate: { $gt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) }, // within the last 3 days
+      });
+
+      if (recentRejection) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "You have recently been rejected by this company. Please wait a few days before sending another request.",
           null,
           0
         );
@@ -801,109 +819,6 @@ class CompanyCTRL {
       );
     }
   }
-
-  async admitEmployerToComp(req, res) {
-    try {
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
-      const { id: companyId } = req.params;
-      const { userId } = req.body;
-      const allowedRoles = ["Employer", "Admin"];
-      const user = await Users.findOne({ _id: req.user.id });
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
-
-      const company = await Company.findById(companyId);
-      if (!company) {
-        return handleResponse(res, 404, "error", "Company not found", null, 0);
-      }
-
-      let hrAdmin = company.workers.find(
-        (worker) => worker.userId.toString() == user._id && worker.isAdmin
-      );
-      // console.log("hrAdmin: ", hrAdmin);
-      // console.log("company.workers: ", company.workers);
-      if (!hrAdmin && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not authorized",
-          null,
-          0
-        );
-      }
-
-      const newUser = await Users.findById(userId);
-      if (!newUser) {
-        return handleResponse(res, 404, "error", "User not found", null, 0);
-      }
-
-      const newReq = await CompanyEmploymentReq.findOne({
-        requesterId: userId,
-        companyId: companyId,
-      });
-      if (!newReq) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "No request found from this employer",
-          null,
-          0
-        );
-      }
-
-      company.workers.push({ userId, isAdmin: false });
-      await company.save();
-      await CompanyEmploymentReq.findByIdAndDelete(newReq.id);
-
-      // Fetch device tokens for the user
-      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
-
-      if (userDeviceTokens.length > 0) {
-        const notification = {
-          title: "Admitted to Company",
-          body: "You have been admitted to the company.",
-        };
-        const info = {
-          companyId: companyId,
-          userId: userId,
-        };
-
-        sendNotification(userDeviceTokens, notification, info);
-      }
-
-      return handleResponse(
-        res,
-        200,
-        "success",
-        "Employer added to the company successfully",
-        company,
-        1
-      );
-    } catch (error) {
-      console.error("Error in admitEmployerToComp function:", error);
-      return handleResponse(
-        res,
-        500,
-        "error",
-        "Something went wrong: " + error.message,
-        null,
-        0
-      );
-    }
-  }
-
   async rejectEmployerToComp(req, res) {
     try {
       if (!req.user) {
@@ -964,6 +879,7 @@ class CompanyCTRL {
 
       await CompanyEmploymentReq.findByIdAndUpdate(newReq.id, {
         status: "rejected",
+        rejectionDate: new Date(), // Add a rejection date
       });
 
       // Fetch device tokens for the user
@@ -1002,6 +918,170 @@ class CompanyCTRL {
       );
     }
   }
+
+  async admitEmployerToComp(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      const { id: companyId } = req.params;
+      const { userId } = req.body;
+      const allowedRoles = ["Employer", "Admin"];
+      const user = await Users.findOne({ _id: req.user.id });
+      if (!allowedRoles.includes(user.role)) {
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "You are not allowed!",
+          null,
+          0
+        );
+      }
+
+      const company = await Company.findById(companyId);
+      if (!company) {
+        return handleResponse(res, 404, "error", "Company not found", null, 0);
+      }
+
+      let hrAdmin = company.workers.find(
+        (worker) => worker.userId.toString() == user._id && worker.isAdmin
+      );
+      if (!hrAdmin && user.role !== "Admin") {
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "You are not authorized",
+          null,
+          0
+        );
+      }
+
+      const newUser = await Users.findById(userId);
+      if (!newUser) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+
+      const newReq = await CompanyEmploymentReq.findOne({
+        requesterId: userId,
+        companyId: companyId,
+      });
+      if (!newReq) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "No request found from this employer",
+          null,
+          0
+        );
+      }
+
+      company.workers.push({ userId, isAdmin: false });
+      await company.save();
+      await CompanyEmploymentReq.findByIdAndUpdate(newReq.id, {
+        status: "accepted",
+      });
+
+      // Fetch device tokens for the user
+      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
+
+      if (userDeviceTokens.length > 0) {
+        const notification = {
+          title: "Admitted to Company",
+          body: "You have been admitted to the company.",
+        };
+        const info = {
+          companyId: companyId,
+          userId: userId,
+        };
+
+        sendNotification(userDeviceTokens, notification, info);
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Employer added to the company successfully",
+        company,
+        1
+      );
+    } catch (error) {
+      console.error("Error in admitEmployerToComp function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async getStatusOfEmployerRequest(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { userId, id: companyId } = req.params;
+
+      // Find the employment request
+      const employmentRequest = await CompanyEmploymentReq.findOne({
+        requesterId: userId,
+        companyId: companyId,
+      });
+
+      if (!employmentRequest) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "No employment request found for this user and company",
+          null,
+          0
+        );
+      }
+
+      // Get the status of the employment request
+      const requestStatus = employmentRequest.status;
+      const rejectionDate = employmentRequest.rejectionDate;
+
+      let additionalInfo = null;
+      if (requestStatus === "rejected" && rejectionDate) {
+        const canReapplyDate = new Date(rejectionDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+        const currentDate = new Date();
+        const canReapply = currentDate >= canReapplyDate;
+
+        additionalInfo = {
+          canReapply,
+          canReapplyDate,
+        };
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Employment request status fetched successfully",
+        { status: requestStatus, additionalInfo },
+        1
+      );
+    } catch (error) {
+      console.error("Error in getStatusOfEmployerRequest function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+
 
   async getCompanyEmploymentRequests(req, res) {
     try {

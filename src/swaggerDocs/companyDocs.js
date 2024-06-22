@@ -1,3 +1,65 @@
+// async getStatusOfEmployerRequest(req, res) {
+//   try {
+//     if (!req.user) {
+//       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+//     }
+
+//     const { userId, companyId } = req.params;
+
+//     // Find the employment request
+//     const employmentRequest = await CompanyEmploymentReq.findOne({
+//       requesterId: userId,
+//       companyId: companyId,
+//     });
+
+//     if (!employmentRequest) {
+//       return handleResponse(
+//         res,
+//         404,
+//         "error",
+//         "No employment request found for this user and company",
+//         null,
+//         0
+//       );
+//     }
+
+//     // Get the status of the employment request
+//     const requestStatus = employmentRequest.status;
+//     const rejectionDate = employmentRequest.rejectionDate;
+
+//     let additionalInfo = null;
+//     if (requestStatus === "rejected" && rejectionDate) {
+//       const canReapplyDate = new Date(rejectionDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+//       const currentDate = new Date();
+//       const canReapply = currentDate >= canReapplyDate;
+
+//       additionalInfo = {
+//         canReapply,
+//         canReapplyDate,
+//       };
+//     }
+
+//     return handleResponse(
+//       res,
+//       200,
+//       "success",
+//       "Employment request status fetched successfully",
+//       { status: requestStatus, additionalInfo },
+//       1
+//     );
+//   } catch (error) {
+//     console.error("Error in getStatusOfEmployerRequest function:", error);
+//     return handleResponse(
+//       res,
+//       500,
+//       "error",
+//       "Something went wrong: " + error.message,
+//       null,
+//       0
+//     );
+//   }
+// }
+
 const CompanyEndpoint = {
   tags: [
     {
@@ -1161,324 +1223,481 @@ const CompanyEndpoint = {
     },
   },
   "/companies/{id}/admitEmployer": {
-    post: {
-      summary: "Admit an employer to a company",
-      tags: ["Hr Company"],
-      description:
-        "Allows an authorized user with the Employer role to admit an employer to a company.",
-      security: [
+    "post": {
+      "summary": "Admit an employer to a company",
+      "tags": ["Hr Company"],
+      "description": "Allows an authorized user with the Employer or Admin role to admit an employer to a company.",
+      "security": [
         {
-          bearerAuth: [],
-        },
+          "bearerAuth": []
+        }
       ],
-      parameters: [
+      "parameters": [
         {
-          name: "id",
-          in: "path",
-          required: true,
-          description:
-            "The ID of the company to which the employer will be admitted.",
-          schema: {
-            type: "string",
-          },
-        },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the company to which the employer will be admitted.",
+          "schema": {
+            "type": "string"
+          }
+        }
       ],
-      requestBody: {
-        required: true,
-        content: {
+      "requestBody": {
+        "required": true,
+        "content": {
           "application/json": {
-            schema: {
-              type: "object",
-              properties: {
-                userId: {
-                  type: "string",
-                  description:
-                    "The ID of the user to be admitted as an employer.",
-                  example: "60d0fe4f5311236168a109ca",
-                },
-              },
-            },
-          },
-        },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "description": "The ID of the user to be admitted as an employer.",
+                  "example": "60d0fe4f5311236168a109ca"
+                }
+              }
+            }
+          }
+        }
       },
-      responses: {
-        200: {
-          description: "Employer added to the company successfully.",
-          content: {
+      "responses": {
+        "200": {
+          "description": "Employer added to the company successfully.",
+          "content": {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "success",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "success"
                   },
-                  msg: {
-                    type: "string",
-                    example: "Employer added to the company successfully",
+                  "msg": {
+                    "type": "string",
+                    "example": "Employer added to the company successfully"
                   },
-                  data: {
-                    type: "object",
-                    properties: {
-                      company: {
-                        $ref: "#/components/schemas/Company",
-                      },
-                    },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "company": {
+                        "$ref": "#/components/schemas/Company"
+                      }
+                    }
                   },
-                  totalCount: {
-                    type: "number",
-                    example: 1,
-                  },
-                },
-              },
-            },
-          },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
         },
-        401: {
-          description: "Unauthorized - User not logged in or not allowed.",
-          content: {
+        "401": {
+          "description": "Unauthorized - User not logged in or not allowed.",
+          "content": {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
                   },
-                  msg: {
-                    type: "string",
-                    example: "Unauthorized or You are not allowed!",
+                  "msg": {
+                    "type": "string",
+                    "example": "Unauthorized or You are not allowed!"
                   },
-                  data: {
-                    type: "null",
-                    example: null,
+                  "data": {
+                    "type": "null",
+                    "example": null
                   },
-                  totalCount: {
-                    type: "number",
-                    example: 0,
-                  },
-                },
-              },
-            },
-          },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
         },
-        404: {
-          description: "Not Found - No such company or user exists.",
-          content: {
+        "404": {
+          "description": "Not Found - No such company or user exists.",
+          "content": {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
                   },
-                  msg: {
-                    type: "string",
-                    example: "Company or user not found with provided ID.",
+                  "msg": {
+                    "type": "string",
+                    "example": "Company or user not found with provided ID."
                   },
-                  data: {
-                    type: "null",
-                    example: null,
+                  "data": {
+                    "type": "null",
+                    "example": null
                   },
-                  totalCount: {
-                    type: "number",
-                    example: 0,
-                  },
-                },
-              },
-            },
-          },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
         },
-        500: {
-          description:
-            "Internal Server Error - Error in processing the request.",
-          content: {
+        "500": {
+          "description": "Internal Server Error - Error in processing the request.",
+          "content": {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
                   },
-                  msg: {
-                    type: "string",
-                    example: "Internal Server Error",
+                  "msg": {
+                    "type": "string",
+                    "example": "Internal Server Error"
                   },
-                  data: {
-                    type: "null",
-                    example: null,
+                  "data": {
+                    "type": "null",
+                    "example": null
                   },
-                  totalCount: {
-                    type: "number",
-                    example: 0,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "/companies/{id}/rejectEmployer": {
-    post: {
-      summary: "Reject an employer from a company",
-      tags: ["Hr Company"],
-      description:
-        "Allows an authorized user with the Employer role to reject an employer from a company.",
-      security: [
+    "post": {
+      "summary": "Reject an employer from a company",
+      "tags": ["Hr Company"],
+      "description": "Allows an authorized user with the Employer or Admin role to reject an employer from a company.",
+      "security": [
         {
-          bearerAuth: [],
-        },
+          "bearerAuth": []
+        }
       ],
-      parameters: [
+      "parameters": [
         {
-          name: "id",
-          in: "path",
-          required: true,
-          description:
-            "The ID of the company to which the employer will be rejected.",
-          schema: {
-            type: "string",
-          },
-        },
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the company from which the employer will be rejected.",
+          "schema": {
+            "type": "string"
+          }
+        }
       ],
-      requestBody: {
-        required: true,
-        content: {
+      "requestBody": {
+        "required": true,
+        "content": {
           "application/json": {
-            schema: {
-              type: "object",
-              properties: {
-                userId: {
-                  type: "string",
-                  description:
-                    "The ID of the user to be rejected as an employer.",
-                  example: "60d0fe4f5311236168a109ca",
-                },
-              },
-            },
-          },
-        },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "description": "The ID of the user to be rejected as an employer.",
+                  "example": "60d0fe4f5311236168a109ca"
+                }
+              }
+            }
+          }
+        }
       },
-      responses: {
-        200: {
-          description: "Employer rejected from the company successfully.",
-          content: {
+      "responses": {
+        "200": {
+          "description": "Employer rejected from the company successfully.",
+          "content": {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "success",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "success"
                   },
-                  msg: {
-                    type: "string",
-                    example: "Employer rejected from the company successfully",
+                  "msg": {
+                    "type": "string",
+                    "example": "Employer rejected from the company successfully"
                   },
-                  data: {
-                    type: "null",
-                    example: null,
+                  "data": {
+                    "type": "null",
+                    "example": null
                   },
-                  totalCount: {
-                    type: "number",
-                    example: 1,
-                  },
-                },
-              },
-            },
-          },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
         },
-        401: {
-          description: "Unauthorized - User not logged in or not allowed.",
-          content: {
+        "401": {
+          "description": "Unauthorized - User not logged in or not allowed.",
+          "content": {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
                   },
-                  msg: {
-                    type: "string",
-                    example: "Unauthorized or You are not allowed!",
+                  "msg": {
+                    "type": "string",
+                    "example": "Unauthorized or You are not allowed!"
                   },
-                  data: {
-                    type: "null",
-                    example: null,
+                  "data": {
+                    "type": "null",
+                    "example": null
                   },
-                  totalCount: {
-                    type: "number",
-                    example: 0,
-                  },
-                },
-              },
-            },
-          },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
         },
-        404: {
-          description: "Not Found - No such company or user exists.",
-          content: {
+        "404": {
+          "description": "Not Found - No such company or user exists.",
+          "content": {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
                   },
-                  msg: {
-                    type: "string",
-                    example: "Company or user not found with provided ID.",
+                  "msg": {
+                    "type": "string",
+                    "example": "Company or user not found with provided ID."
                   },
-                  data: {
-                    type: "null",
-                    example: null,
+                  "data": {
+                    "type": "null",
+                    "example": null
                   },
-                  totalCount: {
-                    type: "number",
-                    example: 0,
-                  },
-                },
-              },
-            },
-          },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
         },
-        500: {
-          description:
-            "Internal Server Error - Error in processing the request.",
-          content: {
+        "500": {
+          "description": "Internal Server Error - Error in processing the request.",
+          "content": {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
                   },
-                  msg: {
-                    type: "string",
-                    example: "Internal Server Error",
+                  "msg": {
+                    "type": "string",
+                    "example": "Internal Server Error"
                   },
-                  data: {
-                    type: "null",
-                    example: null,
+                  "data": {
+                    "type": "null",
+                    "example": null
                   },
-                  totalCount: {
-                    type: "number",
-                    example: 0,
-                  },
-                },
-              },
-            },
-          },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/companies/{id}/users/{userId}/status": {
+    "get": {
+      "summary": "Get the status of an employer request",
+      "tags": ["Hr Company"],
+      "description": "Fetches the status of an employment request for a user to a company.",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "companyId",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the company.",
+          "schema": {
+            "type": "string"
+          }
         },
-      },
-    },
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the user.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Employment request status fetched successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "success"
+                  },
+                  "msg": {
+                    "type": "string",
+                    "example": "Employment request status fetched successfully"
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "example": "accepted"
+                      },
+                      "additionalInfo": {
+                        "type": "object",
+                        "properties": {
+                          "canReapply": {
+                            "type": "boolean",
+                            "example": true
+                          },
+                          "canReapplyDate": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2023-07-21T17:32:28Z"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthorized - User not logged in or not allowed.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
+                  },
+                  "msg": {
+                    "type": "string",
+                    "example": "Unauthorized or You are not allowed!"
+                  },
+                  "data": {
+                    "type": "null",
+                    "example": null
+                  },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Not Found - No employment request found for this user and company.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
+                  },
+                  "msg": {
+                    "type": "string",
+                    "example": "No employment request found for this user and company."
+                  },
+                  "data": {
+                    "type": "null",
+                    "example": null
+                  },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Internal Server Error - Error in processing the request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "string",
+                    "example": "error"
+                  },
+                  "msg": {
+                    "type": "string",
+                    "example": "Internal Server Error"
+                  },
+                  "data": {
+                    "type": "null",
+                    "example": null
+                  },
+                  "totalCount": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "/companies/{id}/employmentRequests": {
     get: {
