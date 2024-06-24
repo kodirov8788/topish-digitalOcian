@@ -789,14 +789,21 @@ class CompanyCTRL {
       if (adminDeviceTokens.length > 0) {
         const notification = {
           title: "New Employment Request",
-          body: `Employer ${user.name} has sent an employment request to your company.`,
+          body: `Employer ${user.fullName} has sent an employment request to your company.`,
         };
         const info = {
           companyId: companyId,
           requesterId: user._id,
         };
 
-        sendNotification(adminDeviceTokens, notification, info);
+        // Debug: Log notification and device tokens
+        console.log("Sending notification to:", adminDeviceTokens);
+        console.log("Notification payload:", notification, info);
+
+        const notificationResult = await sendNotification(adminDeviceTokens, notification, info);
+
+        // Debug: Log result of sendNotification
+        console.log("Notification result:", notificationResult);
       }
 
       return handleResponse(
@@ -819,6 +826,7 @@ class CompanyCTRL {
       );
     }
   }
+
   async rejectEmployerToComp(req, res) {
     try {
       if (!req.user) {
@@ -980,10 +988,7 @@ class CompanyCTRL {
 
       company.workers.push({ userId, isAdmin: false });
       await company.save();
-      await CompanyEmploymentReq.findByIdAndUpdate(newReq.id, {
-        status: "accepted",
-      });
-
+      await CompanyEmploymentReq.findByIdAndDelete(newReq.id);
       // Fetch device tokens for the user
       const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
@@ -1081,8 +1086,6 @@ class CompanyCTRL {
       );
     }
   }
-
-
   async getCompanyEmploymentRequests(req, res) {
     try {
       if (!req.user) {
@@ -1191,8 +1194,6 @@ class CompanyCTRL {
       );
     }
   }
-
-
 
   async addingEmployerManually(req, res) {
     try {
