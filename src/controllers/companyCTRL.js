@@ -1037,10 +1037,10 @@ class CompanyCTRL {
       if (!employmentRequest) {
         return handleResponse(
           res,
-          404,
-          "error",
+          200,
+          "success",
           "No employment request found for this user and company",
-          null,
+          [],
           0
         );
       }
@@ -1142,10 +1142,10 @@ class CompanyCTRL {
       if (!employmentRequests || employmentRequests.length === 0) {
         return handleResponse(
           res,
-          404,
-          "error",
+          200,
+          "success",
           "No employment requests found for this user",
-          null,
+          [],
           0
         );
       }
