@@ -988,7 +988,10 @@ class CompanyCTRL {
 
       company.workers.push({ userId, isAdmin: false });
       await company.save();
-      await CompanyEmploymentReq.findByIdAndDelete(newReq.id);
+      await CompanyEmploymentReq.findByIdAndUpdate(newReq.id, {
+        status: "accepted",
+      });
+
       // Fetch device tokens for the user
       const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
@@ -1044,7 +1047,7 @@ class CompanyCTRL {
           res,
           200,
           "success",
-          "No employment request found for this user and company",
+          "No employment requests found for this user",
           [],
           0
         );
@@ -1194,7 +1197,6 @@ class CompanyCTRL {
       );
     }
   }
-
   async addingEmployerManually(req, res) {
     try {
       if (!req.user) {
@@ -1292,16 +1294,17 @@ class CompanyCTRL {
       );
     }
   }
-
   async removeEmployerFromCompany(req, res) {
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
       const user = await Users.findOne({ _id: req.user.id });
+
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
@@ -1318,7 +1321,7 @@ class CompanyCTRL {
         return handleResponse(res, 404, "error", "Company not found", null, 0);
       }
 
-      let hrAdmin = company.workers.find(
+      const hrAdmin = company.workers.find(
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
       if (!hrAdmin) {
@@ -1356,6 +1359,12 @@ class CompanyCTRL {
       );
       await company.save();
 
+      // Remove employment requests associated with the user and company
+      await CompanyEmploymentReq.deleteMany({
+        requesterId: userId,
+        companyId: companyId,
+      });
+
       // Fetch device tokens for the user
       const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
 
@@ -1369,7 +1378,14 @@ class CompanyCTRL {
           userId: userId,
         };
 
-        sendNotification(userDeviceTokens, notification, info);
+        // Debug: Log notification and device tokens
+        console.log("Sending notification to:", userDeviceTokens);
+        console.log("Notification payload:", notification, info);
+
+        const notificationResult = await sendNotification(userDeviceTokens, notification, info);
+
+        // Debug: Log result of sendNotification
+        console.log("Notification result:", notificationResult);
       }
 
       return handleResponse(
@@ -1392,7 +1408,6 @@ class CompanyCTRL {
       );
     }
   }
-
   async getCompanyJobPosts(req, res) {
     try {
       if (!req.user) {
