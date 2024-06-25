@@ -194,7 +194,6 @@ const initSocketServer = (server) => {
         });
       }
     });
-
     socket.on("sendMessage", async ({ text, recipientId, senderId }) => {
       console.count("sendMessage event received");
       console.log("sendMessage payload:", { text, recipientId, senderId });
@@ -295,7 +294,6 @@ const initSocketServer = (server) => {
         });
       }
     });
-
     socket.on("singleChatRoom", async ({ userId, chatRoomId }) => {
       try {
         const chatRoom = await ChatRoom.findOne({
@@ -672,6 +670,50 @@ const initSocketServer = (server) => {
         console.error("Error handling typing event:", error);
       }
     });
+
+    socket.on("createChatRoom", async ({ userId, recipientId }) => {
+      try {
+        // Check if the user is registered and valid
+        const user = await Users.findById(userId);
+        if (!user) {
+          socket.emit("errorNotification", { error: "User not found" });
+          return;
+        }
+
+        // Check if the recipient is registered and valid
+        const recipient = await Users.findById(recipientId);
+        if (!recipient) {
+          socket.emit("errorNotification", { error: "Recipient not found" });
+          return;
+        }
+
+        // Find an existing chat room or create a new one
+        let chatRoom = await ChatRoom.findOne({
+          users: { $all: [userId, recipientId] },
+        });
+
+        if (!chatRoom) {
+          chatRoom = new ChatRoom({ users: [userId, recipientId] });
+          await chatRoom.save();
+        }
+
+        // Emit chat room details to the user
+        socket.emit("chatRoomCreated", {
+          chatRoomId: chatRoom._id,
+          recipient: {
+            _id: recipient._id,
+            fullName: recipient.fullName,
+            avatar: recipient.avatar,
+          },
+        });
+      } catch (error) {
+        console.error("Error creating chat room:", error);
+        socket.emit("errorNotification", {
+          error: "Failed to create chat room.",
+        });
+      }
+    });
+
     // message to admin route
     socket.on("messageToAdmin", async ({ senderId, text }) => {
       try {
