@@ -238,7 +238,7 @@ class AuthCTRL {
       // const attemptLimit = 3;
       // const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
       // const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
-      // const now = Date.now();
+      const now = Date.now();
 
       // // Use a temporary store for attempts
       // let tempAttempts = existingUser ? existingUser.loginCodeAttempts || [] : [];
@@ -487,7 +487,7 @@ class AuthCTRL {
       // const attemptLimit = 3;
       // const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
       // const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
-      // const now = Date.now();
+      const now = Date.now();
 
       // if (!user.loginCodeAttempts) {
       //   user.loginCodeAttempts = [];
