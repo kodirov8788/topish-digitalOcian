@@ -647,10 +647,10 @@ class AuthCTRL {
       }
 
       // Delete user avatar
-      await deleteUserAvatar(user.avatar);
+      // await deleteUserAvatar(user.avatar);
 
       // Delete user CV
-      await deleteUserCv(user.cv);
+      // await deleteUserCv(user.cv);
 
       await user.deleteOne();
 
