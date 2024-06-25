@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Schema = mongoose.Schema;
-
-// Create a User model
 const UsersSchema = new Schema(
   {
     service: {
@@ -11,6 +9,12 @@ const UsersSchema = new Schema(
         default: [],
       },
     },
+    sessions: [
+      {
+        token: { type: String, required: true },
+        expires: { type: Date, required: true },
+      },
+    ],
     jobSeeker: {
       skills: { type: Array, default: [] },
       professions: {
@@ -51,8 +55,7 @@ const UsersSchema = new Schema(
     },
     fullName: { type: String, default: "" },
     phoneNumber: { type: String, required: true, unique: true },
-    phoneConfirmed: { type: Boolean, default: true },
-    emailConfirmed: { type: Boolean, default: false },
+    phoneConfirmed: { type: Boolean, default: false },
     confirmationCode: { type: String, default: null },
     confirmationCodeExpires: { type: Date, default: null },
     gender: {
@@ -70,7 +73,7 @@ const UsersSchema = new Schema(
       required: true,
       enum: ["JobSeeker", "Employer", "Service", "Admin"],
     },
-    password: { type: String, required: true, minlength: 8 },
+    password: { type: String, required: false, minlength: 8 },
     root: { type: Boolean, default: false },
     admin: { type: Boolean, default: false },
     subAdmin: { type: Boolean, default: false },

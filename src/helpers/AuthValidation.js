@@ -1,8 +1,8 @@
 const Joi = require('joi');
 
 const userValidationSchema = Joi.object({
-    password: Joi.string().min(6).required(),
-    confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
+    // password: Joi.string().min(6).required(),
+    // confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
     role: Joi.string().valid('JobSeeker', 'Employer', 'Service', 'Admin').required(),
     phoneNumber: Joi.string().pattern(/^\d{9}$/).required(),
     mobileToken: Joi.string().min(1).required(),

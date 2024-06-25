@@ -21,8 +21,6 @@ const AuthEndpoints = {
               type: "object",
               required: [
                 "phoneNumber",
-                "email",
-                "password",
                 "confirmPassword",
                 "role",
               ],
@@ -30,21 +28,21 @@ const AuthEndpoints = {
                 phoneNumber: {
                   type: "string",
                   description: "User's phone number",
-                  example: "934440000",
+                  example: "956687007",
                   pattern: "^[0-9]+$", // Optional: Add a regex pattern to ensure the phone number contains only digits
                 },
-                password: {
-                  type: "string",
-                  format: "password",
-                  description: "User's password",
-                  example: "securepassword",
-                },
-                confirmPassword: {
-                  type: "string",
-                  format: "password",
-                  description: "Confirmation of the user's password",
-                  example: "securepassword",
-                },
+                // password: {
+                //   type: "string",
+                //   format: "password",
+                //   description: "User's password",
+                //   example: "securepassword",
+                // },
+                // confirmPassword: {
+                //   type: "string",
+                //   format: "password",
+                //   description: "Confirmation of the user's password",
+                //   example: "securepassword",
+                // },
                 role: {
                   type: "string",
                   enum: ["JobSeeker", "Employer"],
@@ -54,7 +52,7 @@ const AuthEndpoints = {
                 mobileToken: {
                   type: "string",
                   description: "The mobile token of the user",
-                  example: "",
+                  example: "12345",
                 },
               },
             },
@@ -293,7 +291,7 @@ const AuthEndpoints = {
                 phoneNumber: {
                   type: "string",
                   description: "The user's phone number",
-                  example: "901234567",
+                  example: "956687007",
                 },
                 confirmationCode: {
                   type: "string",
@@ -456,192 +454,192 @@ const AuthEndpoints = {
       },
     },
   },
-  "/auth/create-user/resetPassword": {
-    post: {
-      summary: "Send reset password SMS",
-      tags: ["Auth"],
-      description:
-        "Send an SMS with a confirmation code to the user's phone number for password reset.",
-      requestBody: {
-        required: true,
-        content: {
-          "application/json": {
-            schema: {
-              type: "object",
-              properties: {
-                phoneNumber: {
-                  type: "string",
-                  description: "The user's phone number",
-                  example: "956687007",
-                },
-              },
-            },
-          },
-        },
-      },
-      responses: {
-        200: {
-          description: "Confirmation code sent successfully",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "success",
-                  },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Confirmation code sent successfully. Please check your phone.",
-                  },
-                },
-              },
-            },
-          },
-        },
-        400: {
-          description: "User not found with this phone number",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
-                  },
-                  msg: {
-                    type: "string",
-                    example: "User not found with this phone number",
-                  },
-                },
-              },
-            },
-          },
-        },
-        500: {
-          description: "Something went wrong",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
-                  },
-                  msg: {
-                    type: "string",
-                    example: "Something went wrong",
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  "/auth/create-user/confirmResetPassword": {
-    post: {
-      summary: "Confirm reset password",
-      tags: ["Auth"],
-      description:
-        "Confirm the reset password using the confirmation code sent to the user's phone.",
-      requestBody: {
-        required: true,
-        content: {
-          "application/json": {
-            schema: {
-              type: "object",
-              properties: {
-                phoneNumber: {
-                  type: "string",
-                  description: "The user's phone number",
-                  example: "956687007",
-                },
-                confirmationCode: {
-                  type: "string",
-                  description: "The confirmation code sent to the user's phone",
-                  example: "123456",
-                },
-                newPassword: {
-                  type: "string",
-                  description: "The new password for the user",
-                  example: "newpassword123",
-                },
-              },
-            },
-          },
-        },
-      },
-      responses: {
-        200: {
-          description: "Password reset successfully",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "success",
-                  },
-                  msg: {
-                    type: "string",
-                    example: "Password reset successfully",
-                  },
-                },
-              },
-            },
-          },
-        },
-        400: {
-          description:
-            "Invalid confirmation code or phone number, or confirmation code expired",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
-                  },
-                  msg: {
-                    type: "string",
-                    example: "Invalid confirmation code or phone number",
-                  },
-                },
-              },
-            },
-          },
-        },
-        500: {
-          description: "Something went wrong",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: {
-                    type: "string",
-                    example: "error",
-                  },
-                  msg: {
-                    type: "string",
-                    example: "Something went wrong",
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
+  // "/auth/create-user/resetPassword": {
+  //   post: {
+  //     summary: "Send reset password SMS",
+  //     tags: ["Auth"],
+  //     description:
+  //       "Send an SMS with a confirmation code to the user's phone number for password reset.",
+  //     requestBody: {
+  //       required: true,
+  //       content: {
+  //         "application/json": {
+  //           schema: {
+  //             type: "object",
+  //             properties: {
+  //               phoneNumber: {
+  //                 type: "string",
+  //                 description: "The user's phone number",
+  //                 example: "956687007",
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //     responses: {
+  //       200: {
+  //         description: "Confirmation code sent successfully",
+  //         content: {
+  //           "application/json": {
+  //             schema: {
+  //               type: "object",
+  //               properties: {
+  //                 result: {
+  //                   type: "string",
+  //                   example: "success",
+  //                 },
+  //                 msg: {
+  //                   type: "string",
+  //                   example:
+  //                     "Confirmation code sent successfully. Please check your phone.",
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       400: {
+  //         description: "User not found with this phone number",
+  //         content: {
+  //           "application/json": {
+  //             schema: {
+  //               type: "object",
+  //               properties: {
+  //                 result: {
+  //                   type: "string",
+  //                   example: "error",
+  //                 },
+  //                 msg: {
+  //                   type: "string",
+  //                   example: "User not found with this phone number",
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       500: {
+  //         description: "Something went wrong",
+  //         content: {
+  //           "application/json": {
+  //             schema: {
+  //               type: "object",
+  //               properties: {
+  //                 result: {
+  //                   type: "string",
+  //                   example: "error",
+  //                 },
+  //                 msg: {
+  //                   type: "string",
+  //                   example: "Something went wrong",
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // },
+  // "/auth/create-user/confirmResetPassword": {
+  //   post: {
+  //     summary: "Confirm reset password",
+  //     tags: ["Auth"],
+  //     description:
+  //       "Confirm the reset password using the confirmation code sent to the user's phone.",
+  //     requestBody: {
+  //       required: true,
+  //       content: {
+  //         "application/json": {
+  //           schema: {
+  //             type: "object",
+  //             properties: {
+  //               phoneNumber: {
+  //                 type: "string",
+  //                 description: "The user's phone number",
+  //                 example: "956687007",
+  //               },
+  //               confirmationCode: {
+  //                 type: "string",
+  //                 description: "The confirmation code sent to the user's phone",
+  //                 example: "123456",
+  //               },
+  //               newPassword: {
+  //                 type: "string",
+  //                 description: "The new password for the user",
+  //                 example: "newpassword123",
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //     responses: {
+  //       200: {
+  //         description: "Password reset successfully",
+  //         content: {
+  //           "application/json": {
+  //             schema: {
+  //               type: "object",
+  //               properties: {
+  //                 result: {
+  //                   type: "string",
+  //                   example: "success",
+  //                 },
+  //                 msg: {
+  //                   type: "string",
+  //                   example: "Password reset successfully",
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       400: {
+  //         description:
+  //           "Invalid confirmation code or phone number, or confirmation code expired",
+  //         content: {
+  //           "application/json": {
+  //             schema: {
+  //               type: "object",
+  //               properties: {
+  //                 result: {
+  //                   type: "string",
+  //                   example: "error",
+  //                 },
+  //                 msg: {
+  //                   type: "string",
+  //                   example: "Invalid confirmation code or phone number",
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       500: {
+  //         description: "Something went wrong",
+  //         content: {
+  //           "application/json": {
+  //             schema: {
+  //               type: "object",
+  //               properties: {
+  //                 result: {
+  //                   type: "string",
+  //                   example: "error",
+  //                 },
+  //                 msg: {
+  //                   type: "string",
+  //                   example: "Something went wrong",
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // },
   "/auth/sign-in": {
     post: {
       summary: "Login",
@@ -659,15 +657,175 @@ const AuthEndpoints = {
                 phoneNumber: {
                   type: "string",
                   description: "User's phone number",
-                  example: "934440000",
+                  example: "956687007",
+                  pattern: "^[0-9]+$",
+                }
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "User logged in successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: { type: "string", example: "Login successful" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      email: { type: "string", example: "" },
+                      phoneNumber: { type: "string", example: "+998939993333" },
+                      coins: { type: "number", example: 50 },
+                      id: {
+                        type: "string",
+                        example: "65c2229d6820d7cc9044b411",
+                      },
+                      role: { type: "string", example: "JobSeeker" },
+                      favorites: {
+                        type: "array",
+                        items: {},
+                      },
+                      jobSeeker: {
+                        type: "object",
+                        properties: {
+                          fullName: {
+                            type: "string",
+                            example: "Asadbek Alimov",
+                          },
+                          gender: { type: "string", example: "Choose" },
+                          skills: {
+                            type: "array",
+                            items: { type: "string" },
+                          },
+                          isVerified: { type: "boolean", example: false },
+                          location: { type: "string", example: "Toshkent" },
+                          expectedSalary: { type: "number", example: 0 },
+                          jobtitle: { type: "string", example: "Developer" },
+                          experience: { type: "string", example: "1-2 year" },
+                          employmentType: {
+                            type: "string",
+                            example: "full-time",
+                          },
+                          _id: {
+                            type: "string",
+                            example: "65c2229d6820d7cc9044b412",
+                          },
+                        },
+                      },
+                      employer: {
+                        type: "object",
+                        properties: {
+                          fullName: {
+                            type: "string",
+                            example: "Asadbek Alimov",
+                          },
+                          companyName: {
+                            type: "string",
+                            example: "AliExpress",
+                          },
+                          about: { type: "string", example: "" },
+                          industry: {
+                            type: "array",
+                            items: { type: "string" },
+                          },
+                          contact: {
+                            type: "array",
+                            items: { type: "string" },
+                          },
+                          location: { type: "string", example: "" },
+                          isVerified: { type: "boolean", example: false },
+                          jobs: {
+                            type: "array",
+                            items: { type: "string" },
+                          },
+                          _id: {
+                            type: "string",
+                            example: "65c21b10b811045e6c02fc2e",
+                          },
+                        },
+                      },
+                    },
+                  },
+                  totalCount: { type: "number", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized. Incorrect email or password.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "Incorrect email or password.",
+                  },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Internal server error." },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/auth/sign-in/confirm": {
+    post: {
+      summary: "Confirm Login",
+      tags: ["Auth"],
+      description:
+        "Endpoint for user login. Authenticates the user and returns an auth token along with user information.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["email", "password"],
+              properties: {
+                phoneNumber: {
+                  type: "string",
+                  description: "User's phone number",
+                  example: "956687007",
                   pattern: "^[0-9]+$", // Optional: Add a regex pattern to ensure the phone number contains only digits
                 },
-
-                password: {
+                confirmationCode: {
                   type: "string",
-                  format: "password",
-                  description: "Password for the account.",
-                  example: "securepassword",
+                  format: "confirmationCode",
+                  description: "confirmationCode for the account.",
+                  example: "123456",
                 },
                 mobileToken: {
                   type: "string",
@@ -836,7 +994,7 @@ const AuthEndpoints = {
                 mobileToken: {
                   type: "string",
                   description: "The mobile token of the user",
-                  example: "fcmToken",
+                  example: "12345",
                 },
               },
             },
