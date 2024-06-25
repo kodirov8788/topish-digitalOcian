@@ -104,7 +104,8 @@ const initSocketServer = (server) => {
           });
           return;
         }
-        const chatRooms = await ChatRoom.find({ users: userId });
+        // Find chat rooms for the user, excluding admin chat rooms
+        const chatRooms = await ChatRoom.find({ users: userId, isForAdmin: false });
         if (!chatRooms.length) {
           socket.emit("chatRoomsResponse", {
             status: 200,
@@ -122,15 +123,13 @@ const initSocketServer = (server) => {
             );
 
             if (!otherUserId) {
-              console.error(
-                `Other user not found in chat room: ${chatRoom._id}`
-              );
+              console.error(`Other user not found in chat room: ${chatRoom._id}`);
               return null;
             }
 
             const otherUser = await Users.findById(otherUserId);
             if (!otherUser) {
-              console.error(`User document not found for ID: ${otherUserId} `);
+              console.error(`User document not found for ID: ${otherUserId}`);
               return null;
             }
 
@@ -147,12 +146,6 @@ const initSocketServer = (server) => {
               seen: false,
             });
 
-            // const roleNameMap = {
-            //   JobSeeker: "jobSeeker",
-            //   Employer: "employer",
-            //   Service: "service",
-            // }; // Extend this map based on your application's roles
-            // const roleField = roleNameMap[otherUser.role];
             const fullName =
               otherUser && otherUser.fullName
                 ? otherUser.fullName
@@ -201,6 +194,7 @@ const initSocketServer = (server) => {
         });
       }
     });
+
     socket.on("sendMessage", async ({ text, recipientId, senderId }) => {
       console.count("sendMessage event received");
       console.log("sendMessage payload:", { text, recipientId, senderId });
