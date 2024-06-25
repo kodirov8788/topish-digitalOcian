@@ -19,6 +19,10 @@ const UsersSchema = new Schema(
         expires: { type: Date, required: true },
       },
     ],
+    phoneNumber: { type: String, required: true, unique: true },
+    phoneConfirmed: { type: Boolean, default: false },
+    confirmationCode: { type: String, default: null },
+    confirmationCodeExpires: { type: Date, default: null },
     jobSeeker: {
       skills: { type: Array, default: [] },
       professions: {
@@ -58,10 +62,7 @@ const UsersSchema = new Schema(
       jobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
     },
     fullName: { type: String, default: "" },
-    phoneNumber: { type: String, required: true, unique: true },
-    phoneConfirmed: { type: Boolean, default: false },
-    confirmationCode: { type: String, default: null },
-    confirmationCodeExpires: { type: Date, default: null },
+
     gender: {
       type: String,
       required: false,

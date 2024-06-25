@@ -1,6 +1,8 @@
 const {
-  register,
-  confirmPhoneNumberWithCode,
+  // register,
+  // confirmPhoneNumberWithCode,
+  confirmRegisterCode,
+  sendRegisterCode,
   sendLoginCode,
   signOut,
   deleteAccount,
@@ -11,8 +13,8 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/auth-middleware");
 // requtes code -------------------
-router.post("/create-user", register);
-router.post("/create-user/confirmCode", confirmPhoneNumberWithCode);
+router.post("/create-user", sendRegisterCode);
+router.post("/create-user/confirmCode", confirmRegisterCode);
 router.post("/create-user/resendCode", resendConfirmationCode);
 router.post("/sign-in", sendLoginCode);
 router.post("/sign-in/confirm", confirmLogin);
