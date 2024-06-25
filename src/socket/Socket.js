@@ -295,6 +295,7 @@ const initSocketServer = (server) => {
       }
     });
     socket.on("singleChatRoom", async ({ userId, chatRoomId }) => {
+      console.log("singleChatRoom event received", { userId, chatRoomId })
       try {
         const chatRoom = await ChatRoom.findOne({
           _id: chatRoomId,
@@ -371,6 +372,49 @@ const initSocketServer = (server) => {
           status: 500,
           message: "Internal server error",
           data: null,
+        });
+      }
+    });
+    socket.on("createChatRoom", async ({ userId, otherUserId }) => {
+      // console.log("createChatRoom event received", { userId, otherUserId })
+      try {
+        // Check if the user is registered and valid
+        const user = await Users.findById(userId);
+        if (!user) {
+          socket.emit("errorNotification", { error: "User not found" });
+          return;
+        }
+
+        // Check if the recipient is registered and valid
+        const recipient = await Users.findById(otherUserId);
+        if (!recipient) {
+          socket.emit("errorNotification", { error: "Recipient not found" });
+          return;
+        }
+
+        // Find an existing chat room or create a new one
+        let chatRoom = await ChatRoom.findOne({
+          users: { $all: [userId, otherUserId] },
+        });
+
+        if (!chatRoom) {
+          chatRoom = new ChatRoom({ users: [userId, otherUserId] });
+          await chatRoom.save();
+        }
+
+        // Emit chat room details to the user
+        socket.emit("chatRoomCreated", {
+          chatRoomId: chatRoom._id,
+          recipient: {
+            _id: recipient._id,
+            fullName: recipient.fullName,
+            avatar: recipient.avatar,
+          },
+        });
+      } catch (error) {
+        console.error("Error creating chat room:", error);
+        socket.emit("errorNotification", {
+          error: "Failed to create chat room.",
         });
       }
     });
@@ -671,48 +715,7 @@ const initSocketServer = (server) => {
       }
     });
 
-    socket.on("createChatRoom", async ({ userId, otherUserId }) => {
-      try {
-        // Check if the user is registered and valid
-        const user = await Users.findById(userId);
-        if (!user) {
-          socket.emit("errorNotification", { error: "User not found" });
-          return;
-        }
 
-        // Check if the recipient is registered and valid
-        const recipient = await Users.findById(otherUserId);
-        if (!recipient) {
-          socket.emit("errorNotification", { error: "Recipient not found" });
-          return;
-        }
-
-        // Find an existing chat room or create a new one
-        let chatRoom = await ChatRoom.findOne({
-          users: { $all: [userId, otherUserId] },
-        });
-
-        if (!chatRoom) {
-          chatRoom = new ChatRoom({ users: [userId, otherUserId] });
-          await chatRoom.save();
-        }
-
-        // Emit chat room details to the user
-        socket.emit("chatRoomCreated", {
-          chatRoomId: chatRoom._id,
-          recipient: {
-            _id: recipient._id,
-            fullName: recipient.fullName,
-            avatar: recipient.avatar,
-          },
-        });
-      } catch (error) {
-        console.error("Error creating chat room:", error);
-        socket.emit("errorNotification", {
-          error: "Failed to create chat room.",
-        });
-      }
-    });
 
 
     // message to admin route
