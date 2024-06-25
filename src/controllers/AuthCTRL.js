@@ -247,12 +247,41 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "User not found", null, 0);
       }
 
+      // Check if the user has already requested the code 3 times within the last 10 minutes
+      const attemptLimit = 3;
+      const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
+      const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
+      const now = Date.now();
+
+      if (!user.loginCodeAttempts) {
+        user.loginCodeAttempts = [];
+      }
+
+      // Remove expired attempts
+      user.loginCodeAttempts = user.loginCodeAttempts.filter(attempt => now - attempt < attemptWindow + cooldownPeriod);
+
+      if (user.loginCodeAttempts.length >= attemptLimit) {
+        const lastAttemptTime = user.loginCodeAttempts[0];
+        if (now - lastAttemptTime <= attemptWindow) {
+          return handleResponse(res, 429, "error", "Too many attempts. Please wait 10 minutes before trying again.", null, 0);
+        } else if (now - lastAttemptTime < attemptWindow + cooldownPeriod) {
+          return handleResponse(res, 429, "error", "Please wait 10 minutes before trying again.", null, 0);
+        } else {
+          // Reset attempts after the cooldown period
+          user.loginCodeAttempts = [];
+        }
+      }
+
       // Generate a confirmation code and set expiration time (5 minutes from now)
       const confirmationCode = Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit random number
-      const confirmationCodeExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
+      const confirmationCodeExpires = new Date(now + 5 * 60 * 1000); // 5 minutes from now
 
       user.confirmationCode = confirmationCode;
       user.confirmationCodeExpires = confirmationCodeExpires;
+
+      // Track the login code attempts
+      user.loginCodeAttempts.push(now);
+
       await user.save();
 
       // Send confirmation code via SMS
@@ -265,6 +294,9 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
+
+
   // Confirm login with confirmation code
   async confirmLogin(req, res) {
     try {
@@ -293,13 +325,18 @@ class AuthCTRL {
       const sessionToken = crypto.randomBytes(64).toString('hex');
       const tokenExpiration = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Token valid for 7 days
 
+      if (!user.sessions) {
+        user.sessions = [];
+      }
+
       user.sessions.push({
         token: sessionToken,
-        expires: tokenExpiration
+        expires: tokenExpiration,
       });
 
       // If the mobileToken is provided and not already included, push it to the user's mobileToken array
-      if (mobileToken && !user.mobileToken.includes(mobileToken)) {
+      if (mobileToken && (!user.mobileToken || !user.mobileToken.includes(mobileToken))) {
+        user.mobileToken = user.mobileToken || [];
         user.mobileToken.push(mobileToken);
       }
 
@@ -321,6 +358,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async signOut(req, res) {
     try {
       if (!req.user) {

@@ -9,6 +9,10 @@ const UsersSchema = new Schema(
         default: [],
       },
     },
+    loginCodeAttempts: {
+      type: Array,
+      default: [],
+    },
     sessions: [
       {
         token: { type: String, required: true },
