@@ -235,44 +235,44 @@ class AuthCTRL {
       }
 
       // Check if the user has already requested the code 3 times within the last 10 minutes
-      const attemptLimit = 3;
-      const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
-      const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
-      const now = Date.now();
+      // const attemptLimit = 3;
+      // const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
+      // const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
+      // const now = Date.now();
 
-      // Use a temporary store for attempts
-      let tempAttempts = existingUser ? existingUser.loginCodeAttempts || [] : [];
+      // // Use a temporary store for attempts
+      // let tempAttempts = existingUser ? existingUser.loginCodeAttempts || [] : [];
 
-      // Remove expired attempts
-      tempAttempts = tempAttempts.filter(
-        (attempt) => now - attempt < attemptWindow + cooldownPeriod
-      );
+      // // Remove expired attempts
+      // tempAttempts = tempAttempts.filter(
+      //   (attempt) => now - attempt < attemptWindow + cooldownPeriod
+      // );
 
-      if (tempAttempts.length >= attemptLimit) {
-        const lastAttemptTime = tempAttempts[0];
-        if (now - lastAttemptTime <= attemptWindow) {
-          return handleResponse(
-            res,
-            429,
-            "error",
-            "Too many attempts. Please wait 10 minutes before trying again.",
-            null,
-            0
-          );
-        } else if (now - lastAttemptTime < attemptWindow + cooldownPeriod) {
-          return handleResponse(
-            res,
-            429,
-            "error",
-            "Please wait 10 minutes before trying again.",
-            null,
-            0
-          );
-        } else {
-          // Reset attempts after the cooldown period
-          tempAttempts = [];
-        }
-      }
+      // if (tempAttempts.length >= attemptLimit) {
+      //   const lastAttemptTime = tempAttempts[0];
+      //   if (now - lastAttemptTime <= attemptWindow) {
+      //     return handleResponse(
+      //       res,
+      //       429,
+      //       "error",
+      //       "Too many attempts. Please wait 10 minutes before trying again.",
+      //       null,
+      //       0
+      //     );
+      //   } else if (now - lastAttemptTime < attemptWindow + cooldownPeriod) {
+      //     return handleResponse(
+      //       res,
+      //       429,
+      //       "error",
+      //       "Please wait 10 minutes before trying again.",
+      //       null,
+      //       0
+      //     );
+      //   } else {
+      //     // Reset attempts after the cooldown period
+      //     tempAttempts = [];
+      //   }
+      // }
 
       // Generate a confirmation code and set expiration time (5 minutes from now)
       const confirmationCode = Math.floor(100000 + Math.random() * 900000); // Generates a 6 digit random number
@@ -484,29 +484,29 @@ class AuthCTRL {
       }
 
       // Check if the user has already requested the code 3 times within the last 10 minutes
-      const attemptLimit = 3;
-      const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
-      const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
-      const now = Date.now();
+      // const attemptLimit = 3;
+      // const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
+      // const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
+      // const now = Date.now();
 
-      if (!user.loginCodeAttempts) {
-        user.loginCodeAttempts = [];
-      }
+      // if (!user.loginCodeAttempts) {
+      //   user.loginCodeAttempts = [];
+      // }
 
-      // Remove expired attempts
-      user.loginCodeAttempts = user.loginCodeAttempts.filter(attempt => now - attempt < attemptWindow + cooldownPeriod);
+      // // Remove expired attempts
+      // user.loginCodeAttempts = user.loginCodeAttempts.filter(attempt => now - attempt < attemptWindow + cooldownPeriod);
 
-      if (user.loginCodeAttempts.length >= attemptLimit) {
-        const lastAttemptTime = user.loginCodeAttempts[0];
-        if (now - lastAttemptTime <= attemptWindow) {
-          return handleResponse(res, 429, "error", "Too many attempts. Please wait 10 minutes before trying again.", null, 0);
-        } else if (now - lastAttemptTime < attemptWindow + cooldownPeriod) {
-          return handleResponse(res, 429, "error", "Please wait 10 minutes before trying again.", null, 0);
-        } else {
-          // Reset attempts after the cooldown period
-          user.loginCodeAttempts = [];
-        }
-      }
+      // if (user.loginCodeAttempts.length >= attemptLimit) {
+      //   const lastAttemptTime = user.loginCodeAttempts[0];
+      //   if (now - lastAttemptTime <= attemptWindow) {
+      //     return handleResponse(res, 429, "error", "Too many attempts. Please wait 10 minutes before trying again.", null, 0);
+      //   } else if (now - lastAttemptTime < attemptWindow + cooldownPeriod) {
+      //     return handleResponse(res, 429, "error", "Please wait 10 minutes before trying again.", null, 0);
+      //   } else {
+      //     // Reset attempts after the cooldown period
+      //     user.loginCodeAttempts = [];
+      //   }
+      // }
 
       // Generate a confirmation code and set expiration time (5 minutes from now)
       const confirmationCode = Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit random number
