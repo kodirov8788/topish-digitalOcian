@@ -671,7 +671,7 @@ const initSocketServer = (server) => {
       }
     });
 
-    socket.on("createChatRoom", async ({ userId, recipientId }) => {
+    socket.on("createChatRoom", async ({ userId, otherUserId }) => {
       try {
         // Check if the user is registered and valid
         const user = await Users.findById(userId);
@@ -681,7 +681,7 @@ const initSocketServer = (server) => {
         }
 
         // Check if the recipient is registered and valid
-        const recipient = await Users.findById(recipientId);
+        const recipient = await Users.findById(otherUserId);
         if (!recipient) {
           socket.emit("errorNotification", { error: "Recipient not found" });
           return;
@@ -689,11 +689,11 @@ const initSocketServer = (server) => {
 
         // Find an existing chat room or create a new one
         let chatRoom = await ChatRoom.findOne({
-          users: { $all: [userId, recipientId] },
+          users: { $all: [userId, otherUserId] },
         });
 
         if (!chatRoom) {
-          chatRoom = new ChatRoom({ users: [userId, recipientId] });
+          chatRoom = new ChatRoom({ users: [userId, otherUserId] });
           await chatRoom.save();
         }
 
@@ -713,6 +713,7 @@ const initSocketServer = (server) => {
         });
       }
     });
+
 
     // message to admin route
     socket.on("messageToAdmin", async ({ senderId, text }) => {
