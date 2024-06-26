@@ -1461,7 +1461,7 @@ class CompanyCTRL {
             ...job._doc,
             hr_name: user
               ? user.employer
-                ? user.employer.fullName
+                ? user.fullName
                 : "No employer name"
               : "deleted user",
             hr_avatar: user
@@ -1478,7 +1478,7 @@ class CompanyCTRL {
             ...job._doc,
             hr_name: user
               ? user.employer
-                ? user.employer.fullName
+                ? user.fullName
                 : "No employer name"
               : "deleted user",
             hr_avatar: user

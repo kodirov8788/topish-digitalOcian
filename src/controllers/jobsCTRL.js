@@ -199,7 +199,7 @@ class JobsCTRL {
           return {
             ...job._doc,
             hr_name: user.employer
-              ? user.employer.fullName
+              ? user.fullName
               : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
@@ -357,7 +357,7 @@ class JobsCTRL {
           return {
             ...job._doc,
             hr_name: user.employer
-              ? user.employer.fullName
+              ? user.fullName
               : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
@@ -442,7 +442,7 @@ class JobsCTRL {
       let NewSearchedJob = allJobs.map((job) => {
         return {
           ...job._doc, // Assuming you're using Mongoose and want to spread the job document
-          hr_name: req.user.employer.fullName, // Directly use req.user information
+          hr_name: req.user.fullName, // Directly use req.user information
           hr_avatar: req.user.avatar, // Directly use req.user information
           issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
         };
@@ -521,7 +521,7 @@ class JobsCTRL {
         NewSearchedJob = {
           ...singleJob.toObject(), // Convert Mongoose document to plain object
           hr_name: NewUser.employer
-            ? NewUser.employer.fullName
+            ? NewUser.fullName
             : "No employer name", // Check if employer exists
           hr_avatar: NewUser.avatar || "default_avatar.png", // Use default avatar if none is provided
           issuedBy: companyMap[singleJob.createdBy.toString()] || null, // Get company details if available
@@ -597,7 +597,7 @@ class JobsCTRL {
       // Construct NewSearchedJob with user details included
       let NewSearchedJob = {
         ...updatedJob.toObject(), // Convert Mongoose document to plain object
-        hr_name: NewUser.employer ? NewUser.employer.fullName : "", // Check for null and provide default value
+        hr_name: NewUser.employer ? NewUser.fullName : "", // Check for null and provide default value
         hr_avatar: NewUser.avatar,
       };
 
@@ -705,7 +705,7 @@ class JobsCTRL {
           return {
             ...job._doc,
             hr_name: user.employer
-              ? user.employer.fullName
+              ? user.fullName
               : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
@@ -839,7 +839,7 @@ class JobsCTRL {
           return {
             ...job._doc,
             hr_name: user.employer
-              ? user.employer.fullName
+              ? user.fullName
               : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
