@@ -298,7 +298,7 @@ class AuthCTRL {
 
       // Send confirmation code via SMS
       const token = await getEskizAuthToken();
-      const message = `topish.org saytida ro‘yxatdan o‘tish uchun tasdiqlash codi: ${confirmationCode}`;
+      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} hkf4/qKX0Qs`;
       await sendCustomSms(token, phoneNumberWithCountryCode, message);
 
       return handleResponse(
@@ -398,8 +398,6 @@ class AuthCTRL {
       );
     }
   }
-
-
   async resendConfirmationCode(req, res) {
     try {
       const { phoneNumber } = req.body;
@@ -464,7 +462,6 @@ class AuthCTRL {
       );
     }
   }
-
   // Send login confirmation code
   async sendLoginCode(req, res) {
     try {
@@ -522,7 +519,7 @@ class AuthCTRL {
 
       // Send confirmation code via SMS
       const token = await getEskizAuthToken();
-      const message = `topish.org saytida ro‘yxatdan o‘tish uchun tasdiqlash codi: ${confirmationCode}`;
+      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} hkf4/qKX0Qs`;
       await sendCustomSms(token, phoneNumberWithCountryCode, message);
 
       return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
