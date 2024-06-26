@@ -1,5 +1,5 @@
 const Users = require("../models/user_model");
-const { attachCookiesToResponse, createTokenUser } = require("../utils");
+const { attachCookiesToResponse, createTokenUser, createJWT } = require("../utils");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteUserAvatar } = require("./avatarCTRL");
 const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
@@ -14,204 +14,6 @@ function createRandomFullname() {
 }
 
 class AuthCTRL {
-  // async register(req, res) {
-  //   try {
-  //     const { error } = RegisterValidation(req.body);
-  //     if (error) {
-  //       return handleResponse(res, 400, "error", error.details[0].message);
-  //     }
-  //     const { phoneNumber, role, mobileToken } = req.body;
-
-  //     const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-  //     let existingUser = await Users.findOne({
-  //       phoneNumber: phoneNumberWithCountryCode,
-  //     });
-
-  //     if (existingUser) {
-  //       return handleResponse(
-  //         res,
-  //         400,
-  //         "error",
-  //         "User already exists with this phone number"
-  //       );
-  //     }
-
-  //     // Check if the user has already requested the code 3 times within the last 10 minutes
-  //     const attemptLimit = 3;
-  //     const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
-  //     const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
-  //     const now = Date.now();
-
-  //     if (!existingUser) {
-  //       existingUser = {
-  //         phoneNumber: phoneNumberWithCountryCode,
-  //         loginCodeAttempts: [],
-  //       };
-  //     }
-
-  //     // Remove expired attempts
-  //     existingUser.loginCodeAttempts = existingUser.loginCodeAttempts.filter(
-  //       (attempt) => now - attempt < attemptWindow + cooldownPeriod
-  //     );
-
-  //     if (existingUser.loginCodeAttempts.length >= attemptLimit) {
-  //       const lastAttemptTime = existingUser.loginCodeAttempts[0];
-  //       if (now - lastAttemptTime <= attemptWindow) {
-  //         return handleResponse(
-  //           res,
-  //           429,
-  //           "error",
-  //           "Too many attempts. Please wait 10 minutes before trying again.",
-  //           null,
-  //           0
-  //         );
-  //       } else if (now - lastAttemptTime < attemptWindow + cooldownPeriod) {
-  //         return handleResponse(
-  //           res,
-  //           429,
-  //           "error",
-  //           "Please wait 10 minutes before trying again.",
-  //           null,
-  //           0
-  //         );
-  //       } else {
-  //         // Reset attempts after the cooldown period
-  //         existingUser.loginCodeAttempts = [];
-  //       }
-  //     }
-
-  //     // Generate a confirmation code and set expiration time (5 minutes from now)
-  //     const confirmationCode = Math.floor(100000 + Math.random() * 900000); // Generates a 6 digit random number
-  //     const confirmationCodeExpires = new Date(now + 5 * 60 * 1000); // 5 minutes from now
-
-  //     // Create user
-  //     const user = await new Users({
-  //       phoneNumber: phoneNumberWithCountryCode,
-  //       fullName: createRandomFullname(),
-  //       role,
-  //       mobileToken: [mobileToken], // Assuming `mobileToken` is an array in the schema
-  //       confirmationCode, // Save the confirmation code
-  //       confirmationCodeExpires, // Save the expiration time
-  //       jobSeeker: {
-  //         skills: [],
-  //         professions: [],
-  //         expectedSalary: "",
-  //         jobTitle: "",
-  //         nowSearchJob: true,
-  //         workingExperience: "",
-  //         employmentType: "full-time",
-  //         educationalBackground: "",
-  //       },
-  //       employer: {
-  //         aboutCompany: "",
-  //         industry: "",
-  //         contactNumber: "",
-  //         contactEmail: "",
-  //         jobs: [],
-  //       },
-  //       service: {
-  //         savedOffices: [],
-  //       },
-  //       loginCodeAttempts: [now], // Track the registration attempts
-  //     }).save();
-
-  //     const tokenUser = createTokenUser(user);
-  //     attachCookiesToResponse({ res, user: tokenUser });
-
-  //     // Send confirmation code via SMS
-  //     const token = await getEskizAuthToken();
-  //     const message = `topish.org saytida ro‘yxatdan o‘tish uchun tasdiqlash codi: ${confirmationCode}`;
-  //     await sendCustomSms(token, phoneNumberWithCountryCode, message);
-
-  //     return handleResponse(
-  //       res,
-  //       201,
-  //       "success",
-  //       "User registered successfully. Please check your phone for the confirmation code.",
-  //       tokenUser
-  //     );
-  //   } catch (error) {
-  //     return handleResponse(
-  //       res,
-  //       500,
-  //       "error",
-  //       "Something went wrong: " + error.message,
-  //       null,
-  //       0
-  //     );
-  //   }
-  // }
-
-  // async confirmPhoneNumberWithCode(req, res) {
-  //   try {
-  //     const { phoneNumber, confirmationCode } = req.body;
-
-  //     if (!phoneNumber || !confirmationCode) {
-  //       return handleResponse(
-  //         res,
-  //         400,
-  //         "error",
-  //         "Phone number and confirmation code are required",
-  //         null,
-  //         0
-  //       );
-  //     }
-
-  //     const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-  //     const user = await Users.findOne({
-  //       phoneNumber: phoneNumberWithCountryCode,
-  //       confirmationCode,
-  //     });
-
-  //     if (!user) {
-  //       return handleResponse(
-  //         res,
-  //         400,
-  //         "error",
-  //         "Invalid confirmation code or phone number",
-  //         null,
-  //         0
-  //       );
-  //     }
-
-  //     // Check if the confirmation code is expired
-  //     if (user.confirmationCodeExpires < new Date()) {
-  //       return handleResponse(
-  //         res,
-  //         400,
-  //         "error",
-  //         "Confirmation code has expired",
-  //         null,
-  //         0
-  //       );
-  //     }
-
-  //     // If the codes match and not expired, mark the phone number as confirmed
-  //     user.phoneConfirmed = true;
-  //     user.confirmationCode = undefined; // Clear the confirmation code
-  //     user.confirmationCodeExpires = undefined; // Clear the expiration time
-  //     await user.save();
-
-  //     return handleResponse(
-  //       res,
-  //       200,
-  //       "success",
-  //       "Phone number confirmed successfully",
-  //       null,
-  //       0
-  //     );
-  //   } catch (error) {
-  //     return handleResponse(
-  //       res,
-  //       500,
-  //       "error",
-  //       "Something went wrong: " + error.message,
-  //       null,
-  //       0
-  //     );
-  //   }
-  // }
-
   async sendRegisterCode(req, res) {
     try {
       const { error } = RegisterValidation(req.body);
@@ -462,7 +264,6 @@ class AuthCTRL {
       );
     }
   }
-  // Send login confirmation code
   async sendLoginCode(req, res) {
     try {
       const { phoneNumber } = req.body;
@@ -480,32 +281,7 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "User not found", null, 0);
       }
 
-      // Check if the user has already requested the code 3 times within the last 10 minutes
-      // const attemptLimit = 3;
-      // const attemptWindow = 10 * 60 * 1000; // 10 minutes in milliseconds
-      // const cooldownPeriod = 5 * 60 * 1000; // 5 minutes in milliseconds
       const now = Date.now();
-
-      // if (!user.loginCodeAttempts) {
-      //   user.loginCodeAttempts = [];
-      // }
-
-      // // Remove expired attempts
-      // user.loginCodeAttempts = user.loginCodeAttempts.filter(attempt => now - attempt < attemptWindow + cooldownPeriod);
-
-      // if (user.loginCodeAttempts.length >= attemptLimit) {
-      //   const lastAttemptTime = user.loginCodeAttempts[0];
-      //   if (now - lastAttemptTime <= attemptWindow) {
-      //     return handleResponse(res, 429, "error", "Too many attempts. Please wait 10 minutes before trying again.", null, 0);
-      //   } else if (now - lastAttemptTime < attemptWindow + cooldownPeriod) {
-      //     return handleResponse(res, 429, "error", "Please wait 10 minutes before trying again.", null, 0);
-      //   } else {
-      //     // Reset attempts after the cooldown period
-      //     user.loginCodeAttempts = [];
-      //   }
-      // }
-
-      // Generate a confirmation code and set expiration time (5 minutes from now)
       const confirmationCode = Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit random number
       const confirmationCodeExpires = new Date(now + 5 * 60 * 1000); // 5 minutes from now
 
@@ -513,6 +289,9 @@ class AuthCTRL {
       user.confirmationCodeExpires = confirmationCodeExpires;
 
       // Track the login code attempts
+      if (!user.loginCodeAttempts) {
+        user.loginCodeAttempts = [];
+      }
       user.loginCodeAttempts.push(now);
 
       await user.save();
@@ -527,7 +306,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-  // Confirm login with confirmation code
   async confirmLogin(req, res) {
     try {
       const { phoneNumber, confirmationCode, mobileToken } = req.body;
@@ -552,7 +330,8 @@ class AuthCTRL {
       user.confirmationCodeExpires = null; // Clear the expiration time
 
       // Generate a unique token for the session
-      const sessionToken = crypto.randomBytes(64).toString('hex');
+      const tokenUser = createTokenUser(user);
+      const sessionToken = createJWT({ payload: tokenUser });
       const tokenExpiration = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Token valid for 7 days
 
       if (!user.sessions) {
@@ -573,15 +352,16 @@ class AuthCTRL {
       await user.save();
 
       // Attach the session token to the response
-      res.cookie('sessionToken', sessionToken, { httpOnly: true, secure: true });
 
-      // Respond with success
+
+      attachCookiesToResponse({ res, user: tokenUser });
+
       return handleResponse(
         res,
         200,
         "success",
         "Login successful",
-        { token: sessionToken, user: createTokenUser(user) },
+        tokenUser,
         1
       );
     } catch (error) {
