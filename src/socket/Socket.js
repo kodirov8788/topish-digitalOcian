@@ -381,14 +381,14 @@ const initSocketServer = (server) => {
         // Check if the user is registered and valid
         const user = await Users.findById(userId);
         if (!user) {
-          socket.emit("errorNotification", { error: "User not found" });
+          socket.emit("errorNotification", { status: 404, error: "User not found" });
           return;
         }
 
         // Check if the recipient is registered and valid
         const recipient = await Users.findById(otherUserId);
         if (!recipient) {
-          socket.emit("errorNotification", { error: "Recipient not found" });
+          socket.emit("errorNotification", { status: 404, error: "Recipient not found" });
           return;
         }
 
@@ -404,6 +404,7 @@ const initSocketServer = (server) => {
 
         // Emit chat room details to the user
         socket.emit("chatRoomCreated", {
+          status: 200,
           chatRoomId: chatRoom._id,
           recipient: {
             _id: recipient._id,
@@ -414,10 +415,12 @@ const initSocketServer = (server) => {
       } catch (error) {
         console.error("Error creating chat room:", error);
         socket.emit("errorNotification", {
+          status: 500,
           error: "Failed to create chat room.",
         });
       }
     });
+
     socket.on("adminChatRoom", async ({ userId }) => {
       try {
         // Retrieve the chat room where both the user and the admin are present
