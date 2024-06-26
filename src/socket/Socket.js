@@ -1,363 +1,924 @@
-import React, { useEffect, useState } from "react";
-import fake_avatar from "../../../assets/img/profile-fake-avatar.webp";
-import { Link, useParams } from "react-router-dom";
-import {
-  BackSingleJobseeker,
-  Education,
-  Experience,
-  Jobseekerstar,
-  LanguagesResume,
-  Sertifikat,
-} from "../../../components/icon";
-import { useDispatch, useSelector } from "react-redux";
-import { favoriteUser, fetchUserById } from "../../../store/usersApi/usersThunks";
-import { toast } from "react-toastify";
-import io from "socket.io-client";
-import { BASE_URL_DOMAIN } from "../../../api/api";
+const { Server } = require("socket.io");
+const ChatRoom = require("../models/chatRoom_model");
+const Users = require("../models/user_model");
+const Message = require("../models/message_model");
+const Notification = require("../utils/Notification");
+// const { handleResponse } = require("../utils/handleResponse");
+let io = null;
 
-const socket = io(BASE_URL_DOMAIN); // Change to your server URL
+// User management variables
+let onlineUsers = [];
+let userChatRoomMap = {};
+let socketUserMap = {}; // Maps socketId to userId
 
-export const JobSeekerSingle = () => {
-  const { id } = useParams();
-  const dispatch = useDispatch();
-  const { singleUser } = useSelector((state) => state.users);
-  const [chatRoomId, setChatRoomId] = useState(null);
-  const [loadingChatRoom, setLoadingChatRoom] = useState(true);
-  const user = JSON.parse(localStorage.getItem("user"));
+const typingDebounceTimers = {};
+// Initialize Socket.IO on the server
 
-  useEffect(() => {
-    dispatch(fetchUserById(id));
-  }, [dispatch, id]);
+const initSocketServer = (server) => {
+  io = new Server(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
+  });
 
-  useEffect(() => {
-    if (user && singleUser) {
-      const handleChatRoomsResponse = (response) => {
-        // console.log("response: ", response);
+  io.on("connection", (socket) => {
+    socket.on("joinRoom", ({ userId, chatRoomId }) => {
+      // Update maps to track user's room and socket
+      userChatRoomMap[userId] = chatRoomId;
+      socketUserMap[socket.id] = userId;
+      socket.join(chatRoomId);
 
-        if (response.status === 200 && response.data.length > 0) {
-          const existingRoom = response.data.find(
-            (room) => room.otherUser._id === singleUser._id
-          );
-          if (existingRoom) {
-            setChatRoomId(existingRoom._id);
-            setLoadingChatRoom(false);
-          } else {
-            createNewChatRoom();
-          }
-        } else {
-          createNewChatRoom();
+      // Notify OTHER users in the room
+      socket
+        .to(chatRoomId)
+        .emit("joinedRoom", { userId: userId, chatRoomId: chatRoomId });
+    });
+    // Admin login
+    socket.on("adminLogin", async (userId) => {
+      // Validate token and retrieve admin data
+      const admin = await Users.findOne({ _id: userId, role: "Admin" });
+      if (admin) {
+        const adminUser = {
+          userId: admin.id,
+          socketId: socket.id,
+          lastActive: new Date(),
+          isAdmin: true,
+          isAvailable: true,
+        };
+        onlineUsers.push(adminUser);
+      }
+      setTimeout(() => {
+        const adminUser = onlineUsers.find((user) => user.userId === userId);
+        if (adminUser) {
+          adminUser.isAvailable = false;
+          io.to(adminUser.socketId).emit("adminUnavailable");
+          onlineUsers = onlineUsers.filter((user) => user.userId !== userId);
         }
-      };
+      }, 60000 * 10);
+    });
+    socket.on("leaveRoom", ({ userId, chatRoomId }) => {
+      if (userChatRoomMap[userId] === chatRoomId) {
+        // Clean up user from room and socket maps
+        delete userChatRoomMap[userId];
+        delete socketUserMap[socket.id];
+        socket.leave(chatRoomId);
 
-      const handleChatRoomCreated = (response) => {
-        // console.log("created chat room: ", response);
-        if (response.status === 200) {
-          setChatRoomId(response.chatRoomId);
-          setLoadingChatRoom(false);
-        }
-      };
-
-      const createNewChatRoom = () => {
-        socket.emit("createChatRoom", { userId: user.id, otherUserId: singleUser._id });
-      };
-
-      socket.emit("requestChatRooms", { userId: user.id });
-      socket.on("chatRoomsResponse", handleChatRoomsResponse);
-      socket.on("chatRoomCreated", handleChatRoomCreated);
-
-      return () => {
-        socket.off("chatRoomsResponse", handleChatRoomsResponse);
-        socket.off("chatRoomCreated", handleChatRoomCreated);
-      };
-    }
-  }, [singleUser, user]);
-
-  const handleFavorite = () => {
-    dispatch(favoriteUser(id)).then((res) => {
-      if (res.payload?.result) {
-        toast.success("Sevimlilarga qo'shildi");
+        // Notify OTHER users in the room
+        socket
+          .to(chatRoomId)
+          .emit("leftRoom", { userId: userId, chatRoomId: chatRoomId });
+      } else {
+        socket.emit("error", { message: "You are not in the specified room." });
       }
     });
-  };
+    socket.on("heartbeat", (userId) => {
+      const existingUser = onlineUsers.find((user) => user.userId === userId);
+      if (existingUser) {
+        existingUser.lastActive = new Date();
+      } else {
+        onlineUsers.push({
+          userId,
+          socketId: socket.id,
+          lastActive: new Date(),
+        });
+      }
 
-  return (
-    <div
-      style={{
-        background: "linear-gradient(142deg, #8EC9FF 0%, #FFECCF 59.18%)",
-      }}
-    >
-      <div className="w-full flex justify-between px-6 pt-4">
-        <Link to={"/"}>
-          <BackSingleJobseeker />
-        </Link>
-        <span onClick={handleFavorite} className="relative cursor-pointer">
-          <Jobseekerstar />
-        </span>
-      </div>
-      <div className="pt-30 mb-40">
-        <div className="bg-white rounded-tl-[50px] relative rounded-tr-[50px] px-6 pt-22">
-          <label className="w-40 h-40 rounded-full  absolute  left-1/2 transform -translate-x-1/2 top-[-12%]">
-            <img
-              className="rounded-full w-40 h-40 object-cover"
-              src={singleUser?.avatar || fake_avatar}
-              alt="avatar"
-            />
-          </label>
-          <div>
-            <ul className="mt-7 flex flex-col gap-3">
-              <li className="">
-                <h3 className="text-[#616161] font-semibold text-base">Ism</h3>
-                <div className="flex justify-between gap-5">
-                  <h3 className="text-[#212121] text-base font-semibold">
-                    {singleUser?.fullName}
-                  </h3>
-                </div>
-              </li>
-              <li className="">
-                <h3 className="text-[#616161] font-semibold text-base">
-                  Qisqa sarlavha
-                </h3>
-                <div className="flex justify-between gap-5">
-                  <h3 className="text-[#212121] text-base font-semibold">
-                    {singleUser?.jobSeeker.jobtitle}
-                  </h3>
-                </div>
-              </li>
-              <li className="">
-                <h3 className="text-[#616161] font-semibold text.base">Jinsi</h3>
-                <div className="flex justify-between gap-5">
-                  <h3 className="text-[#212121] text.base font-semibold">
-                    {singleUser?.gender}
-                  </h3>
-                </div>
-              </li>
-              <li className="">
-                <h3 className="text-[#616161] font-semibold text.base">
-                  Joriy joylashuv
-                </h3>
-                <div className="flex justify-between gap-5">
-                  <h3 className="text-[#212121] text.base font-semibold">
-                    {singleUser?.location}
-                  </h3>
-                </div>
-              </li>
-              <li className="">
-                <h3 className="text-[#616161] font-semibold text.base">
-                  Kutilayotgan maosh
-                </h3>
-                <div className="flex justify-between gap-5">
-                  <h3 className="text-[#212121] text.base font-semibold">
-                    {singleUser?.jobSeeker.expectedSalary}
-                  </h3>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="bg-white relative px-6 py-1 mb-20">
-          <div className="my-6">
-            <h3 className="text-[#616161] font-semibold text-lg">Kasblar</h3>
-            <ul className="mt-4 flex flex-col gap-3">
-              {singleUser?.jobSeeker.professions?.map((item) => (
-                <li key={item} className="">
-                  <div className="flex justify.center bg-blue-100 p-3 rounded-3xl gap-5">
-                    <h3 className="text-[#212121] text.base font-semibold">
-                      {item}
-                    </h3>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="border rounded-[30px] px-3 py-3">
-            <div className="py-2">
-              <h3 className="text-black text-xl font-semibold mb-3 leading-[normal]">
-                Kontakt ma'lumotlari
-              </h3>
-              <hr />
-              <ul className="">
-                <li>
-                  <p className="mt-4 flex items.center gap-3 text.base font.medium text-[#212121]">
-                    {singleUser?.location}
-                  </p>
-                </li>
-                <li>
-                  <p className="mt-4 flex items.center gap-3 text.base font.medium text-[#212121]">
-                    {singleUser?.phoneNumber}
-                  </p>
-                </li>
-                <li>
-                  <p className="mt-4 flex items.center gap-3 text.base font.medium text-[#212121]">
-                    {singleUser?.resume.contact.email}
-                  </p>
-                </li>
-              </ul>
-            </div>
-          </div>
-          {singleUser?.resume?.summary ? (
-            <div className="border rounded-[30px] px-3 py-3 mt-6">
-              <div className="py-2">
-                <h3 className="text-black text-xl font-semibold mb-3 leading-[normal]">
-                  Summary
-                </h3>
-                <hr />
-                <ul className="">
-                  <li>
-                    <p className="mt-4 flex items.center gap-3 text.base font.medium text-[#212121]">
-                      {singleUser?.resume?.summary}
-                    </p>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          ) : (
-            ""
-          )}
-          {singleUser?.resume?.workExperience?.length ? (
-            <div className="border rounded-[30px] px-3 py-3 mt-6">
-              <div className="py-2">
-                <h3 className="text-black flex items.center gap-2 text-xl font-semibold mb-3 leading-[normal]">
-                  <Experience />
-                  Ish tajriba
-                </h3>
-                <hr />
-                <ul className="">
-                  {singleUser?.resume?.workExperience?.map((item) => (
-                    <li key={item.id} className="">
-                      <div className="mt-4 flex items.center gap-4 text.base font.medium text-[#212121]">
-                        <div className="border p-5 rounded-3xl">
-                          <Experience />
-                        </div>
-                        <div>
-                          <h3 className="text-black text-xl font.bold leading-[normal]">
-                            {item.jobTitle}
-                          </h3>
-                          <p className="text-[#616161] font-semibold text.base">
-                            {item.company}
-                          </p>
-                          <p className="text-[#616161] font-semibold text.base">
-                            {item.startDate} / {item.endDate}
-                          </p>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            ""
-          )}
-          {singleUser?.resume?.education?.length ? (
-            <div className="border rounded-[30px] px-3 py-3 mt-6">
-              <div className="py-2">
-                <h3 className="text-black flex items.center gap-2 text-xl font-semibold mb-3 leading-[normal]">
-                  <Education />
-                  Ta'lim
-                </h3>
-                <hr />
-                <ul className="">
-                  {singleUser?.resume?.education?.map((item) => (
-                    <li key={item.id} className="">
-                      <div className="mt-4 flex items.center gap-4 text.base font.medium text-[#212121]">
-                        <div className="border p-5 rounded-3xl">
-                          <Education />
-                        </div>
-                        <div>
-                          <h3 className="text-black text-xl font.bold leading-[normal]">
-                            {item.fieldOfStudy}
-                          </h3>
-                          <p className="text-[#616161] font-semibold text.base">
-                            {item.startDate} / {item.endDate}
-                          </p>
-                          <p className="text-[#616161] font-semibold text.base">
-                            {item.degree}
-                          </p>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            ""
-          )}
-          {singleUser?.resume?.certificates?.length ? (
-            <div className="border rounded-[30px] px-3 py-3 mt-6">
-              <div className="py-2">
-                <h3 className="text-black flex items.center gap-2 text-xl font-semibold mb-3 leading-[normal]">
-                  <Sertifikat />
-                  Sertifikatlar va ruxsatnomalar
-                </h3>
-                <hr />
-                <ul className="">
-                  {singleUser?.resume?.certificates?.map((item) => (
-                    <li key={item.id} className="">
-                      <div className="mt-4 flex items.center gap-4 text.base font.medium text-[#212121]">
-                        <div className="border p-5 rounded-3xl">
-                          <Sertifikat />
-                        </div>
-                        <div>
-                          <h3 className="text-black text-xl font.bold leading-[normal]">
-                            {item.title}
-                          </h3>
-                          <p className="text-[#616161] font-semibold text.base">
-                            {item.organization}
-                          </p>
-                          <p className="text-[#616161] font-semibold text.base">
-                            {item.dateOfIssue?.substring(0, 10)}
-                          </p>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            ""
-          )}
-          {singleUser?.resume?.languages?.length ? (
-            <div className="border rounded-[30px] px-3 py-3 mt-6">
-              <div className="py-2">
-                <h3 className="text.black flex items.center gap-2 text-xl font-semibold mb-3 leading-[normal]">
-                  <LanguagesResume />
-                  Tillar
-                </h3>
-                <hr />
-                <ul className="">
-                  {singleUser?.resume?.languages?.map((item) => (
-                    <li key={item.id} className="">
-                      <div className="mt-4 flex items.center gap-4 text.base font.medium text-[#212121]">
-                        <div>
-                          <h3 className="text-black text-xl font.bold leading-[normal]">
-                            {item.language}
-                          </h3>
-                          <p className="text-[#616161] font-semibold text.base">
-                            {item.proficiency}
-                          </p>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            ""
-          )}
-        </div>
-      </div>
-      <div className="w.full ">
-        <Link to={loadingChatRoom ? "#" : `/chat/${chatRoomId}`}
-          className={`shadow-md text.center w.full fixed bottom-22  text.white font.bold text.base  bg-[#246BFD] rounded-[100px] p-4 ${loadingChatRoom ? "cursor-not-allowed" : ""}`}
-          type="button"
-          onClick={loadingChatRoom ? (e) => e.preventDefault() : null}
-        >
-          {loadingChatRoom ? "Yuklanmoqda..." : "Xabar yuborish"}
-        </Link>
-      </div>
-    </div>
-  );
+      // console.count("Heartbeat");
+      const timeoutMinutes = 60;
+      onlineUsers = onlineUsers.filter(
+        (user) => (new Date() - user.lastActive) / 60000 < timeoutMinutes
+      );
+      // console.log(onlineUsers, "onlineUsers");
+      io.emit("getOnlineUsers", onlineUsers);
+    });
+    socket.on("requestChatRooms", async ({ userId }) => {
+      try {
+        if (!userId) {
+          socket.emit("chatRoomsResponse", {
+            status: 401,
+            message: "Unauthorized access. Please log in.",
+            data: null,
+            count: 0,
+          });
+          return;
+        }
+        // Find chat rooms for the user, excluding admin chat rooms
+        const chatRooms = await ChatRoom.find({ users: userId, isForAdmin: false });
+        if (!chatRooms.length) {
+          socket.emit("chatRoomsResponse", {
+            status: 200,
+            message: "No chat rooms found.",
+            data: [],
+            count: 0,
+          });
+          return;
+        }
+
+        const chatRoomsWithInfo = await Promise.all(
+          chatRooms.map(async (chatRoom) => {
+            const otherUserId = chatRoom.users.find(
+              (uId) => uId.toString() !== userId.toString()
+            );
+
+            if (!otherUserId) {
+              console.error(`Other user not found in chat room: ${chatRoom._id}`);
+              return null;
+            }
+
+            const otherUser = await Users.findById(otherUserId);
+            if (!otherUser) {
+              console.error(`User document not found for ID: ${otherUserId}`);
+              return null;
+            }
+
+            const lastMessage = await Message.findOne({
+              chatRoom: chatRoom._id,
+            })
+              .sort({ timestamp: -1 })
+              .populate("senderId")
+              .exec();
+
+            const unreadMessagesCount = await Message.countDocuments({
+              chatRoom: chatRoom._id,
+              recipientId: userId,
+              seen: false,
+            });
+
+            const fullName =
+              otherUser && otherUser.fullName
+                ? otherUser.fullName
+                : "Unknown User";
+
+            return {
+              _id: chatRoom._id,
+              otherUser: {
+                _id: otherUser._id,
+                fullName: fullName,
+                avatar: otherUser.avatar,
+                role: otherUser.role,
+              },
+              lastMessage: lastMessage
+                ? {
+                  text: lastMessage.text,
+                  timestamp: lastMessage.timestamp,
+                  senderId: lastMessage.senderId._id,
+                  recipientId:
+                    lastMessage.senderId._id.toString() === userId.toString()
+                      ? otherUserId
+                      : userId,
+                }
+                : null,
+              unreadMessagesCount,
+            };
+          })
+        );
+        const filteredChatRooms = chatRoomsWithInfo.filter(
+          (chatRoom) => chatRoom !== null
+        );
+
+        socket.emit("chatRoomsResponse", {
+          status: 200,
+          message: "Chat rooms retrieved successfully.",
+          data: filteredChatRooms,
+          count: filteredChatRooms.length,
+        });
+      } catch (error) {
+        console.error(error);
+        socket.emit("chatRoomsResponse", {
+          status: 500,
+          message: "An error occurred while retrieving chat rooms.",
+          data: null,
+          count: 0,
+        });
+      }
+    });
+    socket.on("sendMessage", async ({ text, recipientId, senderId }) => {
+      console.count("sendMessage event received");
+      console.log("sendMessage payload:", { text, recipientId, senderId });
+
+      try {
+        const sender = onlineUsers.find((user) => user.userId == senderId);
+        if (!sender) {
+          socket.emit("errorNotification", { error: "Sender not found" });
+          return;
+        }
+
+        const recipientUser = await Users.findById(recipientId);
+
+        if (!recipientUser) {
+          socket.emit("errorNotification", { error: "Recipient not found" });
+          return;
+        }
+
+        let chatRoom = await ChatRoom.findOne({
+          users: { $all: [senderId, recipientId] },
+        });
+        if (!chatRoom) {
+          chatRoom = new ChatRoom({ users: [senderId, recipientId] });
+          await chatRoom.save();
+        }
+        const message = new Message({
+          text,
+          senderId,
+          recipientId,
+          chatRoom: chatRoom._id,
+        });
+        const senderChatRoom = userChatRoomMap[senderId];
+        const recipientChatRoom = userChatRoomMap[recipientId];
+
+        if (senderChatRoom && recipientChatRoom && senderChatRoom === recipientChatRoom) {
+          message.read = true;
+          io.to(senderChatRoom).emit("messageRead", {
+            messageId: message._id,
+            chatRoomId: senderChatRoom,
+            readBy: recipientId,
+            read: true,
+          });
+        }
+        await message.save();
+
+        const senderFromStorage = await Users.findById(senderId);
+        const messageToSend = {
+          _id: message._id,
+          text: message.text,
+          timestamp: message.timestamp,
+          seen: message.seen,
+          chatRoomId: chatRoom._id,
+          senderId: {
+            _id: sender?.userId,
+            avatar: senderFromStorage?.avatar,
+          },
+          deleted: message.deleted,
+          recipientId: message.recipientId,
+        };
+
+
+        const recipient = onlineUsers.find((user) => user.userId == recipientId);
+
+        if (recipient && recipient.socketId) {
+          console.count("getMessage event emitted to recipient");
+          io.to(recipient.socketId).emit("getMessage", messageToSend);
+          socket.emit("getMessage", messageToSend); // Emit to sender
+        } else {
+          console.count("getMessage event emitted to sender (recipient not online)");
+          socket.emit("getMessage", messageToSend); // Emit to sender
+        }
+
+        const fullName =
+          senderFromStorage && senderFromStorage.fullName
+            ? senderFromStorage.fullName
+            : "Unknown User";
+        socket.emit("messageSentConfirmation", {
+          success: true,
+          messageId: message._id,
+        });
+        let customData = {
+          chatRoomId: chatRoom._id.toString(),
+          messageId: message._id.toString(),
+          timestamp: new Date().toISOString(),
+          senderId: sender.userId,
+          senderAvatar: senderFromStorage.avatar,
+          recipientId: message.recipientId.toString(),
+        };
+        Notification(
+          recipientUser.mobileToken,
+          { title: fullName, body: text },
+          customData
+        );
+      } catch (error) {
+        console.error("Error in sendMessage socket event:", error);
+        socket.emit("errorNotification", {
+          error: "An error occurred while sending the message.",
+        });
+      }
+    });
+    socket.on("singleChatRoom", async ({ userId, chatRoomId }) => {
+      console.log("singleChatRoom event received", { userId, chatRoomId })
+      try {
+        const chatRoom = await ChatRoom.findOne({
+          _id: chatRoomId,
+          users: userId,
+        }).populate("users", "avatar"); // Assuming 'users' is an array of user IDs
+        if (!chatRoom) {
+          socket.emit("chatRoomResponse", {
+            status: 404,
+            message: "Chat room not found or access denied",
+            data: null,
+          });
+          return;
+        }
+        // Find the other user in the chat room
+        const otherUserId = chatRoom.users.find(
+          (user) => user._id.toString() !== userId
+        )?.id; // Ensure user._id is available and in the correct format
+        if (!otherUserId) {
+          socket.emit("chatRoomResponse", {
+            status: 404,
+            message: "Other user not found in chat room",
+            data: null,
+          });
+          return;
+        }
+        let otherUser = await Users.findById(otherUserId)
+          .select("avatar fullName")
+          .exec();
+
+        if (!otherUser) {
+          socket.emit("chatRoomResponse", {
+            status: 404,
+            message: "User document not found",
+            data: null,
+          });
+          return;
+        }
+
+        // Update the message status to seen for the current user
+        await Message.updateMany(
+          { chatRoom: chatRoomId, recipientId: userId, seen: false },
+          { $set: { seen: true } }
+        );
+
+        const messageHistory = await Message.find({ chatRoom: chatRoomId })
+          .sort({ timestamp: 1 })
+          .populate("senderId", "avatar")
+          .exec();
+
+        // Prepare other user's data to send back
+        let otherUserData = {
+          fullName: otherUser.fullName,
+          avatar: otherUser.avatar,
+          _id: otherUser._id,
+        };
+
+        // Notify the recipient if they are online
+        const recipient = onlineUsers.find(
+          (user) => user.userId === otherUserId.toString()
+        );
+        if (recipient && recipient.socketId) {
+          socket.to(recipient.socketId).emit("seenUpdate", messageHistory);
+        }
+
+        // Send chat room details and message history back to the requester
+        socket.emit("chatRoomResponse", {
+          status: 200,
+          message: "Chat room and message history retrieved successfully",
+          data: { otherUser: otherUserData, messageHistory },
+        });
+      } catch (error) {
+        console.error("Error handling singleChatRoom event:", error);
+        socket.emit("chatRoomResponse", {
+          status: 500,
+          message: "Internal server error",
+          data: null,
+        });
+      }
+    });
+    socket.on("createChatRoom", async ({ userId, otherUserId }) => {
+      // console.log("createChatRoom event received", { userId, otherUserId })
+      try {
+        // Check if the user is registered and valid
+        const user = await Users.findById(userId);
+        if (!user) {
+          socket.emit("errorNotification", { status: 404, error: "User not found" });
+          return;
+        }
+
+        // Check if the recipient is registered and valid
+        const recipient = await Users.findById(otherUserId);
+        if (!recipient) {
+          socket.emit("errorNotification", { status: 404, error: "Recipient not found" });
+          return;
+        }
+
+        // Find an existing chat room or create a new one
+        let chatRoom = await ChatRoom.findOne({
+          users: { $all: [userId, otherUserId] },
+        });
+
+        if (!chatRoom) {
+          chatRoom = new ChatRoom({ users: [userId, otherUserId] });
+          await chatRoom.save();
+        }
+
+        // Emit chat room details to the user
+        socket.emit("chatRoomCreated", {
+          status: 200,
+          chatRoomId: chatRoom._id,
+          recipient: {
+            _id: recipient._id,
+            fullName: recipient.fullName,
+            avatar: recipient.avatar,
+          },
+        });
+      } catch (error) {
+        console.error("Error creating chat room:", error);
+        socket.emit("errorNotification", {
+          status: 500,
+          error: "Failed to create chat room.",
+        });
+      }
+    });
+
+    socket.on("adminChatRoom", async ({ userId }) => {
+      try {
+        // Retrieve the chat room where both the user and the admin are present
+        const Rooms = await ChatRoom.find().populate("users", "avatar");
+        let chatRoom = Rooms.find((chat) => {
+          return (
+            (chat.users[0]?._id == userId.toString() &&
+              chat.isForAdmin == true) ||
+            (chat.users[1]?._id == userId.toString() && chat.isForAdmin == true)
+          );
+        });
+        if (!chatRoom) {
+          socket.emit("adminChatRoom", {
+            status: 404,
+            message: "No chat room found between you and the admin",
+            data: null,
+          });
+          return;
+        }
+
+        // Retrieve message history for the chat room
+        const messageHistory = await Message.find({ chatRoom: chatRoom._id })
+          .sort({ timestamp: 1 })
+          .populate("senderId", "avatar")
+          .exec();
+
+        // Update the message status to seen for the current user
+        await Message.updateMany(
+          { chatRoom: chatRoom._id, recipientId: userId, seen: false },
+          { $set: { seen: true } }
+        );
+
+        // Notify the recipient if they are online
+        const recipient = onlineUsers.find((user) => user.userId === userId);
+        if (recipient && recipient.socketId) {
+          socket.to(recipient.socketId).emit("seenUpdate", messageHistory);
+        }
+
+        // Send chat room details and message history back to the requester
+        socket.emit("adminChatRoom", {
+          status: 200,
+          message: "Admin chat room and message history retrieved successfully",
+          data: messageHistory,
+        });
+      } catch (error) {
+        // console.error("Error handling AdminChatRoom event:", error);
+        socket.emit("adminChatRoom", {
+          status: 500,
+          message: "Internal server error",
+          data: null,
+        });
+      }
+    });
+    socket.on("deleteChatRoom", async ({ userId, chatRoomId }) => {
+      if (!userId) {
+        socket.emit("deleteChatRoomResponse", {
+          status: 401,
+          message: "Unauthorized access. Please log in.",
+        });
+        return;
+      }
+
+      const chatRoom = await ChatRoom.findOne({
+        _id: chatRoomId,
+        users: userId,
+      });
+
+      if (!chatRoom) {
+        socket.emit("deleteChatRoomResponse", {
+          status: 404,
+          message: "Chat room not found or access denied.",
+        });
+        return;
+      }
+
+      // Optionally, mark all messages as deleted or directly delete the chat room
+      await Message.updateMany({ chatRoom: chatRoomId }, { deleted: true });
+      await ChatRoom.deleteOne({ _id: chatRoomId });
+      chatRoom.users.forEach((memberId) => {
+        const member = onlineUsers.find(
+          (user) => user.userId === memberId.toString()
+        );
+        if (member) {
+          io.to(member.socketId).emit("chatRoomDeleted", {
+            chatRoomId,
+            message: "Chat room has been deleted.",
+          });
+        }
+      });
+
+      // Acknowledge the deletion to the requesting user
+      socket.emit("deleteChatRoomResponse", {
+        status: 200,
+        message: "Chat room deleted successfully.",
+      });
+    });
+    socket.on("deleteMessage", async ({ userId, messageId }) => {
+      try {
+        if (!userId) {
+          socket.emit("deleteMessageResponse", {
+            status: 401,
+            message: "Unauthorized",
+          });
+          return;
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+          socket.emit("deleteMessageResponse", {
+            status: 404,
+            message: "Message not found",
+          });
+          return;
+        }
+
+        if (message.senderId.toString() !== userId) {
+          socket.emit("deleteMessageResponse", {
+            status: 403,
+            message: "You are not authorized to delete this message",
+          });
+          return;
+        }
+
+        message.deleted = true;
+        await message.save();
+
+        const chatRoom = await ChatRoom.findOne({ _id: message.chatRoom });
+        if (!chatRoom) {
+          socket.emit("deleteMessageResponse", {
+            status: 404,
+            message: "Chat room not found or access denied.",
+          });
+          return;
+        }
+        chatRoom.users.forEach((memberId) => {
+          const member = onlineUsers.find(
+            (user) => user.userId === memberId.toString()
+          );
+          if (member) {
+            io.to(member.socketId).emit("deleteMessageNotification", {
+              // Changed to avoid key duplication and clarify the event type
+              messageId: message._id, // Use messageId for clarity
+              text: "A message has been deleted.", // Renamed to 'text' to avoid duplication
+            });
+          }
+        });
+
+        socket.emit("deleteMessageResponse", {
+          status: 200,
+          message: "Message deleted successfully",
+        });
+      } catch (error) {
+        console.error("Error deleting message:", error);
+        socket.emit("deleteMessageResponse", {
+          status: 500,
+          message: "Internal Server Error",
+        });
+      }
+    });
+    socket.on("updateMessage", async ({ userId, messageId, newText }) => {
+      try {
+        if (!userId) {
+          socket.emit("updateMessageResponse", {
+            status: 401,
+            message: "Unauthorized",
+          });
+          return;
+        }
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+          socket.emit("updateMessageResponse", {
+            status: 404,
+            message: "Message not found",
+          });
+          return;
+        }
+
+        if (message.senderId.toString() !== userId.toString()) {
+          socket.emit("updateMessageResponse", {
+            status: 403,
+            message: "You are not authorized to update this message",
+          });
+          return;
+        }
+
+        if (message.text === newText) {
+          socket.emit("updateMessageResponse", {
+            status: 200,
+            message: "No changes detected, message not updated.",
+          });
+          return;
+        }
+
+        message.text = newText;
+        await message.save(); // Ensure changes are saved
+
+        const chatRoom = await ChatRoom.findOne({ _id: message.chatRoom });
+        if (!chatRoom) {
+          socket.emit("updateMessageResponse", {
+            status: 404,
+            message: "Chat room not found or access denied.",
+          });
+          return;
+        }
+
+        chatRoom.users.forEach((memberId) => {
+          const member = onlineUsers.find(
+            (user) => user.userId === memberId.toString()
+          );
+          if (member) {
+            io.to(member.socketId).emit("updateMessageNotification", {
+              // Consistent naming
+              messageId: message._id, // Unique key for the message ID
+              newText: message.text, // Clear key for the updated text
+              notification: "A message has been updated.", // Descriptive key for the notification message
+            });
+          }
+        });
+        // Acknowledge the update to the sender
+        socket.emit("updateMessageResponse", {
+          status: 200,
+          message: "Message updated successfully",
+        });
+      } catch (error) {
+        console.error("Error updating message:", error);
+        socket.emit("updateMessageResponse", {
+          status: 500,
+          message: "Internal Server Error",
+        });
+      }
+    });
+    socket.on("typing", async ({ chatRoomId, userId, isTyping }) => {
+      try {
+        const chatRoom = await ChatRoom.findOne({
+          _id: chatRoomId,
+          users: userId,
+        });
+        if (!chatRoom) {
+          socket.emit("typingResponse", {
+            status: 404,
+            message: "Chat room not found or access denied.",
+          });
+          return;
+        }
+
+        // Debounce typing notification
+        const debounceKey = `${chatRoomId} -${userId} `;
+        if (typingDebounceTimers[debounceKey]) {
+          clearTimeout(typingDebounceTimers[debounceKey]);
+        }
+
+        // Automatically set typing to false after 2 seconds of inactivity
+        typingDebounceTimers[debounceKey] = setTimeout(() => {
+          chatRoom.users.forEach((memberId) => {
+            if (memberId.toString() === userId) return; // Don't send notification to the user who is typing
+
+            const member = onlineUsers.find(
+              (user) => user.userId === memberId.toString()
+            );
+            if (member) {
+              io.to(member.socketId).emit("typingNotification", {
+                chatRoomId,
+                userId,
+                typing: false,
+                text: "Online",
+                notification: "User is online",
+              });
+            }
+          });
+          delete typingDebounceTimers[debounceKey];
+        }, 2000);
+
+        // Immediately notify others if the user is typing
+        if (isTyping) {
+          chatRoom.users.forEach((memberId) => {
+            if (memberId.toString() === userId) return; // Don't send notification to the user who is typing
+
+            const member = onlineUsers.find(
+              (user) => user.userId === memberId.toString()
+            );
+            if (member) {
+              io.to(member.socketId).emit("typingNotification", {
+                chatRoomId,
+                userId,
+                typing: true,
+                text: "Typing...",
+                notification: "User is typing...",
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error handling typing event:", error);
+      }
+    });
+
+
+
+
+    // message to admin route
+    socket.on("messageToAdmin", async ({ senderId, text }) => {
+      try {
+        // Check if the user is registered and valid
+        const user = await Users.findById(senderId);
+        if (!user) {
+          socket.emit("errorNotification", { error: "User not found" });
+          return;
+        }
+
+        // Find an admin's chat room or create it if it does not exist
+        let adminChatRoom = await ChatRoom.findOne({
+          isForAdmin: true,
+          users: { $all: [senderId] },
+        });
+
+        if (!adminChatRoom) {
+          adminChatRoom = new ChatRoom({ users: [senderId], isForAdmin: true });
+          await adminChatRoom.save();
+        }
+        // Create a new message instance
+        const message = new Message({
+          text,
+          senderId,
+          chatRoom: adminChatRoom._id,
+          recipientId: "admin", // This can be dynamic based on available admins
+        });
+        // Save message to database
+        await message.save();
+
+        // Emit message to admin dashboard (assuming admins are also connected via socket)
+        const adminSocketId = findAdminSocketId(); // Implement this function based on your logic
+        io.to(adminSocketId).emit("newAdminMessage", {
+          message: text,
+          from: user.fullName,
+          chatRoomId: adminChatRoom._id,
+        });
+
+        // Confirm message sent to the user
+        socket.emit("messageSentToAdmin", { success: true });
+      } catch (error) {
+        console.error("Error sending message to admin:", error);
+        socket.emit("errorNotification", {
+          error: "Failed to send message to admin.",
+        });
+      }
+    });
+    socket.on("adminMessageToUser", async ({ senderId, userId, text }) => {
+      try {
+        // Check if the user is registered and valid
+        const user = await Users.findById(userId);
+        if (!user) {
+          socket.emit("adminChatRoom", { error: "User not found" });
+          return;
+        }
+        // Check if the sender (admin) is registered and valid
+        const admin = await Users.findById(senderId);
+        if (!admin) {
+          socket.emit("adminChatRoom", { error: "Admin not found" });
+          return;
+        }
+        // Find the existing chat room between any admin and the user
+        let chatRoom = await ChatRoom.findOne({
+          isForAdmin: true,
+          users: { $all: [userId] },
+        });
+        // If no chat room exists, create a new one
+        if (!chatRoom) {
+          chatRoom = new ChatRoom({
+            users: [senderId, userId],
+            isForAdmin: true,
+          });
+          await chatRoom.save();
+        } else {
+          // Ensure the admin is added to the chat room if not already
+          if (!chatRoom.users.includes(senderId)) {
+            chatRoom.users.push(senderId);
+            await chatRoom.save();
+          }
+        }
+
+        // Create a new message instance
+        const message = new Message({
+          text,
+          senderId,
+          chatRoom: chatRoom._id,
+          recipientId: userId,
+        });
+        await message.save();
+
+        // console.log("message", message);
+        // Emit message to user (assuming users are also connected via socket)
+        // Emit message to user (assuming users are also connected via socket)
+        const userSocket = onlineUsers.find((user) => user.userId === userId);
+        if (userSocket) {
+          const userSocketId = userSocket.socketId;
+          io.to(userSocketId).emit("adminChatRoom", {
+            message: message.text,
+            _id: message._id,
+            avatar: "",
+            recipientId: message.recipientId,
+            deleted: message.deleted,
+            seen: message.seen,
+            senderId: "Admin",
+            chatRoomId: chatRoom._id,
+            timestamp: message.timestamp,
+            file: message.file,
+          });
+        }
+
+        // Confirm message sent to the admin
+        socket.emit("adminChatRoom", {
+          message: message.text,
+          _id: message._id,
+          avatar: "",
+          recipientId: message.recipientId,
+          deleted: message.deleted,
+          seen: message.seen,
+          senderId: "Admin",
+          chatRoomId: chatRoom._id,
+          timestamp: message.timestamp,
+          file: message.file,
+        });
+
+        let customData = {
+          timestamp: new Date().toISOString(),
+          senderId: "Admin",
+        };
+        Notification(
+          user.mobileToken,
+          { title: "Topish support", body: text },
+          customData
+        );
+      } catch (error) {
+        console.error("Error sending message from admin to user:", error);
+        socket.emit("adminMessageToUser", {
+          error: "Failed to send message to user.",
+        });
+      }
+    });
+    socket.on("disconnect", () => {
+      // Use the socket ID to find the corresponding user ID and chat room
+      const userId = socketUserMap[socket.id];
+      const chatRoomId = userChatRoomMap[userId];
+      if (userId && chatRoomId) {
+        socket.leave(chatRoomId);
+
+        // Notify OTHER users in the room
+        socket
+          .to(chatRoomId)
+          .emit("leftRoom", { userId: userId, chatRoomId: chatRoomId });
+
+        // Clean up user from room and socket maps
+        delete userChatRoomMap[userId];
+        delete socketUserMap[socket.id];
+      }
+
+      // Remove user from online users list
+      onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id);
+      io.emit("updateOnlineUsers", onlineUsers);
+    });
+  });
+};
+// find admin socket id
+function findAdminSocketId() {
+  // Placeholder function to fetch an admin's socket ID
+  return onlineUsers.find((user) => user.isAdmin).socketId;
+}
+// Get the io instance
+const getIO = () => {
+  if (!io) {
+    throw new Error("Socket.IO not initialized!");
+  }
+  return io;
+};
+
+// User management functions
+const addUser = (user) => {
+  onlineUsers.push(user);
+};
+
+const removeUser = (socketId) => {
+  onlineUsers = onlineUsers.filter((user) => user.socketId !== socketId);
+};
+
+const getUser = (userId) => {
+  return onlineUsers.find((user) => user.userId === userId);
+};
+
+const getOnlineUsers = () => {
+  return onlineUsers;
+};
+
+module.exports = {
+  initSocketServer,
+  getIO,
+  addUser,
+  removeUser,
+  getUser,
+  getOnlineUsers,
 };
