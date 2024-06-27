@@ -45,7 +45,6 @@ class TournamentsCTRL {
         params: { id: tournamentID },
       } = req;
 
-
       const deleteTournament = await Tournament.findOneAndDelete({
         _id: tournamentID,
         createdBy: req.user._id,
@@ -76,7 +75,6 @@ class TournamentsCTRL {
 
   async getTournament(req, res) {
     try {
-
       const { id: tournamentID } = req.params;
 
       if (!tournamentID) {
@@ -116,7 +114,6 @@ class TournamentsCTRL {
       }
       const user = await Users.findById(req.user.id).select("-password");
       if (user.role !== 'Admin') return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-
 
       const {
         params: { id: tournamentID },
@@ -171,7 +168,7 @@ class TournamentsCTRL {
       }
 
       let queryObject = {
-        name: { $regex: name, $options: "i" },
+        tournament_name: { $regex: name, $options: "i" },
       };
 
       const tournaments = await Tournament.find(queryObject)
@@ -212,7 +209,7 @@ class TournamentsCTRL {
       }
 
       const { id: tournamentID } = req.params;
-      const user = req.user._id;
+      const user = req.user.id;
 
       const tournament = await Tournament.findById(tournamentID);
       if (!tournament) {
@@ -226,7 +223,7 @@ class TournamentsCTRL {
         );
       }
 
-      if (tournament.participants.includes(user.toString())) {
+      if (tournament.participants.includes(user.id)) {
         return handleResponse(
           res,
           400,
@@ -237,7 +234,7 @@ class TournamentsCTRL {
         );
       }
 
-      tournament.participants.push(user);
+      tournament.participants.push(user.id);
       await tournament.save();
 
       return handleResponse(
@@ -260,7 +257,7 @@ class TournamentsCTRL {
       }
 
       const { id: tournamentID } = req.params;
-      const user = req.user._id;
+      const user = req.user.id;
 
       const tournament = await Tournament.findById(tournamentID);
       if (!tournament) {
@@ -274,7 +271,7 @@ class TournamentsCTRL {
         );
       }
 
-      const participantIndex = tournament.participants.indexOf(user.toString());
+      const participantIndex = tournament.participants.indexOf(user.id);
       if (participantIndex === -1) {
         return handleResponse(
           res,

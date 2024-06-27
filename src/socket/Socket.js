@@ -22,7 +22,6 @@ const initSocketServer = (server) => {
       credentials: true,
     },
   });
-
   io.on("connection", (socket) => {
     socket.on("joinRoom", ({ userId, chatRoomId }) => {
       // Update maps to track user's room and socket
@@ -35,7 +34,6 @@ const initSocketServer = (server) => {
         .to(chatRoomId)
         .emit("joinedRoom", { userId: userId, chatRoomId: chatRoomId });
     });
-    // Admin login
     socket.on("adminLogin", async (userId) => {
       // Validate token and retrieve admin data
       const admin = await Users.findOne({ _id: userId, role: "Admin" });
@@ -420,7 +418,6 @@ const initSocketServer = (server) => {
         });
       }
     });
-
     socket.on("adminChatRoom", async ({ userId }) => {
       try {
         // Retrieve the chat room where both the user and the admin are present
@@ -717,11 +714,6 @@ const initSocketServer = (server) => {
         console.error("Error handling typing event:", error);
       }
     });
-
-
-
-
-    // message to admin route
     socket.on("messageToAdmin", async ({ senderId, text }) => {
       try {
         // Check if the user is registered and valid

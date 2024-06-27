@@ -9,8 +9,7 @@ const tournamentsEndpoint = {
     post: {
       summary: "Create a new tournament",
       tags: ["Tournaments"],
-      description:
-        "Endpoint to create a new tournament. Requires authentication.",
+      description: "Endpoint to create a new tournament. Requires authentication.",
       requestBody: {
         required: true,
         content: {
@@ -18,24 +17,73 @@ const tournamentsEndpoint = {
             schema: {
               type: "object",
               properties: {
-                name: {
+                tournament_id: {
                   type: "string",
                   required: true,
-                  example: "Championship Tournament",
+                  example: "tournament123",
+                },
+                tournament_name: {
+                  type: "string",
+                  required: true,
+                  example: "Topish Cup tournament",
+                },
+                date_range: {
+                  type: "string",
+                  required: true,
+                  example: "12-28-Sentyabr",
                 },
                 location: {
                   type: "string",
                   required: true,
-                  example: "New York, NY",
+                  example: "Online",
                 },
-                date: {
+                prize_pool: {
                   type: "string",
-                  format: "date",
+                  required: false,
+                  example: "5 000 000 so'm",
+                },
+                organizer: {
+                  type: "string",
                   required: true,
-                  example: "2024-08-21",
+                  example: "Topish va Navana Technologies",
+                },
+                game: {
+                  type: "string",
+                  required: false,
+                  example: "PlayerUnknown’s Battlegrounds (PUBG)",
+                },
+                platform: {
+                  type: "string",
+                  required: false,
+                  example: "PC, Mobile",
+                },
+                player_id: {
+                  type: "string",
+                  required: false,
+                  example: "@Topish2398900240",
+                },
+                special_code: {
+                  type: "string",
+                  required: false,
+                  example: "Topish-tour2398",
+                },
+                description: {
+                  type: "string",
+                  required: false,
+                  example: "Description of the tournament",
+                },
+                image: {
+                  type: "string",
+                  required: false,
+                  example: "image_url",
+                },
+                type: {
+                  type: "string",
+                  required: true,
+                  example: "kibersport",
                 },
               },
-              required: ["name", "location", "date"],
+              required: ["tournament_id", "tournament_name", "date_range", "location", "organizer", "type"],
             },
           },
         },
@@ -96,8 +144,7 @@ const tournamentsEndpoint = {
     get: {
       summary: "Get all tournaments",
       tags: ["Tournaments"],
-      description:
-        "Endpoint to retrieve all tournaments with optional filtering. Requires authentication.",
+      description: "Endpoint to retrieve all tournaments with optional filtering. Requires authentication.",
       parameters: [
         {
           in: "query",
@@ -128,8 +175,7 @@ const tournamentsEndpoint = {
       ],
       responses: {
         200: {
-          description:
-            "A list of tournaments with optional filtering, sorting, and field selection.",
+          description: "A list of tournaments with optional filtering, sorting, and field selection.",
           content: {
             "application/json": {
               schema: {
@@ -297,21 +343,56 @@ const tournamentsEndpoint = {
             schema: {
               type: "object",
               properties: {
-                name: {
+                tournament_name: {
                   type: "string",
-                  example: "Championship Tournament",
+                  example: "Topish Cup tournament",
+                },
+                date_range: {
+                  type: "string",
+                  example: "12-28-Sentyabr",
                 },
                 location: {
                   type: "string",
-                  example: "New York, NY",
+                  example: "Online",
                 },
-                date: {
+                prize_pool: {
                   type: "string",
-                  format: "date",
-                  example: "2024-08-21",
+                  example: "5 000 000 so'm",
+                },
+                organizer: {
+                  type: "string",
+                  example: "Topish va Navana Technologies",
+                },
+                game: {
+                  type: "string",
+                  example: "PlayerUnknown’s Battlegrounds (PUBG)",
+                },
+                platform: {
+                  type: "string",
+                  example: "PC, Mobile",
+                },
+                player_id: {
+                  type: "string",
+                  example: "@Topish2398900240",
+                },
+                special_code: {
+                  type: "string",
+                  example: "Topish-tour2398",
+                },
+                description: {
+                  type: "string",
+                  example: "Description of the tournament",
+                },
+                image: {
+                  type: "string",
+                  example: "image_url",
+                },
+                type: {
+                  type: "string",
+                  example: "kibersport",
                 },
               },
-              required: ["name", "location", "date"],
+              required: ["tournament_name", "date_range", "location", "organizer", "type"],
             },
           },
         },
