@@ -13,12 +13,12 @@ const UsersSchema = new Schema(
       type: Array,
       default: [],
     },
-    sessions: [
-      {
-        token: { type: String, required: true },
-        expires: { type: Date, required: true },
-      },
-    ],
+    // sessions: [
+    //   {
+    //     token: { type: String, required: true },
+    //     expires: { type: Date, required: true },
+    //   },
+    // ],
     phoneNumber: { type: String, required: true, unique: true },
     phoneConfirmed: { type: Boolean, default: false },
     confirmationCode: { type: String, default: null },

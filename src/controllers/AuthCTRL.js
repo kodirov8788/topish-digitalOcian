@@ -5,14 +5,13 @@ const { deleteUserAvatar } = require("./avatarCTRL");
 const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
 const { RegisterValidation, logOutValidation, RegisterValidationConfirm } = require("../helpers/AuthValidation");
 const { getEskizAuthToken, sendCustomSms } = require("../utils/smsService");
-const crypto = require('crypto');
+// const crypto = require('crypto');
 
 function createRandomFullname() {
   const firstName = "User";
   const randomNumber = Math.floor(Math.random() * 1000000);
   return `${firstName} ${randomNumber}`;
 }
-
 class AuthCTRL {
   async sendRegisterCode(req, res) {
     try {
@@ -93,7 +92,7 @@ class AuthCTRL {
       } else {
         existingUser.confirmationCode = confirmationCode;
         existingUser.confirmationCodeExpires = confirmationCodeExpires;
-        existingUser.loginCodeAttempts.push(now);
+        // existingUser.loginCodeAttempts.push(now);
       }
 
       await existingUser.save();
@@ -296,10 +295,10 @@ class AuthCTRL {
       user.confirmationCodeExpires = confirmationCodeExpires;
 
       // Track the login code attempts
-      if (!user.loginCodeAttempts) {
-        user.loginCodeAttempts = [];
-      }
-      user.loginCodeAttempts.push(now);
+      // if (!user.loginCodeAttempts) {
+      //   user.loginCodeAttempts = [];
+      // }
+      // user.loginCodeAttempts.push(now);
 
       await user.save();
 
@@ -342,17 +341,17 @@ class AuthCTRL {
 
       // Generate a unique token for the session
       const tokenUser = createTokenUser(user);
-      const sessionToken = createJWT({ payload: tokenUser });
-      const tokenExpiration = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Token valid for 7 days
+      // const sessionToken = createJWT({ payload: tokenUser });
+      // const tokenExpiration = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Token valid for 7 days
 
-      if (!user.sessions) {
-        user.sessions = [];
-      }
+      // if (!user.sessions) {
+      //   user.sessions = [];
+      // }
 
-      user.sessions.push({
-        token: sessionToken,
-        expires: tokenExpiration,
-      });
+      // user.sessions.push({
+      //   token: sessionToken,
+      //   expires: tokenExpiration,
+      // });
 
       // If the mobileToken is provided and not already included, push it to the user's mobileToken array
       if (mobileToken && (!user.mobileToken || !user.mobileToken.includes(mobileToken))) {
