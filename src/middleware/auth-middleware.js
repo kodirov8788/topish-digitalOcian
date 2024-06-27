@@ -2,43 +2,31 @@ const { handleResponse } = require("../utils/handleResponse");
 const { isTokenValid } = require("../utils/jwt");
 
 const authMiddleware = async (req, res, next) => {
-  // console.log("req: ", req);
-  // console.log("req.cookies: ", req.cookies);
   const token = req.cookies.token;
-  // console.log("token middleware ", token);
+
   if (!token) {
     return handleResponse(res, 401, "error", "Authentication invalid", {}, 0);
   }
+
   try {
-    const {
-      phoneNumber,
-      employer,
-      favorites,
-      jobSeeker,
-      coins,
-      id,
-      role,
-      avatar,
-      mobileToken,
-      fullName,
-    } = isTokenValid({ token });
+    const payload = isTokenValid(token); // Remove destructuring and call isTokenValid directly
     req.user = {
-      phoneNumber,
-      employer,
-      favorites,
-      jobSeeker,
-      coins,
-      id,
-      role,
-      avatar,
-      mobileToken,
-      fullName,
+      phoneNumber: payload.phoneNumber,
+      employer: payload.employer,
+      favorites: payload.favorites,
+      jobSeeker: payload.jobSeeker,
+      coins: payload.coins,
+      id: payload.id,
+      role: payload.role,
+      avatar: payload.avatar,
+      mobileToken: payload.mobileToken,
+      fullName: payload.fullName,
     };
     next();
   } catch (error) {
     console.error("Error in authMiddleware:", error);
-    return handleResponse(res, 401, "error", "No Authenticated", {}, 0);
+    return handleResponse(res, 401, "error", "Authentication invalid", {}, 0);
   }
 };
 
-module.exports = authMiddleware; // Export the middleware function for use in other parts of the application
+module.exports = authMiddleware;
