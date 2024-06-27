@@ -9,7 +9,7 @@ const authMiddleware = async (req, res, next) => {
   }
 
   try {
-    const payload = isTokenValid(token); // Remove destructuring and call isTokenValid directly
+    const payload = isTokenValid(token); // Pass the token directly
     req.user = {
       phoneNumber: payload.phoneNumber,
       employer: payload.employer,

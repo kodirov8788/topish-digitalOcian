@@ -116,7 +116,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async resendConfirmationCode(req, res) {
     try {
       const { phoneNumber } = req.body;
@@ -148,7 +147,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async sendLoginCode(req, res) {
     try {
       const { phoneNumber } = req.body;
@@ -182,7 +180,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async confirmLogin(req, res) {
     try {
 
@@ -227,7 +224,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async signOut(req, res) {
     try {
       if (!req.user) {
