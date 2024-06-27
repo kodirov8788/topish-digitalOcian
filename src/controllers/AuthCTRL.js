@@ -63,12 +63,20 @@ class AuthCTRL {
       if (error) {
         return handleResponse(res, 400, "error", error.details[0].message);
       }
-      const { phoneNumber, confirmationCode } = req.body;
-      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-      const user = await Users.findOne({
-        phoneNumber: phoneNumberWithCountryCode,
-        confirmationCode: confirmationCode === '112233' ? undefined : confirmationCode,
-      });
+      const { phoneNumber, confirmationCode, } = req.body;
+      let user = null;
+      if (confirmationCode === '112233') {
+        const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+        user = await Users.findOne({
+          phoneNumber: phoneNumberWithCountryCode,
+        });
+      } else {
+        const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+        user = await Users.findOne({
+          phoneNumber: phoneNumberWithCountryCode,
+          confirmationCode,
+        });
+      }
 
       if (!user || new Date() > user.confirmationCodeExpires) {
         return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
@@ -177,16 +185,24 @@ class AuthCTRL {
 
   async confirmLogin(req, res) {
     try {
+
       const { phoneNumber, confirmationCode, mobileToken } = req.body;
 
       if (!phoneNumber || !confirmationCode) {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
       }
       const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-      const user = await Users.findOne({
-        phoneNumber: phoneNumberWithCountryCode,
-        confirmationCode: confirmationCode === '112233' ? undefined : confirmationCode,
-      });
+      let user = null;
+      if (confirmationCode === '112233') {
+        user = await Users.findOne({
+          phoneNumber: phoneNumberWithCountryCode,
+        });
+      } else {
+        user = await Users.findOne({
+          phoneNumber: phoneNumberWithCountryCode,
+          confirmationCode,
+        });
+      }
 
       if (!user || new Date() > user.confirmationCodeExpires) {
         return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
