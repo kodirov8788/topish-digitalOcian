@@ -16,6 +16,12 @@ const TournamentSchema = new mongoose.Schema(
         image: { type: String, required: false },
         type: { type: String, required: true },
         participants: { type: [String], required: false, default: [] },
+        status: {
+            type: String,
+            enum: ["open", "closed", "expired"],
+            default: "open",
+            required: false
+        }
     },
     { timestamps: true }
 );

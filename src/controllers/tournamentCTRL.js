@@ -1,6 +1,7 @@
 const Tournament = require("../models/tournament_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
+const { deleteFiles } = require("../utils/TurnerUpload");
 
 class TournamentsCTRL {
   async createTournament(req, res) {
@@ -10,12 +11,15 @@ class TournamentsCTRL {
       }
 
       const user = await Users.findById(req.user.id).select("-password");
-      if (user.role !== 'Admin') return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      if (user.role !== 'Admin' && user.role !== "Employer") {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
 
       const tournamentDetails = {
         ...req.body,
         createdBy: req.user._id,
-        participants: []
+        participants: [],
+        image: req.files.length ? req.files[0] : ""
       };
 
       const tournament = await Tournament.create(tournamentDetails);
@@ -29,6 +33,9 @@ class TournamentsCTRL {
         1
       );
     } catch (error) {
+      if (req.files && req.files.length) {
+        await deleteFiles(req.files); // Cleanup uploaded file if tournament creation fails
+      }
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
@@ -38,18 +45,20 @@ class TournamentsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+
       const user = await Users.findById(req.user.id).select("-password");
-      if (user.role !== 'Admin') return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      if (user.role !== 'Admin' && user.role !== "Employer") {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
 
-      const {
-        params: { id: tournamentID },
-      } = req;
+      const { params: { id: tournamentID } } = req;
 
-      const deleteTournament = await Tournament.findOneAndDelete({
+      const tournament = await Tournament.findOneAndDelete({
         _id: tournamentID,
         createdBy: req.user._id,
       });
-      if (!deleteTournament) {
+
+      if (!tournament) {
         return handleResponse(
           res,
           404,
@@ -58,6 +67,10 @@ class TournamentsCTRL {
           null,
           0
         );
+      }
+
+      if (tournament.image) {
+        await deleteFiles([tournament.image]);
       }
 
       return handleResponse(
@@ -112,16 +125,22 @@ class TournamentsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
-      if (user.role !== 'Admin') return handleResponse(res, 401, "error", "Unauthorized", null, 0);
 
-      const {
-        params: { id: tournamentID },
-      } = req;
+      const user = await Users.findById(req.user.id).select("-password");
+      if (user.role !== 'Admin' && user.role !== "Employer") {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { params: { id: tournamentID } } = req;
+
+      const updateData = { ...req.body };
+      if (req.files && req.files.length) {
+        updateData.image = req.files[0];
+      }
 
       const updatedTournament = await Tournament.findOneAndUpdate(
         { _id: tournamentID, createdBy: req.user._id },
-        req.body,
+        updateData,
         {
           new: true,
           runValidators: true,
@@ -148,6 +167,9 @@ class TournamentsCTRL {
         1
       );
     } catch (error) {
+      if (req.files && req.files.length) {
+        await deleteFiles(req.files); // Cleanup uploaded file if tournament update fails
+      }
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
@@ -156,20 +178,13 @@ class TournamentsCTRL {
     try {
       const { name, page = 1, limit = 10 } = req.query;
 
-      if (!name || !name.trim()) {
-        return handleResponse(
-          res,
-          200,
-          "error",
-          "Tournament name is required",
-          [],
-          0
-        );
-      }
+      let queryObject = {};
 
-      let queryObject = {
-        tournament_name: { $regex: name, $options: "i" },
-      };
+      if (name && name.trim()) {
+        queryObject = {
+          tournament_name: { $regex: name, $options: "i" },
+        };
+      }
 
       const tournaments = await Tournament.find(queryObject)
         .skip((page - 1) * limit)
@@ -223,7 +238,7 @@ class TournamentsCTRL {
         );
       }
 
-      if (tournament.participants.includes(user.id)) {
+      if (tournament.participants.includes(user)) {
         return handleResponse(
           res,
           400,
@@ -234,7 +249,7 @@ class TournamentsCTRL {
         );
       }
 
-      tournament.participants.push(user.id);
+      tournament.participants.push(user);
       await tournament.save();
 
       return handleResponse(
@@ -271,7 +286,7 @@ class TournamentsCTRL {
         );
       }
 
-      const participantIndex = tournament.participants.indexOf(user.id);
+      const participantIndex = tournament.participants.indexOf(user);
       if (participantIndex === -1) {
         return handleResponse(
           res,
@@ -292,6 +307,60 @@ class TournamentsCTRL {
         "success",
         "Left tournament successfully",
         tournament,
+        1
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+
+  async updateTournamentStatus(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findById(req.user.id).select("-password");
+      if (user.role !== 'Admin' && user.role !== 'Employer') {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { params: { id: tournamentID } } = req;
+      const { status } = req.body;
+
+      if (status) {
+        const validStatuses = ["open", "closed", "expired"];
+        if (!validStatuses.includes(status)) {
+          return handleResponse(res, 400, "error", "Invalid status value", null, 0);
+        }
+      }
+
+      const updatedTournament = await Tournament.findOneAndUpdate(
+        { _id: tournamentID, createdBy: req.user._id },
+        { status },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+      if (!updatedTournament) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Tournament not found with ID: ${tournamentID}`,
+          null,
+          0
+        );
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Tournament status updated successfully",
+        updatedTournament,
         1
       );
     } catch (error) {

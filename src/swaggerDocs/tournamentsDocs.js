@@ -13,80 +13,68 @@ const tournamentsEndpoint = {
       requestBody: {
         required: true,
         content: {
-          "application/json": {
+          "multipart/form-data": {
             schema: {
               type: "object",
               properties: {
                 tournament_id: {
                   type: "string",
-                  required: true,
-                  example: "tournament123",
+                  example: "tournament123"
                 },
                 tournament_name: {
                   type: "string",
-                  required: true,
-                  example: "Topish Cup tournament",
+                  example: "Topish Cup tournament"
                 },
                 date_range: {
                   type: "string",
-                  required: true,
-                  example: "12-28-Sentyabr",
+                  example: "12-28-Sentyabr"
                 },
                 location: {
                   type: "string",
-                  required: true,
-                  example: "Online",
+                  example: "Online"
                 },
                 prize_pool: {
                   type: "string",
-                  required: false,
-                  example: "5 000 000 so'm",
+                  example: "5 000 000 so'm"
                 },
                 organizer: {
                   type: "string",
-                  required: true,
-                  example: "Topish va Navana Technologies",
+                  example: "Topish va Navana Technologies"
                 },
                 game: {
                   type: "string",
-                  required: false,
-                  example: "PlayerUnknown’s Battlegrounds (PUBG)",
+                  example: "PlayerUnknown’s Battlegrounds (PUBG)"
                 },
                 platform: {
                   type: "string",
-                  required: false,
-                  example: "PC, Mobile",
+                  example: "PC, Mobile"
                 },
                 player_id: {
                   type: "string",
-                  required: false,
-                  example: "@Topish2398900240",
+                  example: "@Topish2398900240"
                 },
                 special_code: {
                   type: "string",
-                  required: false,
-                  example: "Topish-tour2398",
+                  example: "Topish-tour2398"
                 },
                 description: {
                   type: "string",
-                  required: false,
-                  example: "Description of the tournament",
+                  example: "Description of the tournament"
                 },
                 image: {
                   type: "string",
-                  required: false,
-                  example: "image_url",
+                  format: "binary",
+                  description: "The image file to upload"
                 },
                 type: {
                   type: "string",
-                  required: true,
-                  example: "kibersport",
-                },
+                  example: "kibersport"
+                }
               },
-              required: ["tournament_id", "tournament_name", "date_range", "location", "organizer", "type"],
-            },
-          },
-        },
+              required: ["tournament_id", "tournament_name", "date_range", "location", "organizer", "type"]
+            }
+          }
+        }
       },
       responses: {
         201: {
@@ -545,6 +533,121 @@ const tournamentsEndpoint = {
         },
       },
     },
+  },
+  "/tournaments/{id}/updateStatus": {
+    patch: {
+      summary: "Update a tournament",
+      tags: ["Tournaments"],
+      description: "Endpoint to update a tournament by its ID. Requires authentication.",
+      parameters: [
+        {
+          in: "path",
+          name: "id",
+          required: true,
+          schema: {
+            type: "string"
+          },
+          description: "The unique identifier of the tournament to update."
+        }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                status: {
+                  type: "string",
+                  enum: ["open", "closed", "expired"],
+                  example: "open"
+                }
+              },
+              required: ["status"]
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: "Tournament updated successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: { type: "string", example: "Tournament updated successfully." },
+                  data: {
+                    $ref: "#/components/schemas/Tournament"
+                  }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: "Invalid status value.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Invalid status value." },
+                  data: { type: "null", example: null }
+                }
+              }
+            }
+          }
+        },
+        401: {
+          description: "Unauthorized access.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized." },
+                  data: { type: "null", example: null }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: "Tournament not found.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Tournament not found." },
+                  data: { type: "null", example: null }
+                }
+              }
+            }
+          }
+        },
+        500: {
+          description: "Internal server error.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Internal server error." },
+                  data: { type: "null", example: null }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "/tournaments/{id}/join": {
     post: {
