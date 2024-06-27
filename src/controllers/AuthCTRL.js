@@ -100,7 +100,7 @@ class AuthCTRL {
 
       // Send confirmation code via SMS
       const token = await getEskizAuthToken();
-      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} hkf4/qKX0Qs`;
+      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
       await sendCustomSms(token, phoneNumberWithCountryCode, message);
 
       return handleResponse(
@@ -249,7 +249,7 @@ class AuthCTRL {
 
       // Send new confirmation code via SMS
       const token = await getEskizAuthToken();
-      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} hkf4/qKX0Qs`;
+      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
       await sendCustomSms(token, phoneNumberWithCountryCode, message);
 
       return handleResponse(
@@ -305,7 +305,7 @@ class AuthCTRL {
 
       // Send confirmation code via SMS
       const token = await getEskizAuthToken();
-      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} hkf4/qKX0Qs`;
+      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
       await sendCustomSms(token, phoneNumberWithCountryCode, message);
 
       return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
