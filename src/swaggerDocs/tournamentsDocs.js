@@ -17,64 +17,52 @@ const tournamentsEndpoint = {
             schema: {
               type: "object",
               properties: {
-                tournament_id: {
-                  type: "string",
-                  example: "tournament123"
-                },
                 tournament_name: {
                   type: "string",
-                  example: "Topish Cup tournament"
+                  example: "Topish Cup tournament",
                 },
                 date_range: {
                   type: "string",
-                  example: "12-28-Sentyabr"
+                  example: "12-28-Sentyabr",
                 },
                 location: {
                   type: "string",
-                  example: "Online"
+                  example: "Online",
                 },
                 prize_pool: {
                   type: "string",
-                  example: "5 000 000 so'm"
+                  example: "5 000 000 so'm",
                 },
                 organizer: {
                   type: "string",
-                  example: "Topish va Navana Technologies"
+                  example: "Topish va Navana Technologies",
                 },
                 game: {
                   type: "string",
-                  example: "PlayerUnknown’s Battlegrounds (PUBG)"
+                  example: "PlayerUnknown’s Battlegrounds (PUBG)",
                 },
                 platform: {
                   type: "string",
-                  example: "PC, Mobile"
-                },
-                player_id: {
-                  type: "string",
-                  example: "@Topish2398900240"
-                },
-                special_code: {
-                  type: "string",
-                  example: "Topish-tour2398"
+                  example: "PC, Mobile",
                 },
                 description: {
                   type: "string",
-                  example: "Description of the tournament"
+                  example: "Description of the tournament",
                 },
                 image: {
                   type: "string",
                   format: "binary",
-                  description: "The image file to upload"
+                  description: "The image file to upload",
                 },
                 type: {
                   type: "string",
-                  example: "kibersport"
-                }
+                  example: "kibersport",
+                },
               },
-              required: ["tournament_id", "tournament_name", "date_range", "location", "organizer", "type"]
-            }
-          }
-        }
+              required: ["tournament_name", "date_range", "location", "organizer", "type"],
+            },
+          },
+        },
       },
       responses: {
         201: {
@@ -849,6 +837,227 @@ const tournamentsEndpoint = {
       ],
     },
   },
+  // router.post("/:id/checkUser", TournamentsCTRL.checkUserInTournament);
+  "/tournaments/{id}/checkUser": {
+    post: {
+      summary: "Check user in a tournament",
+      tags: ["Tournaments"],
+      description: "Endpoint to check if a user is a participant in a tournament by its ID. Requires authentication.",
+      parameters: [
+        {
+          in: "path",
+          name: "id",
+          required: true,
+          schema: {
+            type: "string",
+          },
+          description: "The unique identifier of the tournament to check user in.",
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                specialCode: {
+                  type: "string",
+                  example: "Topish-123A2398"
+                }
+              },
+              required: ["specialCode"]
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: "User is a participant in the tournament.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: { type: "string", example: "User is a participant in the tournament." },
+                  data: { $ref: "#/components/schemas/Tournament" },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "User is not a participant in the tournament.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "User is not a participant in the tournament." },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized access.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized." },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "Tournament not found.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Tournament not found." },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Internal server error." },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+  },
+  "components": {
+    "schemas": {
+      "Tournament": {
+        "type": "object",
+        "properties": {
+          "tournament_id": {
+            "type": "string",
+            "example": "tournament123"
+          },
+          "tournament_name": {
+            "type": "string",
+            "example": "Topish Cup tournament"
+          },
+          "date_range": {
+            "type": "string",
+            "example": "12-28-Sentyabr"
+          },
+          "location": {
+            "type": "string",
+            "example": "Online"
+          },
+          "prize_pool": {
+            "type": "string",
+            "example": "5 000 000 so'm"
+          },
+          "organizer": {
+            "type": "string",
+            "example": "Topish va Navana Technologies"
+          },
+          "game": {
+            "type": "string",
+            "example": "PlayerUnknown’s Battlegrounds (PUBG)"
+          },
+          "platform": {
+            "type": "string",
+            "example": "PC, Mobile"
+          },
+          "playerId": {
+            "type": "string",
+            "example": "@Topish2398900240"
+          },
+          "specialCode": {
+            "type": "string",
+            "example": "Topish-tour2398"
+          },
+          "description": {
+            "type": "string",
+            "example": "Description of the tournament"
+          },
+          "image": {
+            "type": "string",
+            "example": "image_url"
+          },
+          "type": {
+            "type": "string",
+            "example": "kibersport"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "type": "string",
+                  "example": "user123"
+                },
+                "player_id": {
+                  "type": "string",
+                  "example": "Topish2398900240"
+                },
+                "special_code": {
+                  "type": "string",
+                  "example": "Topish-tour2398"
+                }
+              }
+            },
+            "example": [
+              {
+                "user_id": "user123",
+                "player_id": "Topish2398900240",
+                "special_code": "Topish-tour2398"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "closed", "expired"],
+            "example": "open"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-01-01T00:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-01-01T00:00:00.000Z"
+          }
+        }
+      }
+    }
+  }
 };
 
 module.exports = {

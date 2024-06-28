@@ -1,9 +1,11 @@
+const { v4: uuidv4 } = require('uuid');
 const Tournament = require("../models/tournament_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteFiles } = require("../utils/TurnerUpload");
 
 class TournamentsCTRL {
+
   async createTournament(req, res) {
     try {
       if (!req.user) {
@@ -17,9 +19,10 @@ class TournamentsCTRL {
 
       const tournamentDetails = {
         ...req.body,
+        tournament_id: uuidv4(), // Generate unique tournament_id
         createdBy: req.user._id,
         participants: [],
-        image: req.files.length ? req.files[0] : ""
+        image: req.files && req.files.length ? req.files[0] : "",
       };
 
       const tournament = await Tournament.create(tournamentDetails);
@@ -238,7 +241,7 @@ class TournamentsCTRL {
         );
       }
 
-      if (tournament.participants.includes(user)) {
+      if (tournament.participants.some((participant) => participant.userId === user)) {
         return handleResponse(
           res,
           400,
@@ -249,7 +252,15 @@ class TournamentsCTRL {
         );
       }
 
-      tournament.participants.push(user);
+      const playerId = `topish${Math.floor(1000 + Math.random() * 9000)}`;
+      const specialCode = `topish-${tournament.tournament_id.slice(-4)}${user.slice(-4)}`;
+
+      tournament.participants.push({
+        userId: user,
+        playerId,
+        specialCode,
+      });
+
       await tournament.save();
 
       return handleResponse(
@@ -286,7 +297,10 @@ class TournamentsCTRL {
         );
       }
 
-      const participantIndex = tournament.participants.indexOf(user);
+      const participantIndex = tournament.participants.findIndex(
+        (participant) => participant.userId === user
+      );
+
       if (participantIndex === -1) {
         return handleResponse(
           res,
@@ -361,6 +375,51 @@ class TournamentsCTRL {
         "success",
         "Tournament status updated successfully",
         updatedTournament,
+        1
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+
+  async checkUserInTournament(req, res) {
+    try {
+      const { id: tournamentID } = req.params;
+      const { specialCode } = req.body;
+
+      const tournament = await Tournament.findById(tournamentID);
+      if (!tournament) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Tournament with id: ${tournamentID} not found`,
+          null,
+          0
+        );
+      }
+
+      const participant = tournament.participants.find(
+        (participant) => participant.specialCode === specialCode
+      );
+
+      if (!participant) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "Participant not found in this tournament",
+          null,
+          0
+        );
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Participant found in tournament",
+        participant,
         1
       );
     } catch (error) {
