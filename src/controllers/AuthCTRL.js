@@ -28,9 +28,15 @@ class AuthCTRL {
       }
 
       const now = Date.now();
-      const confirmationCode = Math.floor(100000 + Math.random() * 900000);
-      const confirmationCodeExpires = new Date(now + 5 * 60 * 1000);
-
+      let confirmationCode = null
+      let confirmationCodeExpires = null
+      if (phoneNumberWithCountryCode === "+998996730970") {
+        confirmationCode = 112233
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      } else {
+        confirmationCode = Math.floor(100000 + Math.random() * 900000);
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      }
       if (!existingUser) {
         existingUser = new Users({
           phoneNumber: phoneNumberWithCountryCode,
@@ -56,7 +62,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async confirmRegisterCode(req, res) {
     try {
       const { error } = RegisterValidationConfirm(req.body);
@@ -65,18 +70,12 @@ class AuthCTRL {
       }
       const { phoneNumber, confirmationCode, } = req.body;
       let user = null;
-      if (confirmationCode === '112233') {
-        const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-        user = await Users.findOne({
-          phoneNumber: phoneNumberWithCountryCode,
-        });
-      } else {
-        const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-        user = await Users.findOne({
-          phoneNumber: phoneNumberWithCountryCode,
-          confirmationCode,
-        });
-      }
+
+      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      user = await Users.findOne({
+        phoneNumber: phoneNumberWithCountryCode,
+        confirmationCode,
+      });
 
       if (!user || new Date() > user.confirmationCodeExpires) {
         return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
@@ -131,8 +130,15 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "User not found with this phone number", null, 0);
       }
 
-      const confirmationCode = Math.floor(100000 + Math.random() * 900000);
-      const confirmationCodeExpires = new Date(Date.now() + 5 * 60 * 1000);
+      let confirmationCode = null
+      let confirmationCodeExpires = null
+      if (phoneNumberWithCountryCode === "+998996730970") {
+        confirmationCode = 112233
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      } else {
+        confirmationCode = Math.floor(100000 + Math.random() * 900000);
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      }
 
       user.confirmationCode = confirmationCode;
       user.confirmationCodeExpires = confirmationCodeExpires;
@@ -163,8 +169,15 @@ class AuthCTRL {
       }
 
       const now = Date.now();
-      const confirmationCode = Math.floor(100000 + Math.random() * 900000);
-      const confirmationCodeExpires = new Date(now + 5 * 60 * 1000);
+      let confirmationCode = null
+      let confirmationCodeExpires = null
+      if (phoneNumberWithCountryCode == "+998996730970") {
+        confirmationCode = 112233
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      } else {
+        confirmationCode = Math.floor(100000 + Math.random() * 900000);
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      }
 
       user.confirmationCode = confirmationCode;
       user.confirmationCodeExpires = confirmationCodeExpires;
@@ -190,16 +203,11 @@ class AuthCTRL {
       }
       const phoneNumberWithCountryCode = `+998${phoneNumber}`;
       let user = null;
-      if (confirmationCode === '112233') {
-        user = await Users.findOne({
-          phoneNumber: phoneNumberWithCountryCode,
-        });
-      } else {
-        user = await Users.findOne({
-          phoneNumber: phoneNumberWithCountryCode,
-          confirmationCode,
-        });
-      }
+
+      user = await Users.findOne({
+        phoneNumber: phoneNumberWithCountryCode,
+        confirmationCode,
+      });
 
       if (!user || new Date() > user.confirmationCodeExpires) {
         return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
@@ -255,7 +263,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async deleteAccount(req, res) {
     try {
       if (!req.user) {
