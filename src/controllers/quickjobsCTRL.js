@@ -139,10 +139,6 @@ class QuickJobsCTRL {
   }
   async getAllQuickjobs(req, res) {
     try {
-      // if (!req.user) {
-      //     return handleResponse(res, 401, 'error', 'Unauthorized');
-      // }
-
       const {
         recommended,
         jobTitle,
@@ -151,7 +147,9 @@ class QuickJobsCTRL {
         limit = 10,
         sort,
       } = req.query;
+
       let queryObject = {};
+      let query = QuickJobs.find();
 
       if (recommended) {
         queryObject.recommended = recommended === "true";
@@ -176,24 +174,26 @@ class QuickJobsCTRL {
         queryObject.location = { $regex: location, $options: "i" };
       }
 
-      let query = QuickJobs.find(queryObject);
+      if (Object.keys(queryObject).length > 0) {
+        query = query.find(queryObject);
 
-      // Pagination
-      const skip = (page - 1) * parseInt(limit); // Ensure limit is an integer
-      query = query.skip(skip).limit(parseInt(limit));
+        // Pagination
+        const skip = (page - 1) * parseInt(limit);
+        query = query.skip(skip).limit(parseInt(limit));
 
-      // Sort
-      if (sort) {
-        const sortList = sort.split(",").join(" ");
-        query = query.sort(sortList);
+        // Sort
+        if (sort) {
+          const sortList = sort.split(",").join(" ");
+          query = query.sort(sortList);
+        } else {
+          query = query.sort("-createdAt");
+        }
       } else {
-        query = query.sort("-createdAt"); // Default sort by createdAt in descending order
+        // Random job retrieval when no filters are applied
+        const count = await QuickJobs.countDocuments();
+        const random = Math.floor(Math.random() * count);
+        query = QuickJobs.find().skip(random).limit(parseInt(limit));
       }
-
-      // Fields selection
-      // Ensure 'description' is always included along with other fields
-      // let fieldsToSelect = "title location createdBy description phoneNumber"; // Default fields now include 'description'
-      // query = query.select(fieldsToSelect);
 
       const searchedJob = await query;
 
@@ -222,28 +222,25 @@ class QuickJobsCTRL {
       }, {});
 
       let NewSearchedJob = searchedJob.map((job) => {
-        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
+        const user = userMap[job.createdBy.toString()];
         if (!user) {
           return {
-            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
-            hr_name: "deleted user", // Fallback if user is not found
-            hr_avatar: "default_avatar.png", // Fallback avatar image path
-            issuedBy: null, // Fallback to null if company not found
+            ...job._doc,
+            hr_name: "deleted user",
+            hr_avatar: "default_avatar.png",
+            issuedBy: null,
           };
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
-            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
-            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
+            hr_name: user.employer ? user.fullName : "No employer name",
+            hr_avatar: user.avatar || "default_avatar.png",
+            issuedBy: companyMap[job.createdBy.toString()] || null,
           };
         }
       });
 
-      // Prepare pagination data
-      const totalJobs = await QuickJobs.countDocuments(queryObject); // Efficiently fetch total count
+      const totalJobs = await QuickJobs.countDocuments(queryObject);
       const pagination = {
         currentPage: parseInt(page),
         totalPages: Math.ceil(totalJobs / parseInt(limit)),
@@ -271,6 +268,7 @@ class QuickJobsCTRL {
       );
     }
   }
+
   async getEmployerPosts(req, res) {
     try {
 
