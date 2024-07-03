@@ -146,7 +146,7 @@ class QuickJobsCTRL {
         page = 1,
         limit = 10,
         sort,
-        recentJob, // Added recentJob parameter
+        recentJob, // Added recentJob parameter as boolean
       } = req.query;
 
       let queryObject = {};
@@ -175,10 +175,9 @@ class QuickJobsCTRL {
         queryObject.location = { $regex: location, $options: "i" };
       }
 
-      // Handle recentJob filter
-      if (recentJob) {
-        const recentDate = new Date(recentJob); // Use recentJob as the starting date
-        queryObject.createdAt = { $gte: recentDate };
+      // Handle recentJob filter as a boolean
+      if (recentJob === "true") {
+        queryObject.createdAt = { $exists: true }; // This will ensure all jobs with a createdAt field are included
       }
 
       if (Object.keys(queryObject).length > 0) {
@@ -188,13 +187,8 @@ class QuickJobsCTRL {
         const skip = (page - 1) * parseInt(limit);
         query = query.skip(skip).limit(parseInt(limit));
 
-        // Sort
-        if (sort) {
-          const sortList = sort.split(",").join(" ");
-          query = query.sort(sortList);
-        } else {
-          query = query.sort("-createdAt");
-        }
+        // Sort by createdAt in descending order
+        query = query.sort({ createdAt: -1 });
       } else {
         // Random job retrieval when no filters are applied
         const count = await QuickJobs.countDocuments();
@@ -275,6 +269,8 @@ class QuickJobsCTRL {
       );
     }
   }
+
+
 
 
   async getEmployerPosts(req, res) {
