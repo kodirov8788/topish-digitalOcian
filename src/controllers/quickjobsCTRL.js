@@ -146,6 +146,7 @@ class QuickJobsCTRL {
         page = 1,
         limit = 10,
         sort,
+        recentJob, // Added recentJob parameter
       } = req.query;
 
       let queryObject = {};
@@ -172,6 +173,12 @@ class QuickJobsCTRL {
 
       if (location) {
         queryObject.location = { $regex: location, $options: "i" };
+      }
+
+      // Handle recentJob filter
+      if (recentJob) {
+        const recentDate = new Date(recentJob); // Use recentJob as the starting date
+        queryObject.createdAt = { $gte: recentDate };
       }
 
       if (Object.keys(queryObject).length > 0) {
@@ -268,6 +275,7 @@ class QuickJobsCTRL {
       );
     }
   }
+
 
   async getEmployerPosts(req, res) {
     try {

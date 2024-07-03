@@ -159,6 +159,14 @@ const QuickjobsEndpoint = {
         },
         {
           in: "query",
+          name: "recentJob",
+          schema: {
+            type: "boolean",
+          },
+          description: "Filter for recent jobs.",
+        },
+        {
+          in: "query",
           name: "jobTitle",
           schema: {
             type: "string",
