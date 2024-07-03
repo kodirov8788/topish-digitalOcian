@@ -55,9 +55,12 @@ class AuthCTRL {
 
       const token = await getEskizAuthToken();
       const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-      await sendCustomSms(token, phoneNumberWithCountryCode, message);
-
-      return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
+      if (phoneNumberWithCountryCode === "+998996730970") {
+        return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
+      } else {
+        await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
+      }
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
@@ -146,9 +149,14 @@ class AuthCTRL {
 
       const token = await getEskizAuthToken();
       const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-      await sendCustomSms(token, phoneNumberWithCountryCode, message);
 
-      return handleResponse(res, 200, "success", "Confirmation code resent successfully. Please check your phone for the new confirmation code.", null, 0);
+      if (phoneNumberWithCountryCode === "+998996730970") {
+        return handleResponse(res, 200, "success", "Confirmation code resent successfully. Please check your phone for the new confirmation code.", null, 0);
+      } else {
+        await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        return handleResponse(res, 200, "success", "Confirmation code resent successfully. Please check your phone for the new confirmation code.", null, 0);
+      }
+
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
@@ -186,9 +194,14 @@ class AuthCTRL {
 
       const token = await getEskizAuthToken();
       const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-      await sendCustomSms(token, phoneNumberWithCountryCode, message);
 
-      return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
+      if (phoneNumberWithCountryCode === "+998996730970") {
+        return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
+      } else {
+        await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
+      }
+
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
