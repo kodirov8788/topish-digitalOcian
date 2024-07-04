@@ -3,7 +3,7 @@ const { isTokenValid } = require("../utils/jwt");
 
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
-
+  console.log("token: ", token)
   if (!token) {
     return handleResponse(res, 401, "error", "Authentication invalid", {}, 0);
   }
