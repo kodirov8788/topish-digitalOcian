@@ -48,13 +48,24 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
 //   next();
 // });
 app.use(helmet());
+const allowedOrigins = [
+  'http://localhost:3000', // Add your allowed origins here
+  'https://www.topish.app',
+  'https://topish.app',
+
+];
+
 const corsOptions = {
   origin: (origin, callback) => {
-    // As "*" cannot be used with credentials: true, you need to explicitly set the allowed origin
-    if (!origin) {
+    // Allow requests with no origin, like mobile apps or curl requests
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      // If the origin is in the allowed list
       callback(null, true);
     } else {
-      callback(null, true);
+      // If the origin is not in the allowed list
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
