@@ -3,7 +3,7 @@ const { isTokenValid } = require("../utils/jwt");
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  // console.log(" req.headers.authorization: ", req.headers.authorization)
+  console.log(" req.headers.authorization: ", req.headers.authorization)
   const token = authHeader && authHeader.split(' ')[1];
   // console.log("token: ", token)
   if (!token) {
