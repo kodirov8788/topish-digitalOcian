@@ -2,14 +2,15 @@ const { handleResponse } = require("../utils/handleResponse");
 const { isTokenValid } = require("../utils/jwt");
 
 const authMiddleware = async (req, res, next) => {
-  const token = req.cookies.token;
-  console.log("token: ", token)
+  const authHeader = req.headers.authorization;
+  // console.log(" req.headers.authorization: ", req.headers.authorization)
+  const token = authHeader && authHeader.split(' ')[1];
+  // console.log("token: ", token)
   if (!token) {
-    return handleResponse(res, 401, "error", "Authentication invalid", {}, 0);
+    return handleResponse(res, 401, "error", "Authentication invalid: No token provided", {}, 0);
   }
-
   try {
-    const payload = isTokenValid(token); // Pass the token directly
+    const payload = isTokenValid(token, process.env.JWT_SECRET);
     req.user = {
       phoneNumber: payload.phoneNumber,
       employer: payload.employer,
@@ -24,8 +25,8 @@ const authMiddleware = async (req, res, next) => {
     };
     next();
   } catch (error) {
-    console.error("Error in authMiddleware:", error);
-    return handleResponse(res, 401, "error", "Authentication invalid", {}, 0);
+    console.error("Error in authMiddleware:", error.message);
+    return handleResponse(res, 401, "error", "Authentication invalid: Token verification failed", {}, 0);
   }
 };
 

@@ -797,13 +797,13 @@ class CompanyCTRL {
         };
 
         // Debug: Log notification and device tokens
-        console.log("Sending notification to:", adminDeviceTokens);
-        console.log("Notification payload:", notification, info);
+        // console.log("Sending notification to:", adminDeviceTokens);
+        // console.log("Notification payload:", notification, info);
 
         const notificationResult = await sendNotification(adminDeviceTokens, notification, info);
 
         // Debug: Log result of sendNotification
-        console.log("Notification result:", notificationResult);
+        // console.log("Notification result:", notificationResult);
       }
 
       return handleResponse(
@@ -1379,13 +1379,13 @@ class CompanyCTRL {
         };
 
         // Debug: Log notification and device tokens
-        console.log("Sending notification to:", userDeviceTokens);
-        console.log("Notification payload:", notification, info);
+        // console.log("Sending notification to:", userDeviceTokens);
+        // console.log("Notification payload:", notification, info);
 
         const notificationResult = await sendNotification(userDeviceTokens, notification, info);
 
         // Debug: Log result of sendNotification
-        console.log("Notification result:", notificationResult);
+        // console.log("Notification result:", notificationResult);
       }
 
       return handleResponse(

@@ -1,11 +1,11 @@
 const Users = require("../models/user_model");
-const { attachCookiesToResponse, createTokenUser } = require("../utils");
+const { generateTokens, createTokenUser } = require("../utils/jwt");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteUserAvatar } = require("./avatarCTRL");
 const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
 const { RegisterValidation, logOutValidation, RegisterValidationConfirm } = require("../helpers/AuthValidation");
 const { getEskizAuthToken, sendCustomSms } = require("../utils/smsService");
-
+const jwt = require('jsonwebtoken');
 function createRandomFullname() {
   const firstName = "User";
   const randomNumber = Math.floor(Math.random() * 1000000);
@@ -14,6 +14,7 @@ function createRandomFullname() {
 
 class AuthCTRL {
   async sendRegisterCode(req, res) {
+    // console.log("sendRegisterCode", req.body)
     try {
       const { error } = RegisterValidation(req.body);
       if (error) {
@@ -111,9 +112,11 @@ class AuthCTRL {
       await user.save();
 
       const tokenUser = createTokenUser(user);
-      attachCookiesToResponse({ res, user: tokenUser });
+      const { accessToken, refreshToken } = generateTokens(tokenUser);
+      user.refreshTokens = [{ token: refreshToken }];
+      await user.save();
 
-      return handleResponse(res, 201, "success", "User registered successfully.", tokenUser);
+      return handleResponse(res, 201, "success", "User registered successfully.", { accessToken, refreshToken });
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
@@ -162,6 +165,7 @@ class AuthCTRL {
     }
   }
   async sendLoginCode(req, res) {
+    // console.log("sendLoginCode", req.body)
     try {
       const { phoneNumber } = req.body;
 
@@ -238,9 +242,12 @@ class AuthCTRL {
       await user.save();
 
       const tokenUser = createTokenUser(user);
-      attachCookiesToResponse({ res, user: tokenUser });
+      const { accessToken, refreshToken } = generateTokens(tokenUser);
+      user.refreshTokens = user.refreshTokens || [];
+      user.refreshTokens.push({ token: refreshToken });
+      await user.save();
 
-      return handleResponse(res, 200, "success", "Login successful", tokenUser, 1);
+      return handleResponse(res, 200, "success", "Login successful", { accessToken, refreshToken });
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
@@ -289,16 +296,48 @@ class AuthCTRL {
       }
 
       await user.deleteOne();
-
-      res.cookie("token", "", {
-        httpOnly: true,
-        expires: new Date(Date.now()),
-      });
       return handleResponse(res, 200, "success", "Account and associated data deleted successfully", null, 0);
     } catch (err) {
       return handleResponse(res, 500, "error", "Something went wrong: " + err.message, null, 0);
     }
   }
+  async renewAccessToken(req, res) {
+    try {
+      const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        return handleResponse(res, 400, "error", "Refresh token is required", null, 0);
+      }
+
+      // Verify the refresh token
+      jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
+        if (err) {
+          return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+        }
+
+        // Check if the refresh token is in the database
+        const user = await Users.findOne({ 'refreshTokens.token': refreshToken });
+        if (!user) {
+          return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+        }
+
+        // Generate new tokens
+        const tokenUser = createTokenUser(user);
+        const { accessToken, refreshToken: newRefreshToken } = generateTokens(tokenUser);
+
+        // Update refresh tokens in the database
+        user.refreshTokens = user.refreshTokens.filter(token => token.token !== refreshToken);
+        user.refreshTokens.push({ token: newRefreshToken });
+        await user.save();
+
+        return handleResponse(res, 200, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
+      });
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
+
+
 }
 
 module.exports = new AuthCTRL();

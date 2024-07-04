@@ -78,6 +78,10 @@ const UsersSchema = new Schema(
       required: true,
       enum: ["JobSeeker", "Employer", "Service", "Admin"],
     },
+    refreshTokens: {
+      type: Array,
+      default: [],
+    },
     password: { type: String, required: false, minlength: 8 },
     root: { type: Boolean, default: false },
     admin: { type: Boolean, default: false },

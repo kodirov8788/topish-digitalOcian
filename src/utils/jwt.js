@@ -1,32 +1,55 @@
 const jwt = require("jsonwebtoken");
 
-const createJWT = ({ payload }) => {
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_LIFETIME,
-  });
+// Function to create JWT
+const createJWT = ({ payload, secret, expiresIn }) => {
+  const token = jwt.sign(payload, secret, { expiresIn });
   return token;
 };
 
-const isTokenValid = (token) => jwt.verify(token, process.env.JWT_SECRET);
+// Function to verify JWT
+const isTokenValid = (token, secret) => jwt.verify(token, secret);
 
-const attachCookiesToResponse = ({ res, user }) => {
-  const token = createJWT({ payload: user });
-  const thirtyDays = 1000 * 60 * 60 * 24 * 30;
+// Function to generate access and refresh tokens
+const generateTokens = (user) => {
+  const payload = {
+    phoneNumber: user.phoneNumber,
+    coins: user.coins,
+    id: user.id,
+    role: user.role,
+    favorites: user.favorites,
+    employer: user.employer,
+    jobSeeker: user.jobSeeker,
+    service: user.service,
+    avatar: user.avatar,
+    mobileToken: user.mobileToken,
+    fullName: user.fullName,
+  };
 
-  const isSecure = res.req.secure || res.req.headers["x-forwarded-proto"] === "https";
-
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: isSecure ? "None" : "Lax",
-    expires: new Date(Date.now() + thirtyDays),
+  // Create access token
+  const accessToken = createJWT({
+    payload,
+    secret: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_LIFETIME,
   });
+
+  // Create refresh token
+  const refreshToken = createJWT({
+    payload,
+    secret: process.env.JWT_REFRESH_SECRET,
+    expiresIn: process.env.JWT_REFRESH_LIFETIME,
+  });
+
+  return {
+    accessToken: `Bearer ${accessToken}`,
+    refreshToken,
+  };
 };
 
+// Function to create a token payload from user data
 const createTokenUser = (user) => ({
   phoneNumber: user.phoneNumber,
   coins: user.coins,
-  id: user._id,
+  id: user.id,
   role: user.role,
   favorites: user.favorites,
   employer: user.employer,
@@ -40,6 +63,6 @@ const createTokenUser = (user) => ({
 module.exports = {
   createJWT,
   isTokenValid,
-  attachCookiesToResponse,
+  generateTokens,
   createTokenUser,
 };

@@ -50,6 +50,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
 app.use(helmet());
 const allowedOrigins = [
   'http://localhost:3000', // Add your allowed origins here
+  'http://localhost:8080', // Add your allowed origins here
   'https://www.topish.app',
   'https://topish.app',
 
