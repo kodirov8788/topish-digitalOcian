@@ -76,6 +76,7 @@ class UserCTRL {
   }
   //  GET CURRENT USER
   async showCurrentUser(req, res) {
+    console.log("current user")
     try {
       console.log("req.user: ", req.user)
       if (!req.user || !req.user.id) {
