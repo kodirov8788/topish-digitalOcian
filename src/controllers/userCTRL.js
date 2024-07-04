@@ -77,13 +77,14 @@ class UserCTRL {
   //  GET CURRENT USER
   async showCurrentUser(req, res) {
     try {
+      console.log("req.user: ", req.user)
       if (!req.user || !req.user.id) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
       const userId = req.user.id;
       const user = await Users.findById(userId).select("-password");
-
+      console.log("req.user 2: ", user)
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
