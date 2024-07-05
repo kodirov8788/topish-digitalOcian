@@ -23,7 +23,7 @@ const AuthEndpoints = {
                 phoneNumber: {
                   type: "string",
                   description: "User's phone number",
-                  example: "956687007",
+                  example: "996730970",
                   pattern: "^[0-9]+$",
                 },
                 role: {
@@ -121,12 +121,12 @@ const AuthEndpoints = {
                 phoneNumber: {
                   type: "string",
                   description: "The user's phone number",
-                  example: "956687007",
+                  example: "996730970",
                 },
                 confirmationCode: {
                   type: "string",
                   description: "The confirmation code sent to the user's phone",
-                  example: "123456",
+                  example: "112233",
                 },
               },
             },
@@ -219,7 +219,7 @@ const AuthEndpoints = {
                 phoneNumber: {
                   type: "string",
                   description: "The user's phone number",
-                  example: "901234567",
+                  example: "996730970",
                 },
               },
             },
@@ -305,7 +305,7 @@ const AuthEndpoints = {
                 phoneNumber: {
                   type: "string",
                   description: "User's phone number",
-                  example: "956687007",
+                  example: "996730970",
                   pattern: "^[0-9]+$",
                 },
               },
@@ -392,12 +392,12 @@ const AuthEndpoints = {
                 phoneNumber: {
                   type: "string",
                   description: "The user's phone number",
-                  example: "956687007",
+                  example: "996730970",
                 },
                 confirmationCode: {
                   type: "string",
                   description: "The confirmation code sent to the user's phone",
-                  example: "123456",
+                  example: "112233",
                 },
                 mobileToken: {
                   type: "string",
