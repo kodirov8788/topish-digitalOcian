@@ -116,7 +116,7 @@ class AuthCTRL {
       user.refreshTokens = [{ token: refreshToken }];
       await user.save();
 
-      return handleResponse(res, 201, "success", "User registered successfully.", { accessToken, refreshToken });
+      return handleResponse(res, 201, "success", "User registered successfully.", { accessToken, refreshToken, role: user.role });
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
@@ -247,7 +247,7 @@ class AuthCTRL {
       user.refreshTokens.push({ token: refreshToken });
       await user.save();
 
-      return handleResponse(res, 200, "success", "Login successful", { accessToken, refreshToken });
+      return handleResponse(res, 200, "success", "Login successful", { accessToken, refreshToken, role: user.role });
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
