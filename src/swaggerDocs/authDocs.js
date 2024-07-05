@@ -9,40 +9,23 @@ const AuthEndpoints = {
   ],
   "/auth/create-user": {
     post: {
-      summary: "Register a new user",
+      summary: "Send registration code",
       tags: ["Auth"],
-      description:
-        "Endpoint for user registration. Registers a new user with the provided details.",
+      description: "Send a confirmation code to the user's phone number for registration.",
       requestBody: {
         required: true,
         content: {
           "application/json": {
             schema: {
               type: "object",
-              required: [
-                "phoneNumber",
-                "confirmPassword",
-                "role",
-              ],
+              required: ["phoneNumber", "role", "mobileToken"],
               properties: {
                 phoneNumber: {
                   type: "string",
                   description: "User's phone number",
                   example: "956687007",
-                  pattern: "^[0-9]+$", // Optional: Add a regex pattern to ensure the phone number contains only digits
+                  pattern: "^[0-9]+$",
                 },
-                // password: {
-                //   type: "string",
-                //   format: "password",
-                //   description: "User's password",
-                //   example: "securepassword",
-                // },
-                // confirmPassword: {
-                //   type: "string",
-                //   format: "password",
-                //   description: "Confirmation of the user's password",
-                //   example: "securepassword",
-                // },
                 role: {
                   type: "string",
                   enum: ["JobSeeker", "Employer"],
@@ -60,163 +43,28 @@ const AuthEndpoints = {
         },
       },
       responses: {
-        201: {
-          description: "User registered successfully",
+        200: {
+          description: "Confirmation code sent successfully",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
-                  result: { type: "string" },
-                  msg: { type: "string" },
-                  data: {
-                    type: "object",
-                    properties: {
-                      email: { type: "string" },
-                      phoneNumber: { type: "string" },
-                      coins: { type: "number" },
-                      id: { type: "string" },
-                      role: { type: "string" },
-                      recomending: {
-                        type: "boolean",
-                        default: false,
-                      },
-                      favorites: { type: "array", items: {} },
-                      oneOf: [
-                        {
-                          type: "object",
-                          properties: {
-                            // Properties specific to JobSeeker
-                            jobSeeker: {
-                              type: "object",
-                              properties: {
-                                email: { type: "string" },
-                                phoneNumber: { type: "string" },
-                                coins: { type: "number" },
-                                id: { type: "string" },
-                                role: { type: "string" },
-                                favorites: { type: "array", items: {} },
-                                employer: {
-                                  type: "object",
-                                  properties: {
-                                    fullName: { type: "string" },
-                                    companyName: { type: "string" },
-                                    about: { type: "string" },
-                                    industry: {
-                                      type: "array",
-                                      items: { type: "string" },
-                                    },
-                                    contact: {
-                                      type: "array",
-                                      items: { type: "string" },
-                                    },
-                                    location: { type: "string" },
-                                    isVerified: { type: "boolean" },
-                                    jobs: {
-                                      type: "array",
-                                      items: { type: "string" },
-                                    },
-                                    _id: { type: "string" },
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                        {
-                          type: "object",
-                          properties: {
-                            // Properties specific to Employer
-                            employer: {
-                              type: "object",
-                              properties: {
-                                email: {
-                                  type: "string",
-                                  example: "user@example.com",
-                                },
-                                phoneNumber: {
-                                  type: "string",
-                                  example: "+998939992222",
-                                },
-                                coins: {
-                                  type: "number",
-                                  example: 50,
-                                },
-                                id: {
-                                  type: "string",
-                                  example: "65c277b2ed4e7c821def862a",
-                                },
-                                role: {
-                                  type: "string",
-                                  example: "Employer",
-                                },
-                                favorites: {
-                                  type: "array",
-                                  items: {},
-                                },
-                                employer: {
-                                  type: "object",
-                                  properties: {
-                                    fullName: {
-                                      type: "string",
-                                      example: "Asadbek Alimov",
-                                    },
-                                    companyName: {
-                                      type: "string",
-                                      example: "AliExpress",
-                                    },
-                                    about: {
-                                      type: "string",
-                                      example: "",
-                                    },
-                                    industry: {
-                                      type: "array",
-                                      items: {
-                                        type: "string",
-                                      },
-                                    },
-                                    contact: {
-                                      type: "array",
-                                      items: {
-                                        type: "string",
-                                      },
-                                    },
-                                    location: {
-                                      type: "string",
-                                      example: "",
-                                    },
-                                    isVerified: {
-                                      type: "boolean",
-                                      example: false,
-                                    },
-                                    jobs: {
-                                      type: "array",
-                                      items: {
-                                        type: "string",
-                                      },
-                                    },
-                                    _id: {
-                                      type: "string",
-                                      example: "65c277b2ed4e7c821def862b",
-                                    },
-                                  },
-                                },
-                              },
-                            },
-                          },
-                        },
-                      ],
-                    },
+                  result: {
+                    type: "string",
+                    example: "success",
                   },
-                  totalCount: { type: "number" },
+                  msg: {
+                    type: "string",
+                    example: "Confirmation code sent. Please check your phone.",
+                  },
                 },
               },
             },
           },
         },
         400: {
-          description:
-            "Bad request (e.g., user already exists, passwords do not match, required fields missing, invalid phone or email)",
+          description: "User already exists with this phone number or validation error",
           content: {
             "application/json": {
               schema: {
@@ -228,16 +76,7 @@ const AuthEndpoints = {
                   },
                   msg: {
                     type: "string",
-                    example:
-                      "User already exists with this phone number or email",
-                  },
-                  data: {
-                    type: "null",
-                    example: null,
-                  },
-                  totalCount: {
-                    type: "number",
-                    example: 0,
+                    example: "User already exists with this phone number or validation error.",
                   },
                 },
               },
@@ -259,14 +98,6 @@ const AuthEndpoints = {
                     type: "string",
                     example: "Something went wrong",
                   },
-                  data: {
-                    type: "null",
-                    example: null,
-                  },
-                  totalCount: {
-                    type: "number",
-                    example: 0,
-                  },
                 },
               },
             },
@@ -279,8 +110,7 @@ const AuthEndpoints = {
     post: {
       summary: "Confirm phone number with code",
       tags: ["Auth"],
-      description:
-        "Confirm the phone number using the confirmation code sent to the user's phone.",
+      description: "Confirm the phone number using the confirmation code sent to the user's phone.",
       requestBody: {
         required: true,
         content: {
@@ -304,8 +134,8 @@ const AuthEndpoints = {
         },
       },
       responses: {
-        200: {
-          description: "Phone number confirmed successfully",
+        201: {
+          description: "User registered successfully",
           content: {
             "application/json": {
               schema: {
@@ -317,7 +147,14 @@ const AuthEndpoints = {
                   },
                   msg: {
                     type: "string",
-                    example: "Phone number confirmed successfully",
+                    example: "User registered successfully.",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      accessToken: { type: "string", example: "access_token_example" },
+                      refreshToken: { type: "string", example: "refresh_token_example" },
+                    },
                   },
                 },
               },
@@ -325,8 +162,7 @@ const AuthEndpoints = {
           },
         },
         400: {
-          description:
-            "Invalid confirmation code or phone number, or confirmation code expired",
+          description: "Invalid or expired confirmation code or validation error",
           content: {
             "application/json": {
               schema: {
@@ -338,7 +174,7 @@ const AuthEndpoints = {
                   },
                   msg: {
                     type: "string",
-                    example: "Invalid confirmation code or phone number",
+                    example: "Invalid or expired confirmation code or validation error.",
                   },
                 },
               },
@@ -454,212 +290,24 @@ const AuthEndpoints = {
       },
     },
   },
-  // "/auth/create-user/resetPassword": {
-  //   post: {
-  //     summary: "Send reset password SMS",
-  //     tags: ["Auth"],
-  //     description:
-  //       "Send an SMS with a confirmation code to the user's phone number for password reset.",
-  //     requestBody: {
-  //       required: true,
-  //       content: {
-  //         "application/json": {
-  //           schema: {
-  //             type: "object",
-  //             properties: {
-  //               phoneNumber: {
-  //                 type: "string",
-  //                 description: "The user's phone number",
-  //                 example: "956687007",
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //     responses: {
-  //       200: {
-  //         description: "Confirmation code sent successfully",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: {
-  //                   type: "string",
-  //                   example: "success",
-  //                 },
-  //                 msg: {
-  //                   type: "string",
-  //                   example:
-  //                     "Confirmation code sent successfully. Please check your phone.",
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       400: {
-  //         description: "User not found with this phone number",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: {
-  //                   type: "string",
-  //                   example: "error",
-  //                 },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "User not found with this phone number",
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       500: {
-  //         description: "Something went wrong",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: {
-  //                   type: "string",
-  //                   example: "error",
-  //                 },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Something went wrong",
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // },
-  // "/auth/create-user/confirmResetPassword": {
-  //   post: {
-  //     summary: "Confirm reset password",
-  //     tags: ["Auth"],
-  //     description:
-  //       "Confirm the reset password using the confirmation code sent to the user's phone.",
-  //     requestBody: {
-  //       required: true,
-  //       content: {
-  //         "application/json": {
-  //           schema: {
-  //             type: "object",
-  //             properties: {
-  //               phoneNumber: {
-  //                 type: "string",
-  //                 description: "The user's phone number",
-  //                 example: "956687007",
-  //               },
-  //               confirmationCode: {
-  //                 type: "string",
-  //                 description: "The confirmation code sent to the user's phone",
-  //                 example: "123456",
-  //               },
-  //               newPassword: {
-  //                 type: "string",
-  //                 description: "The new password for the user",
-  //                 example: "newpassword123",
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //     responses: {
-  //       200: {
-  //         description: "Password reset successfully",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: {
-  //                   type: "string",
-  //                   example: "success",
-  //                 },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Password reset successfully",
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       400: {
-  //         description:
-  //           "Invalid confirmation code or phone number, or confirmation code expired",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: {
-  //                   type: "string",
-  //                   example: "error",
-  //                 },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Invalid confirmation code or phone number",
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       500: {
-  //         description: "Something went wrong",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: {
-  //                   type: "string",
-  //                   example: "error",
-  //                 },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Something went wrong",
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // },
   "/auth/sign-in": {
     post: {
-      summary: "Login",
+      summary: "Send login code",
       tags: ["Auth"],
-      description:
-        "Endpoint for user login. Authenticates the user and returns an auth token along with user information.",
+      description: "Send a confirmation code to the user's phone number for login.",
       requestBody: {
         required: true,
         content: {
           "application/json": {
             schema: {
               type: "object",
-              required: ["email", "password"],
               properties: {
                 phoneNumber: {
                   type: "string",
                   description: "User's phone number",
                   example: "956687007",
                   pattern: "^[0-9]+$",
-                }
+                },
               },
             },
           },
@@ -667,132 +315,60 @@ const AuthEndpoints = {
       },
       responses: {
         200: {
-          description: "User logged in successfully.",
+          description: "Confirmation code sent successfully",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
-                  result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Login successful" },
-                  data: {
-                    type: "object",
-                    properties: {
-                      email: { type: "string", example: "" },
-                      phoneNumber: { type: "string", example: "+998939993333" },
-                      coins: { type: "number", example: 50 },
-                      id: {
-                        type: "string",
-                        example: "65c2229d6820d7cc9044b411",
-                      },
-                      role: { type: "string", example: "JobSeeker" },
-                      favorites: {
-                        type: "array",
-                        items: {},
-                      },
-                      jobSeeker: {
-                        type: "object",
-                        properties: {
-                          fullName: {
-                            type: "string",
-                            example: "Asadbek Alimov",
-                          },
-                          gender: { type: "string", example: "Choose" },
-                          skills: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          isVerified: { type: "boolean", example: false },
-                          location: { type: "string", example: "Toshkent" },
-                          expectedSalary: { type: "number", example: 0 },
-                          jobtitle: { type: "string", example: "Developer" },
-                          experience: { type: "string", example: "1-2 year" },
-                          employmentType: {
-                            type: "string",
-                            example: "full-time",
-                          },
-                          _id: {
-                            type: "string",
-                            example: "65c2229d6820d7cc9044b412",
-                          },
-                        },
-                      },
-                      employer: {
-                        type: "object",
-                        properties: {
-                          fullName: {
-                            type: "string",
-                            example: "Asadbek Alimov",
-                          },
-                          companyName: {
-                            type: "string",
-                            example: "AliExpress",
-                          },
-                          about: { type: "string", example: "" },
-                          industry: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          contact: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          location: { type: "string", example: "" },
-                          isVerified: { type: "boolean", example: false },
-                          jobs: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          _id: {
-                            type: "string",
-                            example: "65c21b10b811045e6c02fc2e",
-                          },
-                        },
-                      },
-                    },
+                  result: {
+                    type: "string",
+                    example: "success",
                   },
-                  totalCount: { type: "number", example: 1 },
+                  msg: {
+                    type: "string",
+                    example: "Confirmation code sent. Please check your phone.",
+                  },
                 },
               },
             },
           },
         },
-        401: {
-          description: "Unauthorized. Incorrect email or password.",
+        400: {
+          description: "User not found with this phone number",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
-                  result: { type: "string", example: "error" },
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
                   msg: {
                     type: "string",
-                    example: "Incorrect email or password.",
+                    example: "User not found with this phone number",
                   },
-                  data: {
-                    type: "null",
-                    example: null,
-                  },
-                  totalCount: { type: "number", example: 0 },
                 },
               },
             },
           },
         },
         500: {
-          description: "Internal server error.",
+          description: "Internal server error",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
-                  result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Internal server error." },
-                  data: {
-                    type: "null",
-                    example: null,
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  totalCount: { type: "number", example: 0 },
+                  msg: {
+                    type: "string",
+                    example: "Something went wrong",
+                  },
                 },
               },
             },
@@ -803,28 +379,24 @@ const AuthEndpoints = {
   },
   "/auth/sign-in/confirm": {
     post: {
-      summary: "Confirm Login",
+      summary: "Confirm login",
       tags: ["Auth"],
-      description:
-        "Endpoint for user login. Authenticates the user and returns an auth token along with user information.",
+      description: "Confirm the user's login using the confirmation code sent to their phone.",
       requestBody: {
         required: true,
         content: {
           "application/json": {
             schema: {
               type: "object",
-              required: ["email", "password"],
               properties: {
                 phoneNumber: {
                   type: "string",
-                  description: "User's phone number",
+                  description: "The user's phone number",
                   example: "956687007",
-                  pattern: "^[0-9]+$", // Optional: Add a regex pattern to ensure the phone number contains only digits
                 },
                 confirmationCode: {
                   type: "string",
-                  format: "confirmationCode",
-                  description: "confirmationCode for the account.",
+                  description: "The confirmation code sent to the user's phone",
                   example: "123456",
                 },
                 mobileToken: {
@@ -839,132 +411,67 @@ const AuthEndpoints = {
       },
       responses: {
         200: {
-          description: "User logged in successfully.",
+          description: "Login successful",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
-                  result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Login successful" },
+                  result: {
+                    type: "string",
+                    example: "success",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Login successful",
+                  },
                   data: {
                     type: "object",
                     properties: {
-                      email: { type: "string", example: "" },
-                      phoneNumber: { type: "string", example: "+998939993333" },
-                      coins: { type: "number", example: 50 },
-                      id: {
-                        type: "string",
-                        example: "65c2229d6820d7cc9044b411",
-                      },
-                      role: { type: "string", example: "JobSeeker" },
-                      favorites: {
-                        type: "array",
-                        items: {},
-                      },
-                      jobSeeker: {
-                        type: "object",
-                        properties: {
-                          fullName: {
-                            type: "string",
-                            example: "Asadbek Alimov",
-                          },
-                          gender: { type: "string", example: "Choose" },
-                          skills: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          isVerified: { type: "boolean", example: false },
-                          location: { type: "string", example: "Toshkent" },
-                          expectedSalary: { type: "number", example: 0 },
-                          jobtitle: { type: "string", example: "Developer" },
-                          experience: { type: "string", example: "1-2 year" },
-                          employmentType: {
-                            type: "string",
-                            example: "full-time",
-                          },
-                          _id: {
-                            type: "string",
-                            example: "65c2229d6820d7cc9044b412",
-                          },
-                        },
-                      },
-                      employer: {
-                        type: "object",
-                        properties: {
-                          fullName: {
-                            type: "string",
-                            example: "Asadbek Alimov",
-                          },
-                          companyName: {
-                            type: "string",
-                            example: "AliExpress",
-                          },
-                          about: { type: "string", example: "" },
-                          industry: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          contact: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          location: { type: "string", example: "" },
-                          isVerified: { type: "boolean", example: false },
-                          jobs: {
-                            type: "array",
-                            items: { type: "string" },
-                          },
-                          _id: {
-                            type: "string",
-                            example: "65c21b10b811045e6c02fc2e",
-                          },
-                        },
-                      },
+                      accessToken: { type: "string", example: "access_token_example" },
+                      refreshToken: { type: "string", example: "refresh_token_example" },
                     },
                   },
-                  totalCount: { type: "number", example: 1 },
                 },
               },
             },
           },
         },
-        401: {
-          description: "Unauthorized. Incorrect email or password.",
+        400: {
+          description: "Invalid or expired confirmation code",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
-                  result: { type: "string", example: "error" },
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
                   msg: {
                     type: "string",
-                    example: "Incorrect email or password.",
+                    example: "Invalid or expired confirmation code",
                   },
-                  data: {
-                    type: "null",
-                    example: null,
-                  },
-                  totalCount: { type: "number", example: 0 },
                 },
               },
             },
           },
         },
         500: {
-          description: "Internal server error.",
+          description: "Something went wrong",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
-                  result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Internal server error." },
-                  data: {
-                    type: "null",
-                    example: null,
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  totalCount: { type: "number", example: 0 },
+                  msg: {
+                    type: "string",
+                    example: "Something went wrong",
+                  },
                 },
               },
             },
@@ -977,8 +484,7 @@ const AuthEndpoints = {
     post: {
       summary: "Sign out the current user",
       tags: ["Auth"],
-      description:
-        "Endpoint for signing out the current user. This clears the user's auth token.",
+      description: "Endpoint for signing out the current user. This clears the user's auth token.",
       security: [
         {
           cookieAuth: [], // Assuming you are using cookie-based authentication
@@ -1022,8 +528,7 @@ const AuthEndpoints = {
           },
         },
         401: {
-          description:
-            "Unauthorized. User is not authenticated or token is invalid.",
+          description: "Unauthorized. User is not authenticated or token is invalid.",
           content: {
             "application/json": {
               schema: {
@@ -1039,19 +544,14 @@ const AuthEndpoints = {
           },
         },
         500: {
-          description:
-            "Internal server error. Something went wrong during the sign out process.",
+          description: "Internal server error. Something went wrong during the sign out process.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Something went wrong during the sign out process.",
-                  },
+                  msg: { type: "string", example: "Something went wrong during the sign out process." },
                   data: { type: "object", example: {} },
                   totalCount: { type: "number", example: 0 },
                 },
@@ -1066,8 +566,7 @@ const AuthEndpoints = {
     delete: {
       summary: "Delete a user account",
       tags: ["Auth"],
-      description:
-        "This endpoint deletes a user's account. It requires the user to be authenticated.",
+      description: "This endpoint deletes a user's account. It requires the user to be authenticated.",
       security: [
         {
           cookieAuth: [],
@@ -1082,10 +581,7 @@ const AuthEndpoints = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Account deleted successfully",
-                  },
+                  msg: { type: "string", example: "Account deleted successfully" },
                   data: {
                     type: "null",
                     example: null,
@@ -1097,8 +593,7 @@ const AuthEndpoints = {
           },
         },
         401: {
-          description:
-            "Unauthorized. User is not authenticated or token is invalid.",
+          description: "Unauthorized. User is not authenticated or token is invalid.",
           content: {
             "application/json": {
               schema: {
@@ -1117,23 +612,132 @@ const AuthEndpoints = {
           },
         },
         500: {
-          description:
-            "Internal server error. An error occurred while deleting the account.",
+          description: "Internal server error. An error occurred while deleting the account.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example: "An error occurred while deleting the account.",
-                  },
+                  msg: { type: "string", example: "An error occurred while deleting the account." },
                   data: {
                     type: "null",
                     example: null,
                   },
                   totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/auth/renewAccessToken": {
+    post: {
+      summary: "Renew access token",
+      tags: ["Auth"],
+      description: "Endpoint for renewing the access token using a refresh token.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                refreshToken: {
+                  type: "string",
+                  description: "The refresh token",
+                  example: "refresh_token_example",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Access token renewed successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "success",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Access token renewed successfully",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      accessToken: { type: "string", example: "access_token_example" },
+                      refreshToken: { type: "string", example: "refresh_token_example" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Refresh token is required",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Refresh token is required",
+                  },
+                },
+              },
+            },
+          },
+        },
+        403: {
+          description: "Invalid refresh token",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Invalid refresh token",
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Something went wrong",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Something went wrong",
+                  },
                 },
               },
             },

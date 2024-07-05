@@ -2,33 +2,44 @@ const UsersEndpoint = {
   tags: [
     {
       name: "Users",
-      description: "The Auth managing API",
+      description: "The Users managing API",
     },
   ],
-  "/users/AllUsers": {
+  "/users/allUsers": {
     get: {
       summary: "Retrieve all users",
       tags: ["Users"],
       description: "Endpoint to retrieve all user profiles.",
-      parameters: [
+
+      "parameters": [
         {
-          in: "query",
-          name: "page",
-          schema: {
-            type: "integer",
-            default: 1,
+          "in": "header",
+          "name": "Authorization",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "example": "Bearer <token>"
           },
-          description: "Page number for pagination.",
+          "description": "Bearer token"
         },
         {
-          in: "query",
-          name: "limit",
-          schema: {
-            type: "integer",
-            default: 10,
+          "in": "query",
+          "name": "page",
+          "schema": {
+            "type": "integer",
+            "default": 1
           },
-          description: "Number of items per page.",
+          "description": "Page number for pagination."
         },
+        {
+          "in": "query",
+          "name": "limit",
+          "schema": {
+            "type": "integer",
+            "default": 10
+          },
+          "description": "Number of items per page."
+        }
       ],
       responses: {
         200: {
@@ -201,7 +212,7 @@ const UsersEndpoint = {
                       accountVisibility: { type: "boolean" },
                       friends: {
                         type: "array",
-                        items: { type: "string" }, // or a more detailed schema if applicable
+                        items: { type: "string" },
                       },
                       role: { type: "string" },
                       jobSeeker: {
@@ -543,13 +554,12 @@ const UsersEndpoint = {
           },
         },
       },
-      summary: "Get the current authenticated user's profile",
+      summary: "Update the role of the current authenticated user",
       tags: ["Users"],
-      description:
-        "Endpoint to retrieve the profile of the current authenticated user.",
+      description: "Endpoint to update the role of the current authenticated user.",
       responses: {
         200: {
-          description: "The profile of the current user.",
+          description: "The role of the current user was updated successfully.",
           content: {
             "application/json": {
               schema: {
@@ -561,7 +571,7 @@ const UsersEndpoint = {
                   },
                   msg: {
                     type: "string",
-                    example: "User retrieved successfully",
+                    example: "User role updated successfully",
                   },
                   data: {
                     type: "object",
@@ -740,8 +750,7 @@ const UsersEndpoint = {
   "/users/updateJobSeekerProfile": {
     put: {
       summary: "Update JobSeeker profile",
-      description:
-        "Update JobSeeker profile based on user role (JobSeeker or Employer)",
+      description: "Update JobSeeker profile based on user role (JobSeeker or Employer)",
       tags: ["Users"],
       requestBody: {
         required: true,
@@ -804,8 +813,7 @@ const UsersEndpoint = {
                   result: { type: "string", example: "error" },
                   msg: {
                     type: "string",
-                    example:
-                      "Update operation is not supported for this user role.",
+                    example: "Update operation is not supported for this user role.",
                   },
                   data: {
                     type: "null",
@@ -880,8 +888,7 @@ const UsersEndpoint = {
   "/users/updateEmployerProfile": {
     put: {
       summary: "Update Employer profile",
-      description:
-        "Update Employer profile based on user role (JobSeeker or Employer)",
+      description: "Update Employer profile based on user role (JobSeeker or Employer)",
       tags: ["Users"],
       requestBody: {
         required: true,
@@ -935,8 +942,7 @@ const UsersEndpoint = {
                   result: { type: "string", example: "error" },
                   msg: {
                     type: "string",
-                    example:
-                      "Update operation is not supported for this user role.",
+                    example: "Update operation is not supported for this user role.",
                   },
                   data: {
                     type: "null",
@@ -1011,7 +1017,7 @@ const UsersEndpoint = {
   "/users/updateServiceProfile": {
     put: {
       summary: "Update Service profile",
-      description: "Update Service profile based on user role  Service",
+      description: "Update Service profile based on user role Service",
       tags: ["Users"],
       requestBody: {
         required: true,
@@ -1025,6 +1031,9 @@ const UsersEndpoint = {
                   required: false,
                   default: "Choose",
                 },
+                fullName: { type: "string", example: "John Doe" },
+                location: { type: "string", example: "Tashkent" },
+                email: { type: "string", example: "example@example.com" }
               },
             },
           },
@@ -1060,8 +1069,7 @@ const UsersEndpoint = {
                   result: { type: "string", example: "error" },
                   msg: {
                     type: "string",
-                    example:
-                      "Update operation is not supported for this user role.",
+                    example: "Update operation is not supported for this user role.",
                   },
                   data: {
                     type: "null",

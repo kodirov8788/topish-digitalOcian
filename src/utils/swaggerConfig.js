@@ -36,10 +36,10 @@ const { tournamentsEndpoint } = require('../swaggerDocs/tournamentsDocs');
 
 
 const SecuritySchemes = {
-    cookieAuth: {
-        type: 'apiKey',
-        in: 'cookie',
-        name: 'token'  // name of the cookie
+    bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
     }
 };
 
@@ -63,14 +63,14 @@ const swaggerOptions = {
         ],
         tags: [AuthEndpoints.tags, UsersEndpoint.tags],
         components: {
+            securitySchemes: {
+                ...SecuritySchemes // Include your security schemes here
+            },
             schemas: {
                 ...userDocSchema.schemas,
                 ...UserDocResponseSchema,
                 ...AllRoutesSchemas.components.schemas
             },
-        },
-        securitySchemes: {
-            ...SecuritySchemes // Include your security schemes here
         },
         paths: {
             ...AuthEndpoints,

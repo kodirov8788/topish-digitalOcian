@@ -68,6 +68,22 @@ const updateUserAvatarUrl = async (userId, url) => {
     throw error; // Rethrow or handle as needed
   }
 };
+
+router.get("/", async (req, res) => {
+  try {
+    const user = await Users.findById(req.user.id);
+    if (!user) throw new Error("User not found.");
+
+    if (user.avatar) {
+      res.status(200).json({ avatar: user.avatar });
+    } else {
+      res.status(200).json({ message: "No avatar found" });
+    }
+  } catch (error) {
+    console.error("Error fetching avatar:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 router.post("/", upload.single("avatar"), async (req, res) => {
   try {
     if (!req.file) throw new Error("Please upload a file.");
