@@ -34,7 +34,6 @@ const { CompanyEndpoint } = require('../swaggerDocs/companyDocs');
 const { reportUserEndPoint } = require('../swaggerDocs/reportUserDocs');
 const { tournamentsEndpoint } = require('../swaggerDocs/tournamentsDocs');
 
-
 const SecuritySchemes = {
     bearerAuth: {
         type: 'http',
@@ -45,7 +44,7 @@ const SecuritySchemes = {
 
 // const URL = `http://localhost:5001/api/v1/`;
 
-const URL = process.env.SWAGGERT_URL
+const URL = process.env.SWAGGERT_URL;
 
 const swaggerOptions = {
     definition: {
@@ -72,6 +71,11 @@ const swaggerOptions = {
                 ...AllRoutesSchemas.components.schemas
             },
         },
+        security: [
+            {
+                bearerAuth: []
+            }
+        ],
         paths: {
             ...AuthEndpoints,
             ...UsersEndpoint,

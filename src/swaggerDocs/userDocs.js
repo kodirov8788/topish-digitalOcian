@@ -10,18 +10,12 @@ const UsersEndpoint = {
       summary: "Retrieve all users",
       tags: ["Users"],
       description: "Endpoint to retrieve all user profiles.",
-
-      "parameters": [
+      security: [
         {
-          "in": "header",
-          "name": "Authorization",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "example": "Bearer <token>"
-          },
-          "description": "Bearer token"
-        },
+          bearerAuth: []
+        }
+      ],
+      "parameters": [
         {
           "in": "query",
           "name": "page",
