@@ -27,6 +27,10 @@ const QuickjobsEndpoint = {
                   type: "string",
                   example: "Job description here",
                 },
+                telegramUsername: {
+                  type: "string",
+                  example: "telegramUsername",
+                },
                 jobStatus: {
                   type: "string",
                   enum: ["Open", "Closed", "Expired"],

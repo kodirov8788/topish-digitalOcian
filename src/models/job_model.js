@@ -39,6 +39,9 @@ const JobsSchema = new mongoose.Schema(
     requirements: { type: String, default: "" },
     workingtype: { type: String, default: "onsite" },
     recommended: { type: Boolean, default: false },
+    callOnly: { type: Boolean, default: false },
+    phoneNumber: { type: String, default: "" },
+    telegramUsername: { type: String, default: "" }
   },
   { timestamps: true }
 );

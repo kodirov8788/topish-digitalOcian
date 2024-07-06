@@ -99,6 +99,18 @@ const JobsEndpoint = {
                   },
                   example: ["English"],
                 },
+                callOnly: {
+                  type: "boolean",
+                  example: "false",
+                },
+                phoneNumber: {
+                  type: "string",
+                  example: "994567890",
+                },
+                telegramUsername: {
+                  type: "string",
+                  example: "telegramUsername",
+                },
                 requirements: {
                   type: "string",
                   example:
