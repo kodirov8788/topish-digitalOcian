@@ -150,7 +150,6 @@ class QuickJobsCTRL {
       } = req.query;
 
       let queryObject = {};
-      let query = QuickJobs.find();
 
       if (recommended) {
         queryObject.recommended = recommended === "true";
@@ -177,19 +176,17 @@ class QuickJobsCTRL {
 
       // Handle recentJob filter as a boolean
       if (recentJob === "true") {
-        queryObject.createdAt = { $exists: true }; // This will ensure all jobs with a createdAt field are included
+        const daysAgo = new Date(new Date().setDate(new Date().getDate() - 7));
+        queryObject.createdAt = { $gte: daysAgo };
       }
 
-      if (Object.keys(queryObject).length > 0) {
-        query = query.find(queryObject);
+      // Pagination
+      const skip = (page - 1) * parseInt(limit, 10);
 
-        // Pagination
-        const skip = (page - 1) * parseInt(limit);
-        query = query.skip(skip).limit(parseInt(limit));
-
-        // Sort by createdAt in descending order
-        query = query.sort({ createdAt: -1 });
-      }
+      let query = QuickJobs.find(queryObject)
+        .skip(skip)
+        .limit(parseInt(limit, 10))
+        .sort(sort ? sort.split(",").join(" ") : "-createdAt");
 
       const searchedJob = await query;
 
@@ -238,9 +235,9 @@ class QuickJobsCTRL {
 
       const totalJobs = await QuickJobs.countDocuments(queryObject);
       const pagination = {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalJobs / parseInt(limit)),
-        limit: parseInt(limit),
+        currentPage: parseInt(page, 10),
+        totalPages: Math.ceil(totalJobs / parseInt(limit, 10)),
+        limit: parseInt(limit, 10),
         totalDocuments: totalJobs,
       };
 
@@ -264,6 +261,7 @@ class QuickJobsCTRL {
       );
     }
   }
+
 
 
 
