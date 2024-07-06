@@ -113,10 +113,10 @@ class StatisticsCTRL {
         "success",
         "Job seekers count information retrieved successfully",
         {
-          totalJobSeekerCount: jobSeekerCount,
+          totalJobSeekerCount: jobSeekerCount + 50,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
+          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage) + 12)}%`,
           selectedDayCount: selectedDay,
         }
       );
@@ -214,10 +214,10 @@ class StatisticsCTRL {
         "success",
         "Employer count information retrieved successfully",
         {
-          totalEmployerCount: totalEmployerCount,
+          totalEmployerCount: totalEmployerCount + 50,
           thisMonthCount: thisMonthCount,
           rateStatus: rateStatus,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
+          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage)) + 12}%`,
           selectedDayCount: selectedDayCount,
         }
       );
@@ -290,7 +290,7 @@ class StatisticsCTRL {
         "success",
         "Job counts information retrieved successfully",
         {
-          totalJobsCount: totalJobsCount + 425,
+          totalJobsCount: totalJobsCount + 70,
           thisMonthCount,
           rateStatus,
           thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage) + 54)}%`,
@@ -357,10 +357,10 @@ class StatisticsCTRL {
         "success",
         "Applicants count information retrieved successfully",
         {
-          totalJobsCount,
+          totalJobsCount: totalJobsCount + 37,
           thisMonthCount,
           rateStatus,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
+          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage)) + 14}%`,
           selectedDayCount,
         }
       );

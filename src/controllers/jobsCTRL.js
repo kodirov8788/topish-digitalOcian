@@ -227,7 +227,6 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
-
   async getAllJobs(req, res) {
     try {
       const {
