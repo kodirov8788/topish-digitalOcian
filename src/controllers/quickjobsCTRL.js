@@ -189,11 +189,6 @@ class QuickJobsCTRL {
 
         // Sort by createdAt in descending order
         query = query.sort({ createdAt: -1 });
-      } else {
-        // Random job retrieval when no filters are applied
-        const count = await QuickJobs.countDocuments();
-        const random = Math.floor(Math.random() * count);
-        query = QuickJobs.find().skip(random).limit(parseInt(limit));
       }
 
       const searchedJob = await query;

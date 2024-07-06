@@ -337,6 +337,89 @@ const statisticsEndpoint = {
                 }
             ]
         }
+    },
+    '/statistics/companies': {
+        get: {
+            summary: 'Get Companies Count Information',
+            tags: ['Statistics'],
+            description: 'Retrieves various applicants counts, including total applicants count, count for the current month, and count for a selected day.',
+            parameters: [
+                {
+                    in: 'query',
+                    name: 'date',
+                    schema: {
+                        type: 'string',
+                        format: 'date',
+                        description: 'Optional. The date for which to retrieve applicants counts. Defaults to today\'s date if not provided.'
+                    },
+                    required: false
+                }
+            ],
+            responses: {
+                '200': {
+                    description: 'Applicants counts information retrieved successfully.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'success' },
+                                    msg: { type: 'string', example: 'Applicants counts information retrieved successfully' },
+                                    data: {
+                                        type: 'object',
+                                        properties: {
+                                            totalJobsCount: { type: 'integer', example: 500 },
+                                            thisMonthCount: { type: 'integer', example: 50 },
+                                            rateStatus: { type: 'string', enum: ['up', 'down', 'steady'], example: 'steady' },
+                                            thisPeriodPercentage: { type: 'string', example: '10%' },
+                                            selectedDayCount: { type: 'integer', example: 5 }
+                                        }
+                                    },
+                                    totalCount: { "type": "number", "example": 1 }
+                                }
+                            }
+                        }
+                    }
+                },
+                '401': {
+                    description: 'Unauthorized access, no or invalid authentication token provided.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'error' },
+                                    msg: { type: 'string', example: 'Unauthorized' },
+                                    data: { "type": "null", "example": null },
+                                    totalCount: { "type": "number", "example": 0 }
+                                }
+                            }
+                        }
+                    }
+                },
+                '500': {
+                    description: 'Internal server error or exception thrown.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'error' },
+                                    msg: { type: 'string', example: 'Internal server error or exception thrown' },
+                                    data: { "type": "null", "example": null },
+                                    totalCount: { "type": "number", "example": 0 }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            security: [
+                {
+                    bearerAuth: []
+                }
+            ]
+        }
     }
 }
 
