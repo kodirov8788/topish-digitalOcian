@@ -12,7 +12,7 @@ class TournamentsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       if (user.role !== 'Admin' && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -49,7 +49,7 @@ class TournamentsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       if (user.role !== 'Admin' && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -129,7 +129,7 @@ class TournamentsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       if (user.role !== 'Admin' && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -334,7 +334,7 @@ class TournamentsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       if (user.role !== 'Admin' && user.role !== 'Employer') {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }

@@ -2,6 +2,7 @@ const Company = require("../models/company_model");
 const QuickJobs = require("../models/quickjob_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
+const { sendTelegramChannels } = require("../utils/sendingTelegram");
 
 class QuickJobsCTRL {
   async createQuickjobs(req, res) {
@@ -9,44 +10,24 @@ class QuickJobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
-      const coins = req.user.coins;
+
+      const user = await Users.findById(req.user.id);
+      const coins = user.coins; // Corrected this to use 'user' instead of 'req.user'
+
       if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
+        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
       }
 
       if (coins == null) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "There are some problems with your coins. Please contact support.",
-          null,
-          0
-        );
+        return handleResponse(res, 400, "error", "There are some problems with your coins. Please contact support.", null, 0);
       }
 
       if (coins < 5) {
         return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
       }
 
-
       if (!user || !user.employer) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "Employer details not found.",
-          null,
-          0
-        );
+        return handleResponse(res, 400, "error", "Employer details not found.", null, 0);
       }
 
       const jobDetails = {
@@ -55,28 +36,20 @@ class QuickJobsCTRL {
         hr_avatar: user.avatar,
         hr_name: user.fullName,
       };
-      // console.log("user", user)
+
       const job = await QuickJobs.create(jobDetails);
 
-      await Users.findByIdAndUpdate(req.user.id, { $inc: { coins: -1 } });
+      await Users.findByIdAndUpdate(req.user.id, { $inc: { coins: -5 } });
 
-      return handleResponse(
-        res,
-        201,
-        "success",
-        "Quick Job created successfully",
-        job,
-        1
-      );
+      // Prepare the message for Telegram
+      const message = `New Quick Job Posted:\nTitle: ${jobDetails.title}\nDescription: ${jobDetails.description}\nCreated by: ${user.fullName}`;
+
+      // Send message to Telegram channels
+      await sendTelegramChannels(user.telegramChannelIds, message);
+
+      return handleResponse(res, 201, "success", "Quick Job created successfully", job, 1);
     } catch (error) {
-      return handleResponse(
-        res,
-        500,
-        "error",
-        "Something went wrong: " + error.message,
-        null,
-        0
-      );
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
   async deleteQuickjobs(req, res, next) {
@@ -86,7 +59,7 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       // Check if the user role is Employer
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
 
       if (user.role !== "Employer") {
         return handleResponse(
@@ -261,11 +234,6 @@ class QuickJobsCTRL {
       );
     }
   }
-
-
-
-
-
   async getEmployerPosts(req, res) {
     try {
 
@@ -273,7 +241,7 @@ class QuickJobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
 
       if (user.role !== "Employer") {
         return handleResponse(
@@ -452,7 +420,7 @@ class QuickJobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
 
       if (user.role !== "Employer") {
         return handleResponse(

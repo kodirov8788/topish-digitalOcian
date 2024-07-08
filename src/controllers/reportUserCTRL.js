@@ -7,7 +7,7 @@ class ReportUserCTRL {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
-    const user = await Users.findById(req.user.id).select("-password");
+    const user = await Users.findById(req.user.id);
     if (
       !user.role === "Employer" ||
       !user.role === "JobSeeker" ||

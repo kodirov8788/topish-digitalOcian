@@ -835,7 +835,7 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,

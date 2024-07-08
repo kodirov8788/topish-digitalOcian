@@ -10,7 +10,7 @@ class UserCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       // Determine the target role for searching based on the requester's role
       let targetRole = user.role === "Employer" ? "JobSeeker" : "Employer";
 
@@ -217,7 +217,7 @@ class UserCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
 
       if (user.role !== "Employer") {
         // Fixed the role check logic

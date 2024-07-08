@@ -31,6 +31,7 @@ const googlePlayRoute = require("./src/routes/googlePlay-route");
 const otherRoutes = require("./src/routes/other-routers");
 const reportUser = require("./src/routes/reportUser-routes");
 const tournament = require("./src/routes/tournament_route");
+const telegramRouter = require("./src/routes/telegram-route");
 
 const { initSocketServer } = require("./src/socket/Socket");
 const http = require("http");
@@ -128,6 +129,7 @@ app.use("/api/v1/companies", companyRouter);
 app.use("/api/v1/tournaments", tournament);
 app.use("/api/v1/others", authMiddleware, otherRoutes);
 app.use("/api/v1/report", authMiddleware, reportUser);
+app.use("/api/v1/telegram", authMiddleware, telegramRouter);
 
 app.use((req, res, next) => {
   const nonce = crypto.randomBytes(16).toString("base64");

@@ -62,7 +62,7 @@ class GalleryCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       if (user.role !== "JobSeeker") {
         return handleResponse(
           res,
@@ -209,7 +209,7 @@ class GalleryCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       if (user.role !== "JobSeeker") {
         return handleResponse(
           res,
@@ -298,7 +298,7 @@ class GalleryCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       // Check if the user is an Employer
       if (user.role !== "Employer") {
         return handleResponse(

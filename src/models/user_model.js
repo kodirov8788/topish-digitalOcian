@@ -1,6 +1,13 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Schema = mongoose.Schema;
+
+const telegramChannelSchema = new Schema({
+  name: { type: String, required: true },
+  id: { type: String, required: true },
+  link: { type: String, required: true },
+  available: { type: Boolean, default: true },
+});
 const UsersSchema = new Schema(
   {
     service: {
@@ -131,6 +138,8 @@ const UsersSchema = new Schema(
       default:
         "https://upload.wikimedia.org/wikipedia/commons/1/1e/Default-avatar.jpg",
     },
+
+    telegramChannelIds: [telegramChannelSchema],
   },
   { timestamps: true }
 );

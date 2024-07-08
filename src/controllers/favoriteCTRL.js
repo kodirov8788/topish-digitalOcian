@@ -117,7 +117,7 @@ class FavoriteCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       // Assuming you want to restrict this action to a specific role, ensure this matches your application logic
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       if (user.role === "JobSeeker") {
         return handleResponse(
           res,

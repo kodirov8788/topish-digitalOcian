@@ -8,7 +8,7 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       const coins = req.user.coins;
       const allowedRoles = ["Service", "Employer"];
       if (!allowedRoles.includes(user.role)) {
@@ -77,7 +77,7 @@ class OfficesCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       // Check if the user role is Employer
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       const allowedRoles = ["Service", "Admin", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -231,7 +231,7 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       const allowedRoles = ["Service", "Admin", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -342,7 +342,7 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id).select("-password");
+      const user = await Users.findById(req.user.id);
       const allowedRoles = ["Service", "Admin", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
