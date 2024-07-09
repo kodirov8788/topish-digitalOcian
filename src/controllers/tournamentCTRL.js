@@ -426,6 +426,156 @@ class TournamentsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
+  async tournamentUsers(req, res) {
+    // console.log("req.params: ", req.params)
+    try {
+      const { id: tournamentID } = req.params;
+
+      const tournament = await Tournament.findById(tournamentID);
+      // console.log("tournament: ", tournament)
+      if (!tournament) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Tournament with id: ${tournamentID} not found`,
+          null,
+          0
+        );
+      }
+
+      const users = tournament.participants;
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Tournament users retrieved successfully",
+        users,
+        users.length
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+
+  async addUserToTournament(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findById(req.user.id);
+      if (user.role !== 'Admin') {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { id: tournamentID } = req.params;
+      const { userId } = req.body;
+
+      const tournament = await Tournament.findById(tournamentID);
+      if (!tournament) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Tournament with id: ${tournamentID} not found`,
+          null,
+          0
+        );
+      }
+
+      if (tournament.participants.some((participant) => participant.userId === userId)) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "User is already a participant in this tournament",
+          null,
+          0
+        );
+      }
+
+      const playerId = `topish${Math.floor(1000 + Math.random() * 9000)}`;
+      const specialCode = `topish-${tournament.tournament_id.slice(-4)}${userId.slice(-4)}`;
+
+      tournament.participants.push({
+        userId,
+        playerId,
+        specialCode,
+      });
+
+      await tournament.save();
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "User added to tournament successfully",
+        tournament,
+        1
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+
+  async removeUserFromTournament(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findById(req.user.id);
+      if (user.role !== 'Admin') {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { id: tournamentID } = req.params;
+      const { userId } = req.body;
+
+      const tournament = await Tournament.findById(tournamentID);
+      if (!tournament) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Tournament with id: ${tournamentID} not found`,
+          null,
+          0
+        );
+      }
+
+      const participantIndex = tournament.participants.findIndex(
+        (participant) => participant.userId === userId
+      );
+
+      if (participantIndex === -1) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "User is not a participant in this tournament",
+          null,
+          0
+        );
+      }
+
+      tournament.participants.splice(participantIndex, 1);
+      await tournament.save();
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "User removed from tournament successfully",
+        tournament,
+        1
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
 }
 
 module.exports = new TournamentsCTRL();

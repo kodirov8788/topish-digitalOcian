@@ -12,5 +12,8 @@ router.post("/:id/join", authMiddleware, TournamentsCTRL.joinTournament);
 router.post("/:id/leave", authMiddleware, TournamentsCTRL.leaveTournament);
 router.patch("/:id/updateStatus", authMiddleware, TournamentsCTRL.updateTournamentStatus);
 router.post("/:id/checkUser", TournamentsCTRL.checkUserInTournament);
+router.get("/:id/users", TournamentsCTRL.tournamentUsers);
+router.post("/:id/addUser", authMiddleware, TournamentsCTRL.addUserToTournament);
+router.post("/:id/removeUser", authMiddleware, TournamentsCTRL.removeUserFromTournament);
 
 module.exports = router;
