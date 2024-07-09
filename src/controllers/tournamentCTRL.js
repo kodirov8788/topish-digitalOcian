@@ -442,13 +442,26 @@ class TournamentsCTRL {
         );
       }
 
-      let users = tournament.participants;
+      const users = tournament.participants;
 
-      for (const user of users) {
+      for (let i = 0; i < users.length; i++) {
+        const user = users[i];
         const userDetails = await Users.findById(user.userId);
-        user.avatar = userDetails.avatar;
-        user.fullName = userDetails.fullName;
-        user.phoneNumber = userDetails.phoneNumber;
+        if (userDetails) {
+          users[i] = {
+            ...user,
+            avatar: userDetails.avatar,
+            fullName: userDetails.fullName,
+            phoneNumber: userDetails.phoneNumber,
+          };
+        } else {
+          users[i] = {
+            ...user,
+            avatar: null,
+            fullName: null,
+            phoneNumber: null,
+          };
+        }
       }
 
       return handleResponse(
@@ -463,6 +476,7 @@ class TournamentsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
+
 
 
 
