@@ -444,30 +444,26 @@ class TournamentsCTRL {
 
       const users = tournament.participants;
 
-      const usersWithDetails = await Promise.all(
-        users.map(async (user) => {
-          const userDetails = await Users.findById(user.userId);
-          return {
-            ...user,
-            avatar: userDetails.avatar,
-            fullName: userDetails.fullName,
-            phoneNumber: userDetails.phoneNumber,
-          };
-        })
-      );
+      for (const user of users) {
+        const userDetails = await Users.findById(user.userId);
+        user.avatar = userDetails.avatar;
+        user.fullName = userDetails.fullName;
+        user.phoneNumber = userDetails.phoneNumber;
+      }
 
       return handleResponse(
         res,
         200,
         "success",
         "Tournament users retrieved successfully",
-        usersWithDetails,
-        usersWithDetails.length
+        users,
+        users.length
       );
     } catch (error) {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
+
 
 
   async addUserToTournament(req, res) {
