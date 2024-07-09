@@ -442,35 +442,31 @@ class TournamentsCTRL {
         );
       }
 
-      let users = tournament.participants;
+      const users = tournament.participants;
+      const userDetailsPromises = users.map(user => Users.findById(user.userId));
 
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        const userDetails = await Users.findById(user.userId);
+      const userDetailsArray = await Promise.all(userDetailsPromises);
+
+      const newUsers = users.map((user, index) => {
+        const userDetails = userDetailsArray[index];
         if (userDetails) {
-          users[i] = {
+          return {
             ...user,
             avatar: userDetails.avatar,
             fullName: userDetails.fullName,
             phoneNumber: userDetails.phoneNumber,
           };
-        } else {
-          users[i] = {
-            ...user,
-            avatar: null,
-            fullName: null,
-            phoneNumber: null,
-          };
         }
-      }
+        return user; // Return original user if userDetails is not found
+      }).filter(user => user.fullName); // Optionally filter out users with missing details
 
       return handleResponse(
         res,
         200,
         "success",
         "Tournament users retrieved successfully",
-        users,
-        users.length
+        newUsers,
+        newUsers.length
       );
     } catch (error) {
       return handleResponse(res, 500, "error", error.message, null, 0);
