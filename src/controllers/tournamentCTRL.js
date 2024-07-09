@@ -444,11 +444,11 @@ class TournamentsCTRL {
 
       const users = tournament.participants;
       const newUsers = [];
-
+      let userDetails = null;
       for (let i = 0; i < users.length; i++) {
         const user = users[i];
         try {
-          const userDetails = await Users.findById(user.userId);
+          userDetails = await Users.findById(user.userId);
           if (userDetails) {
             newUsers.push({
               ...user,
@@ -462,6 +462,8 @@ class TournamentsCTRL {
           console.error(`Error fetching user with id: ${user.userId}`, error);
         }
       }
+
+      console.log("newUsers: ", newUsers)
 
       return handleResponse(
         res,
