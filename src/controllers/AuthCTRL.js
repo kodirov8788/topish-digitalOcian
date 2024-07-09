@@ -31,7 +31,7 @@ class AuthCTRL {
       const now = Date.now();
       let confirmationCode = null
       let confirmationCodeExpires = null
-      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990") {
+      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         confirmationCode = 112233
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       } else {
@@ -138,7 +138,7 @@ class AuthCTRL {
 
       let confirmationCode = null
       let confirmationCodeExpires = null
-      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990") {
+      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         confirmationCode = 112233
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       } else {
@@ -183,7 +183,7 @@ class AuthCTRL {
       const now = Date.now();
       let confirmationCode = null
       let confirmationCodeExpires = null
-      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990") {
+      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         confirmationCode = 112233
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       } else {
