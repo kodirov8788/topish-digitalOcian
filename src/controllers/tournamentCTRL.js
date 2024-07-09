@@ -442,28 +442,26 @@ class TournamentsCTRL {
         );
       }
 
-      const users = tournament.participants;
-      const newUsers = [];
-      let userDetails = null;
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        try {
-          userDetails = await Users.findById(user.userId);
-          if (userDetails) {
-            newUsers.push({
-              ...user,
-              avatar: userDetails.avatar,
-              fullName: userDetails.fullName,
-              phoneNumber: userDetails.phoneNumber,
-            });
-          }
-        } catch (error) {
-          // Handle individual user lookup error if necessary
-          console.error(`Error fetching user with id: ${user.userId}`, error);
-        }
-      }
+      const userIds = tournament.participants.map((participant) => participant.userId);
+      const users = await Users.find({ _id: { $in: userIds } });
 
-      console.log("newUsers: ", newUsers)
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id.toString()] = user;
+        return acc;
+      }, {});
+
+      const newUsers = tournament.participants.map((participant) => {
+        const userDetails = userMap[participant.userId.toString()];
+        if (userDetails) {
+          return {
+            ...participant,
+            avatar: userDetails.avatar,
+            fullName: userDetails.fullName,
+            phoneNumber: userDetails.phoneNumber,
+          };
+        }
+        return participant; // Fallback to original participant if user details are not found
+      });
 
       return handleResponse(
         res,
