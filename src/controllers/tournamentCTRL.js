@@ -442,7 +442,7 @@ class TournamentsCTRL {
         );
       }
 
-      const users = tournament.participants;
+      let users = tournament.participants;
 
       for (let i = 0; i < users.length; i++) {
         const user = users[i];
