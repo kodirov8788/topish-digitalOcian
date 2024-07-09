@@ -466,7 +466,7 @@ class TournamentsCTRL {
       }
 
       const user = await Users.findById(req.user.id);
-      if (user.role !== 'Admin') {
+      if (user.role !== 'Admin' && user.role !== 'Employer') {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
@@ -527,7 +527,7 @@ class TournamentsCTRL {
       }
 
       const user = await Users.findById(req.user.id);
-      if (user.role !== 'Admin') {
+      if (user.role !== 'Admin' && user.role !== 'Employer') {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
