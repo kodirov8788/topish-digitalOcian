@@ -442,7 +442,7 @@ class TournamentsCTRL {
         );
       }
 
-      const users = tournament.participants;
+      let users = tournament.participants;
 
       for (const user of users) {
         const userDetails = await Users.findById(user.userId);
