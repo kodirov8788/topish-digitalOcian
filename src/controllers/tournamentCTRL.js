@@ -446,7 +446,11 @@ class TournamentsCTRL {
       const users = await Users.find({ _id: { $in: userIds } });
 
       const userMap = users.reduce((acc, user) => {
-        acc[user._id.toString()] = user;
+        acc[user._id.toString()] = {
+          avatar: user.avatar,
+          fullName: user.fullName,
+          phoneNumber: user.phoneNumber,
+        };
         return acc;
       }, {});
 
@@ -454,13 +458,17 @@ class TournamentsCTRL {
         const userDetails = userMap[participant.userId.toString()];
         if (userDetails) {
           return {
-            ...participant,
-            avatar: userDetails.avatar,
-            fullName: userDetails.fullName,
-            phoneNumber: userDetails.phoneNumber,
+            userId: participant.userId,
+            playerId: participant.playerId,
+            specialCode: participant.specialCode,
+            ...userDetails,
           };
         }
-        return participant; // Fallback to original participant if user details are not found
+        return {
+          userId: participant.userId,
+          playerId: participant.playerId,
+          specialCode: participant.specialCode,
+        };
       });
 
       return handleResponse(
