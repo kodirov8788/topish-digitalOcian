@@ -64,7 +64,7 @@ const UsersSchema = new Schema(
       jobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
     },
     fullName: { type: String, default: "" },
-    username: { type: String, default: "", required: false },
+    username: { type: String, default: "", unique: true, required: false },
     gender: {
       type: String,
       required: false,
@@ -138,8 +138,8 @@ const UsersSchema = new Schema(
   { timestamps: true }
 );
 
-// // Partial index for unique username
-// UsersSchema.index({ username: 1 }, { unique: true, sparse: true });
+// Partial index for unique username
+UsersSchema.index({ username: 1 }, { unique: true, sparse: true });
 
 // Hash the password before saving the user
 UsersSchema.pre("save", async function (next) {
