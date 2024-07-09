@@ -15,24 +15,24 @@ const UsersEndpoint = {
           bearerAuth: []
         }
       ],
-      "parameters": [
+      parameters: [
         {
-          "in": "query",
-          "name": "page",
-          "schema": {
-            "type": "integer",
-            "default": 1
+          in: "query",
+          name: "page",
+          schema: {
+            type: "integer",
+            default: 1
           },
-          "description": "Page number for pagination."
+          description: "Page number for pagination."
         },
         {
-          "in": "query",
-          "name": "limit",
-          "schema": {
-            "type": "integer",
-            "default": 10
+          in: "query",
+          name: "limit",
+          schema: {
+            type: "integer",
+            default: 10
           },
-          "description": "Number of items per page."
+          description: "Number of items per page."
         }
       ],
       responses: {
@@ -1127,6 +1127,111 @@ const UsersEndpoint = {
                     example: null,
                   },
                   totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/users/updateUsername": {
+    patch: {
+      summary: "Update username",
+      tags: ["Users"],
+      description: "Endpoint to update the username of the current authenticated user.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                username: {
+                  type: "string",
+                  example: "newUsername",
+                },
+              },
+              required: ["username"],
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Username updated successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Username updated successfully",
+                  },
+                  data: { $ref: "#/components/schemas/Users" },
+                  totalCount: { type: "integer", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Bad Request, username already exists",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Username already in use" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "User not found",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "User not found" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Internal server error" },
+                  data: { type: "null", example: null },
                 },
               },
             },

@@ -687,6 +687,59 @@ class UserCTRL {
       );
     }
   }
+  async updateUsername(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const userId = req.user.id;
+      let { username } = req.body;
+
+      if (!username) {
+        return handleResponse(res, 400, "error", "Please provide a username", null, 0);
+      }
+
+      username = username.toLowerCase();
+      username = username.trim();
+      username = username.replace(/\s+/g, "");
+      username = username.replace(/[^a-zA-Z0-9]/g, "");
+
+      // Check if the username already exists
+      const existingUser = await Users.findOne({ username });
+      if (existingUser) {
+        return handleResponse(res, 400, "error", "Username already in use", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: userId });
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+
+      user.username = username;
+
+      const updatedUser = await user.save();
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Username updated successfully",
+        updatedUser,
+        1
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+
 }
 
 module.exports = new UserCTRL();

@@ -8,6 +8,7 @@ const telegramChannelSchema = new Schema({
   link: { type: String, required: true },
   available: { type: Boolean, default: true },
 });
+
 const UsersSchema = new Schema(
   {
     service: {
@@ -20,12 +21,6 @@ const UsersSchema = new Schema(
       type: Array,
       default: [],
     },
-    // sessions: [
-    //   {
-    //     token: { type: String, required: true },
-    //     expires: { type: Date, required: true },
-    //   },
-    // ],
     phoneNumber: { type: String, required: true, unique: true },
     phoneConfirmed: { type: Boolean, default: false },
     confirmationCode: { type: String, default: null },
@@ -69,7 +64,7 @@ const UsersSchema = new Schema(
       jobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
     },
     fullName: { type: String, default: "" },
-
+    username: { type: String, default: "", unique: true, required: false },
     gender: {
       type: String,
       required: false,
@@ -138,11 +133,13 @@ const UsersSchema = new Schema(
       default:
         "https://upload.wikimedia.org/wikipedia/commons/1/1e/Default-avatar.jpg",
     },
-
     telegramChannelIds: [telegramChannelSchema],
   },
   { timestamps: true }
 );
+
+// Partial index for unique username
+UsersSchema.index({ username: 1 }, { unique: true, sparse: true });
 
 // Hash the password before saving the user
 UsersSchema.pre("save", async function (next) {

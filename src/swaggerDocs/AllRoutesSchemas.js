@@ -77,26 +77,25 @@ const UserSchema = {
         description: "Unique phone number of the user",
         example: 935553333,
       },
-      email: {
-        type: "string",
-        format: "email",
-        description: "Unique email address of the user",
-        example: "user@example.com",
-      },
       phoneConfirmed: {
         type: "boolean",
         default: false,
         description: "Indicates if the phone number is confirmed",
       },
-      emailConfirmed: {
-        type: "boolean",
-        default: false,
-        description: "Indicates if the email is confirmed",
-      },
       accountVisibility: {
         type: "boolean",
         default: false,
         description: "User's account visibility status",
+      },
+      fullName: {
+        type: "string",
+        description: "Full name of the user",
+        example: "John Doe",
+      },
+      username: {
+        type: "string",
+        description: "Username of the user",
+        example: "johndoe",
       },
       lastSeen: {
         type: "string",
@@ -1075,7 +1074,6 @@ const CompanySchema = {
     required: ["description", "name", "location", "size", "type", "createdBy"],
   },
 };
-
 module.exports = CompanySchema;
 
 const AllRoutesSchemas = {
