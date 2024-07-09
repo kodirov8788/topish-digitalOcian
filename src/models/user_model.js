@@ -64,7 +64,7 @@ const UsersSchema = new Schema(
       jobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
     },
     fullName: { type: String, default: "" },
-    username: { type: String, default: "", unique: true, required: false },
+    username: { type: String, default: "", unique: false, required: false },
     gender: {
       type: String,
       required: false,
