@@ -446,6 +446,13 @@ class TournamentsCTRL {
 
       const users = tournament.participants;
 
+      users.forEach(async (user) => {
+        const userDetails = await Users.findById(user.userId);
+        user.avatar = userDetails.avatar;
+        user.fullName = userDetails.fullName;
+        user.phoneNumber = userDetails.phoneNumber;
+      });
+
       return handleResponse(
         res,
         200,
