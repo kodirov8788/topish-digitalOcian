@@ -443,22 +443,25 @@ class TournamentsCTRL {
       }
 
       const users = tournament.participants;
-      const userDetailsPromises = users.map(user => Users.findById(user.userId));
+      const newUsers = [];
 
-      const userDetailsArray = await Promise.all(userDetailsPromises);
-
-      const newUsers = users.map((user, index) => {
-        const userDetails = userDetailsArray[index];
-        if (userDetails) {
-          return {
-            ...user,
-            avatar: userDetails.avatar,
-            fullName: userDetails.fullName,
-            phoneNumber: userDetails.phoneNumber,
-          };
+      for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+        try {
+          const userDetails = await Users.findById(user.userId);
+          if (userDetails) {
+            newUsers.push({
+              ...user,
+              avatar: userDetails.avatar,
+              fullName: userDetails.fullName,
+              phoneNumber: userDetails.phoneNumber,
+            });
+          }
+        } catch (error) {
+          // Handle individual user lookup error if necessary
+          console.error(`Error fetching user with id: ${user.userId}`, error);
         }
-        return user; // Return original user if userDetails is not found
-      }).filter(user => user.fullName); // Optionally filter out users with missing details
+      }
 
       return handleResponse(
         res,
@@ -472,6 +475,7 @@ class TournamentsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
+
 
 
 
