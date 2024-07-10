@@ -128,6 +128,16 @@ const AuthEndpoints = {
                   description: "The confirmation code sent to the user's phone",
                   example: "112233",
                 },
+                deviceId: {
+                  type: "string",
+                  description: "The device ID of the user",
+                  example: "deviceId",
+                },
+                deviceName: {
+                  type: "string",
+                  description: "The device name of the user",
+                  example: "deviceName",
+                },
               },
             },
           },
@@ -403,6 +413,16 @@ const AuthEndpoints = {
                   type: "string",
                   description: "The mobile token of the user",
                   example: "fcmToken",
+                },
+                deviceId: {
+                  type: "string",
+                  description: "The device ID of the user",
+                  example: "deviceId",
+                },
+                deviceName: {
+                  type: "string",
+                  description: "The device name of the user",
+                  example: "deviceName",
                 },
               },
             },

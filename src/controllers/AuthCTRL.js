@@ -6,6 +6,8 @@ const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
 const { RegisterValidation, logOutValidation, RegisterValidationConfirm } = require("../helpers/AuthValidation");
 const { getEskizAuthToken, sendCustomSms } = require("../utils/smsService");
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid'); // To generate a custom random ID
+
 function createRandomFullname() {
   const firstName = "User";
   const randomNumber = Math.floor(Math.random() * 1000000);
@@ -66,13 +68,71 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+  // async confirmRegisterCode(req, res) {
+  //   try {
+  //     const { error } = RegisterValidationConfirm(req.body);
+  //     if (error) {
+  //       return handleResponse(res, 400, "error", error.details[0].message);
+  //     }
+  //     const { phoneNumber, confirmationCode, } = req.body;
+  //     let user = null;
+
+  //     const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+  //     user = await Users.findOne({
+  //       phoneNumber: phoneNumberWithCountryCode,
+  //       confirmationCode,
+  //     });
+
+  //     if (!user || new Date() > user.confirmationCodeExpires) {
+  //       return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
+  //     }
+
+  //     user.phoneConfirmed = true;
+  //     user.confirmationCode = null;
+  //     user.confirmationCodeExpires = null;
+  //     user.jobSeeker = {
+  //       skills: [],
+  //       professions: [],
+  //       expectedSalary: "",
+  //       jobTitle: "",
+  //       nowSearchJob: true,
+  //       workingExperience: "",
+  //       employmentType: "full-time",
+  //       educationalBackground: "",
+  //     };
+  //     user.employer = {
+  //       aboutCompany: "",
+  //       industry: "",
+  //       contactNumber: "",
+  //       contactEmail: "",
+  //       jobs: [],
+  //     };
+  //     user.service = {
+  //       savedOffices: [],
+  //     };
+
+  //     await user.save();
+
+  //     const tokenUser = createTokenUser(user);
+  //     const { accessToken, refreshToken } = generateTokens(tokenUser);
+
+  //     user.refreshTokens = [{ token: refreshToken }];
+  //     await user.save();
+
+  //     return handleResponse(res, 201, "success", "User registered successfully.", { accessToken, refreshToken, role: user.role });
+  //   } catch (error) {
+  //     return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+  //   }
+  // }
+
   async confirmRegisterCode(req, res) {
     try {
       const { error } = RegisterValidationConfirm(req.body);
       if (error) {
         return handleResponse(res, 400, "error", error.details[0].message);
       }
-      const { phoneNumber, confirmationCode, } = req.body;
+
+      const { phoneNumber, confirmationCode, deviceId, deviceName } = req.body; // Get deviceId and deviceName from the request body
       let user = null;
 
       const phoneNumberWithCountryCode = `+998${phoneNumber}`;
@@ -113,7 +173,16 @@ class AuthCTRL {
 
       const tokenUser = createTokenUser(user);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
-      user.refreshTokens = [{ token: refreshToken }];
+
+      // Generate a custom random ID
+      const customRandomId = uuidv4();
+
+      user.refreshTokens = [{
+        token: refreshToken,
+        deviceId: deviceId || 'unknown-device-id', // Use 'unknown-device-id' if deviceId is not provided
+        deviceName: deviceName || 'unknown-device-name', // Use 'unknown-device-name' if deviceName is not provided
+        customRandomId: customRandomId,
+      }];
       await user.save();
 
       return handleResponse(res, 201, "success", "User registered successfully.", { accessToken, refreshToken, role: user.role });
@@ -210,10 +279,51 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+  // async confirmLogin(req, res) {
+  //   try {
+
+  //     const { phoneNumber, confirmationCode, mobileToken } = req.body;
+
+  //     if (!phoneNumber || !confirmationCode) {
+  //       return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
+  //     }
+  //     const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+  //     let user = null;
+
+  //     user = await Users.findOne({
+  //       phoneNumber: phoneNumberWithCountryCode,
+  //       confirmationCode,
+  //     });
+
+  //     if (!user || new Date() > user.confirmationCodeExpires) {
+  //       return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
+  //     }
+
+  //     user.phoneConfirmed = true;
+  //     user.confirmationCode = null;
+  //     user.confirmationCodeExpires = null;
+
+  //     if (mobileToken && (!user.mobileToken || !user.mobileToken.includes(mobileToken))) {
+  //       user.mobileToken = user.mobileToken || [];
+  //       user.mobileToken.push(mobileToken);
+  //     }
+
+  //     await user.save();
+
+  //     const tokenUser = createTokenUser(user);
+  //     const { accessToken, refreshToken } = generateTokens(tokenUser);
+  //     user.refreshTokens = user.refreshTokens || [];
+  //     user.refreshTokens.push({ token: refreshToken });
+  //     await user.save();
+
+  //     return handleResponse(res, 200, "success", "Login successful", { accessToken, refreshToken, role: user.role });
+  //   } catch (error) {
+  //     return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+  //   }
+  // }
   async confirmLogin(req, res) {
     try {
-
-      const { phoneNumber, confirmationCode, mobileToken } = req.body;
+      const { phoneNumber, confirmationCode, mobileToken, deviceId, deviceName } = req.body;
 
       if (!phoneNumber || !confirmationCode) {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
@@ -243,8 +353,17 @@ class AuthCTRL {
 
       const tokenUser = createTokenUser(user);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
+
+      // Generate a custom random ID
+      const customRandomId = uuidv4();
+
       user.refreshTokens = user.refreshTokens || [];
-      user.refreshTokens.push({ token: refreshToken });
+      user.refreshTokens.push({
+        token: refreshToken,
+        deviceId: deviceId || 'unknown-device-id', // Use 'unknown-device-id' if deviceId is not provided
+        deviceName: deviceName || 'unknown-device-name', // Use 'unknown-device-name' if deviceName is not provided
+        customRandomId: customRandomId,
+      });
       await user.save();
 
       return handleResponse(res, 200, "success", "Login successful", { accessToken, refreshToken, role: user.role });
