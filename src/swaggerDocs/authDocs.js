@@ -1,5 +1,3 @@
-// swaggerSchemas.js
-
 const AuthEndpoints = {
   tags: [
     {
@@ -137,6 +135,26 @@ const AuthEndpoints = {
                   type: "string",
                   description: "The device name of the user",
                   example: "deviceName",
+                },
+                region: {
+                  type: "string",
+                  description: "The region of the user",
+                  example: "region",
+                },
+                os: {
+                  type: "string",
+                  description: "The operating system of the user",
+                  example: "os",
+                },
+                browser: {
+                  type: "string",
+                  description: "The browser of the user",
+                  example: "browser",
+                },
+                ip: {
+                  type: "string",
+                  description: "The IP address of the user",
+                  example: "ip",
                 },
               },
             },
@@ -424,6 +442,26 @@ const AuthEndpoints = {
                   description: "The device name of the user",
                   example: "deviceName",
                 },
+                region: {
+                  type: "string",
+                  description: "The region of the user",
+                  example: "region",
+                },
+                os: {
+                  type: "string",
+                  description: "The operating system of the user",
+                  example: "os",
+                },
+                browser: {
+                  type: "string",
+                  description: "The browser of the user",
+                  example: "browser",
+                },
+                ip: {
+                  type: "string",
+                  description: "The IP address of the user",
+                  example: "ip",
+                },
               },
             },
           },
@@ -587,11 +625,7 @@ const AuthEndpoints = {
       summary: "Delete a user account",
       tags: ["Auth"],
       description: "This endpoint deletes a user's account. It requires the user to be authenticated.",
-      security: [
-        {
-          cookieAuth: [],
-        },
-      ],
+
       responses: {
         200: {
           description: "Account deleted successfully.",
@@ -766,7 +800,184 @@ const AuthEndpoints = {
       },
     },
   },
+  "/auth/getRefreshTokens": {
+    get: {
+      summary: "Get refresh tokens",
+      tags: ["Auth"],
+      description: "Retrieve all refresh tokens associated with the authenticated user.",
+      responses: {
+        200: {
+          description: "Refresh tokens retrieved successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: { type: "string", example: "Refresh tokens retrieved successfully" },
+                  data: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        token: { type: "string", example: "refresh_token_example" },
+                        deviceId: { type: "string", example: "deviceId" },
+                        deviceName: { type: "string", example: "deviceName" },
+                        region: { type: "string", example: "region" },
+                        os: { type: "string", example: "os" },
+                        browser: { type: "string", example: "browser" },
+                        ip: { type: "string", example: "ip" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized. User is not authenticated or token is invalid.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized!" },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error. Something went wrong while retrieving refresh tokens.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Something went wrong while retrieving refresh tokens." },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/auth/deleteRefreshToken": {
+    delete: {
+      summary: "Delete a refresh token",
+      tags: ["Auth"],
+      description: "Delete a specific refresh token associated with the authenticated user.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                id: {
+                  type: "string",
+                  description: "The ID of the refresh token to delete",
+                  example: "refresh_token_id_example",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Refresh token deleted successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: { type: "string", example: "Refresh token deleted successfully" },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized. User is not authenticated or token is invalid.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized!" },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Invalid request. Refresh token ID is required.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Refresh token ID is required." },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error. Something went wrong while deleting the refresh token.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Something went wrong while deleting the refresh token." },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 };
-// authEndpoints.js
 
 module.exports = { AuthEndpoints };

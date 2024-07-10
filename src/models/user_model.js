@@ -5,8 +5,19 @@ const Schema = mongoose.Schema;
 const telegramChannelSchema = new Schema({
   name: { type: String, required: true },
   id: { type: String, required: true },
-  link: { type: String, required: true },
+  link: { type: String, required: false },
   available: { type: Boolean, default: true },
+
+});
+
+const refreshSchema = new Schema({
+  token: { type: String, required: true },
+  deviceId: { type: String, required: false },
+  deviceName: { type: String, required: false },
+  region: { type: String, required: false },
+  os: { type: String, required: false },
+  browser: { type: String, required: false },
+  ip: { type: String, required: false },
 });
 
 const UsersSchema = new Schema(
@@ -81,8 +92,7 @@ const UsersSchema = new Schema(
       enum: ["JobSeeker", "Employer", "Service", "Admin"],
     },
     refreshTokens: {
-      type: Array,
-      default: [],
+      type: [refreshSchema],
     },
     password: { type: String, required: false, minlength: 8 },
     root: { type: Boolean, default: false },

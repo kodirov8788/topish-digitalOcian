@@ -6,8 +6,6 @@ const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
 const { RegisterValidation, logOutValidation, RegisterValidationConfirm } = require("../helpers/AuthValidation");
 const { getEskizAuthToken, sendCustomSms } = require("../utils/smsService");
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid'); // To generate a custom random ID
-
 function createRandomFullname() {
   const firstName = "User";
   const randomNumber = Math.floor(Math.random() * 1000000);
@@ -126,13 +124,15 @@ class AuthCTRL {
   // }
 
   async confirmRegisterCode(req, res) {
+    console.log("confirmRegisterCode", req.body)
     try {
-      const { error } = RegisterValidationConfirm(req.body);
-      if (error) {
-        return handleResponse(res, 400, "error", error.details[0].message);
-      }
 
-      const { phoneNumber, confirmationCode, deviceId, deviceName } = req.body; // Get deviceId and deviceName from the request body
+
+      const { phoneNumber, confirmationCode, deviceId, deviceName, region, os, browser, ip } = req.body;
+
+      if (!phoneNumber || !confirmationCode) {
+        return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
+      }
       let user = null;
 
       const phoneNumberWithCountryCode = `+998${phoneNumber}`;
@@ -175,13 +175,21 @@ class AuthCTRL {
       const { accessToken, refreshToken } = generateTokens(tokenUser);
 
       // Generate a custom random ID
-      const customRandomId = uuidv4();
-
+      // token: { type: String, required: true },
+      // deviceId: { type: String, required: false },
+      // deviceName: { type: String, required: false },
+      // region: { type: String, required: false },
+      // os: { type: String, required: false },
+      // browser: { type: String, required: false },
+      // ip: { type: String, required: false },
       user.refreshTokens = [{
         token: refreshToken,
         deviceId: deviceId || 'unknown-device-id', // Use 'unknown-device-id' if deviceId is not provided
         deviceName: deviceName || 'unknown-device-name', // Use 'unknown-device-name' if deviceName is not provided
-        customRandomId: customRandomId,
+        region: region || 'unknown-region', // Use 'unknown-region' if region is not provided
+        os: os || 'unknown-os', // Use 'unknown-os' if os is not provided
+        browser: browser || 'unknown-browser', // Use 'unknown-browser' if browser is not provided
+        ip: ip || 'unknown-ip', // Use 'unknown-ip' if ip is not provided
       }];
       await user.save();
 
@@ -204,7 +212,7 @@ class AuthCTRL {
       if (!user) {
         return handleResponse(res, 400, "error", "User not found with this phone number", null, 0);
       }
-
+      let now = Date.now();
       let confirmationCode = null
       let confirmationCodeExpires = null
       if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
@@ -323,7 +331,7 @@ class AuthCTRL {
   // }
   async confirmLogin(req, res) {
     try {
-      const { phoneNumber, confirmationCode, mobileToken, deviceId, deviceName } = req.body;
+      const { phoneNumber, confirmationCode, mobileToken, deviceId, deviceName, region, os, browser, ip } = req.body;
 
       if (!phoneNumber || !confirmationCode) {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
@@ -354,15 +362,15 @@ class AuthCTRL {
       const tokenUser = createTokenUser(user);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
 
-      // Generate a custom random ID
-      const customRandomId = uuidv4();
-
       user.refreshTokens = user.refreshTokens || [];
       user.refreshTokens.push({
         token: refreshToken,
         deviceId: deviceId || 'unknown-device-id', // Use 'unknown-device-id' if deviceId is not provided
         deviceName: deviceName || 'unknown-device-name', // Use 'unknown-device-name' if deviceName is not provided
-        customRandomId: customRandomId,
+        region: region || 'unknown-region', // Use 'unknown-region' if region is not provided
+        os: os || 'unknown-os', // Use 'unknown-os' if os is not provided
+        browser: browser || 'unknown-browser', // Use 'unknown-browser' if browser is not provided
+        ip: ip || 'unknown-ip', // Use 'unknown-ip' if ip is not provided
       });
       await user.save();
 
@@ -428,26 +436,30 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "Refresh token is required", null, 0);
       }
 
-      // Verify the refresh token
       jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
         if (err) {
           return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
         }
 
-        // Check if the refresh token is in the database
         const user = await Users.findOne({ 'refreshTokens.token': refreshToken });
         if (!user) {
           return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
         }
 
-        // Generate new tokens
         const tokenUser = createTokenUser(user);
         const { accessToken, refreshToken: newRefreshToken } = generateTokens(tokenUser);
 
-        // Update refresh tokens in the database
-        user.refreshTokens = user.refreshTokens.filter(token => token.token !== refreshToken);
-        user.refreshTokens.push({ token: newRefreshToken });
-        await user.save();
+        // Use atomic update operation
+        const result = await Users.updateOne(
+          { _id: user._id, 'refreshTokens.token': refreshToken },
+          {
+            $set: { 'refreshTokens.$.token': newRefreshToken }
+          }
+        );
+
+        if (result.nModified === 0) {
+          return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+        }
 
         return handleResponse(res, 200, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
       });
@@ -455,8 +467,56 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+  async getRefreshTokens(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized!", null, 0);
+      }
 
+      const user = await Users.findById(req.user.id);
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
 
+      const refreshTokens = user.refreshTokens.map(token => ({
+        id: token._id,
+        token: token.token,
+        deviceId: token.deviceId,
+        deviceName: token.deviceName,
+        region: token.region,
+        os: token.os,
+        browser: token.browser,
+        ip: token.ip
+      }));
+
+      return handleResponse(res, 200, "success", "Refresh tokens retrieved successfully", { refreshTokens });
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
+  async deleteRefreshToken(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized!", null, 0);
+      }
+      const { id } = req.body;
+      if (!id) {
+        return handleResponse(res, 400, "error", "Refresh token ID is required", null, 0);
+      }
+      const user = await Users.findById(req.user.id);
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+      // Ensure the provided id is a string for comparison
+      user.refreshTokens = user.refreshTokens.filter(token => token._id.toString() !== id);
+
+      await user.save();
+
+      return handleResponse(res, 200, "success", "Refresh token deleted successfully", null, 0);
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
 }
 
 module.exports = new AuthCTRL();
