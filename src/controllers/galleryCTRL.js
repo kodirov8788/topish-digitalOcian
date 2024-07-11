@@ -52,6 +52,8 @@ const upload = multer({
       const fileExtension = file.originalname.split(".").pop();
       cb(null, "Users-gallery-post/" + `file-${Date.now()}.${fileExtension}`);
     },
+    contentType: multerS3.AUTO_CONTENT_TYPE, // Ensure the content type is set correctly
+    contentDisposition: 'inline', // Set the content disposition to inline
   }),
   fileFilter: fileFilter,
 }).array("gallery", 10); // Adjust the number of files as needed
@@ -59,7 +61,6 @@ const upload = multer({
 class GalleryCTRL {
   async createGalleryPost(req, res) {
     try {
-
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -125,6 +126,7 @@ class GalleryCTRL {
       );
     }
   }
+
   async deleteGalleryImage(req, res) {
     try {
       if (!req.user) {
@@ -204,6 +206,7 @@ class GalleryCTRL {
       );
     }
   }
+
   async getAllMyGalleryPost(req, res) {
     try {
       if (!req.user) {
@@ -255,6 +258,7 @@ class GalleryCTRL {
       );
     }
   }
+
   async getGalleryPost(req, res) {
     try {
       if (!req.user) {
@@ -262,7 +266,6 @@ class GalleryCTRL {
       }
 
       const galleryPostId = req.params.id;
-      console.log("galleryPostId: ", galleryPostId)
       const galleryPost = await Gallery.findById(galleryPostId);
       if (!galleryPost) {
         return handleResponse(
@@ -294,6 +297,7 @@ class GalleryCTRL {
       );
     }
   }
+
   async getJobSeekerGallery(req, res) {
     try {
       // Check if the user is authenticated
