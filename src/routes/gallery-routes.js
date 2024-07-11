@@ -13,6 +13,7 @@ router.post('/', createGalleryPost);
 router.get('/', getAllMyGalleryPost);
 router.delete('/', deleteGalleryImage);
 router.get('/allgalleries', getAllGalleryPost);
-router.get('/getjobseeker/:id', getJobSeekerGallery);
+router.get('/:id', getGalleryPost);
+router.get('/jobseeker/:id', getJobSeekerGallery);
 
 module.exports = router;

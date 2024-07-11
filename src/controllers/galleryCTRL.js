@@ -44,6 +44,7 @@ const upload = multer({
   storage: multerS3({
     s3,
     bucket: process.env.AWS_BUCKET_NAME,
+    acl: 'public-read', // Added ACL setting here
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
@@ -261,6 +262,7 @@ class GalleryCTRL {
       }
 
       const galleryPostId = req.params.id;
+      console.log("galleryPostId: ", galleryPostId)
       const galleryPost = await Gallery.findById(galleryPostId);
       if (!galleryPost) {
         return handleResponse(

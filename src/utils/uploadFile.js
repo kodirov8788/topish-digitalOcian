@@ -29,7 +29,7 @@ const fileFilter = (req, file, cb) => {
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Invalid file type. Only images are allowed."));
+    cb(new Error("Invalid file type. Only specified formats are allowed."));
   }
 };
 
@@ -37,6 +37,7 @@ const upload = multer({
   storage: multerS3({
     s3,
     bucket: process.env.AWS_BUCKET_NAME,
+    acl: 'public-read', // Ensure files are publicly readable
     metadata: (req, file, cb) => {
       cb(null, { fieldName: file.fieldname });
     },

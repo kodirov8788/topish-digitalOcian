@@ -54,11 +54,12 @@ class AuthCTRL {
 
       await existingUser.save();
 
-      const token = await getEskizAuthToken();
-      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-      if (phoneNumberWithCountryCode === "+998996730970") {
+
+      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
       } else {
+        const token = await getEskizAuthToken();
+        const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
         await sendCustomSms(token, phoneNumberWithCountryCode, message);
         return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
       }
@@ -227,12 +228,13 @@ class AuthCTRL {
       user.confirmationCodeExpires = confirmationCodeExpires;
       await user.save();
 
-      const token = await getEskizAuthToken();
-      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
+
 
       if (phoneNumberWithCountryCode === "+998996730970") {
         return handleResponse(res, 200, "success", "Confirmation code resent successfully. Please check your phone for the new confirmation code.", null, 0);
       } else {
+        const token = await getEskizAuthToken();
+        const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
         await sendCustomSms(token, phoneNumberWithCountryCode, message);
         return handleResponse(res, 200, "success", "Confirmation code resent successfully. Please check your phone for the new confirmation code.", null, 0);
       }
@@ -273,12 +275,11 @@ class AuthCTRL {
 
       await user.save();
 
-      const token = await getEskizAuthToken();
-      const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-
-      if (phoneNumberWithCountryCode === "+998996730970") {
+      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
       } else {
+        const token = await getEskizAuthToken();
+        const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
         await sendCustomSms(token, phoneNumberWithCountryCode, message);
         return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
       }
@@ -429,44 +430,55 @@ class AuthCTRL {
     }
   }
   async renewAccessToken(req, res) {
+    // console.log("renewAccessToken called");
     try {
       const { refreshToken } = req.body;
-
+      // console.log("Received refreshToken:", refreshToken);
       if (!refreshToken) {
         return handleResponse(res, 400, "error", "Refresh token is required", null, 0);
       }
 
       jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
         if (err) {
+          console.log("JWT verification error:", err);
           return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
         }
 
-        const user = await Users.findOne({ 'refreshTokens.token': refreshToken });
-        if (!user) {
-          return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
-        }
-
-        const tokenUser = createTokenUser(user);
-        const { accessToken, refreshToken: newRefreshToken } = generateTokens(tokenUser);
-
-        // Use atomic update operation
-        const result = await Users.updateOne(
-          { _id: user._id, 'refreshTokens.token': refreshToken },
-          {
-            $set: { 'refreshTokens.$.token': newRefreshToken }
+        try {
+          const user = await Users.findOne({ 'refreshTokens.token': refreshToken });
+          if (!user) {
+            console.log("User not found for provided refresh token");
+            return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
           }
-        );
 
-        if (result.nModified === 0) {
-          return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+          const tokenUser = createTokenUser(user);
+          const { accessToken, refreshToken: newRefreshToken } = generateTokens(tokenUser);
+
+          // Use atomic update operation
+          const result = await Users.updateOne(
+            { _id: user._id, 'refreshTokens.token': refreshToken },
+            {
+              $set: { 'refreshTokens.$.token': newRefreshToken }
+            }
+          );
+
+          if (result.nModified === 0) {
+            console.log("Failed to update the refresh token in the database");
+            return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+          }
+
+          return handleResponse(res, 200, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
+        } catch (dbError) {
+          console.error("Database error:", dbError);
+          return handleResponse(res, 500, "error", "Database error occurred", null, 0);
         }
-
-        return handleResponse(res, 200, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
       });
     } catch (error) {
+      console.error("Unexpected error:", error);
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async getRefreshTokens(req, res) {
     try {
       if (!req.user) {
