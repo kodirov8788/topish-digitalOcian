@@ -853,6 +853,39 @@ const initSocketServer = (server) => {
         });
       }
     });
+
+    socket.on("saveGPTConfig", async ({ gptToken, gptPrompt, userId }) => {
+      try {
+        const user = await Users.findById(userId);
+        if (!user) {
+          socket.emit("errorNotification", { error: "User not found" });
+          return;
+        }
+
+        user.gptToken = gptToken;
+        user.promptString = promptString;
+
+        await user.save();
+
+        socket.emit("g", { success: true, config: { gptToken, gptPrompt } });
+      } catch (error) {
+        socket.emit("errorNotification", { error: "Failed to save GPT config" });
+      }
+    });
+    socket.on("getGPTConfig", async ({ userId }) => {
+      try {
+        const user = await Users.findById(userId);
+        if (!user) {
+          socket.emit("errorNotification", { error: "User not found" });
+          return;
+        }
+        const { gptToken, gptPrompt } = user;
+
+        socket.emit("gptConfigReceive", { success: true, config: { gptToken, gptPrompt } });
+      } catch (error) {
+        socket.emit("errorNotification", { error: "Failed to retrieve GPT config" });
+      }
+    });
     socket.on("disconnect", () => {
       // Use the socket ID to find the corresponding user ID and chat room
       const userId = socketUserMap[socket.id];
