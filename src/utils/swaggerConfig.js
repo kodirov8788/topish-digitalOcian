@@ -34,6 +34,8 @@ const { CompanyEndpoint } = require('../swaggerDocs/companyDocs');
 const { reportUserEndPoint } = require('../swaggerDocs/reportUserDocs');
 const { tournamentsEndpoint } = require('../swaggerDocs/tournamentsDocs');
 const { telegramEndpoint } = require('../swaggerDocs/telegramDocs');
+const { othersEndpoint } = require('../swaggerDocs/otherDocs');
+
 
 const SecuritySchemes = {
     bearerAuth: {
@@ -109,6 +111,7 @@ const swaggerOptions = {
             ...reportUserEndPoint,
             ...tournamentsEndpoint,
             ...telegramEndpoint,
+            ...othersEndpoint
         },
     },
     apis: ["./routes/*.js"],
