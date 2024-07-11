@@ -5,6 +5,11 @@ const JobsEndpoint = {
       description: "The Jobs managing API",
     },
   ],
+  // jobType: {
+  //   type: String,
+  //   default: "Full-time",
+  //   enum: ["Full Time", "Part Time", "Contract", "Freelance","Contractual","Temporary", "Internship"],
+  // },
   "/jobs": {
     post: {
       summary: "Create a new job",
@@ -35,10 +40,9 @@ const JobsEndpoint = {
                 },
                 jobType: {
                   type: "string",
-                  enum: ["Full-time", "Freelance", "Part-time", "negotiable"],
-                  example: "Full-time",
+                  enum: ["Full Time", "Part Time", "Contract", "Freelance", "Contractual", "Temporary", "Internship"],
+                  example: "Full Time",
                 },
-
                 workingtype: {
                   type: "string",
                   example: "onsite",

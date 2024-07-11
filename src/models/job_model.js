@@ -14,8 +14,8 @@ const JobsSchema = new mongoose.Schema(
     },
     jobType: {
       type: String,
-      default: "Full-time",
-      enum: ["Full-time", "Part-time", "Freelance", "Internship", "Temporary"],
+      default: "Full Time",
+      enum: ["Full Time", "Part Time", "Contract", "Freelance", "Contractual", "Temporary", "Internship"],
     },
     experience: { type: String, default: "" }, // e.g., "No experience", "1 year", "2 years", etc.
     educationLevel: { type: String, default: "" }, // e.g., "Bachelor's", "Master's", "Ph.D."
