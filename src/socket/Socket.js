@@ -853,21 +853,16 @@ const initSocketServer = (server) => {
         });
       }
     });
-
-    socket.on("saveGPTConfig", async ({ gptToken, gptPrompt, userId }) => {
+    socket.on("saveGPTConfig", async ({ gptToken, userId }) => {
       try {
         const user = await Users.findById(userId);
         if (!user) {
           socket.emit("errorNotification", { error: "User not found" });
           return;
         }
-
         user.gptToken = gptToken;
-        user.promptString = promptString;
-
         await user.save();
-
-        socket.emit("g", { success: true, config: { gptToken, gptPrompt } });
+        socket.emit("gptConfigSaved", { success: true, config: { gptToken } });
       } catch (error) {
         socket.emit("errorNotification", { error: "Failed to save GPT config" });
       }
@@ -879,9 +874,9 @@ const initSocketServer = (server) => {
           socket.emit("errorNotification", { error: "User not found" });
           return;
         }
-        const { gptToken, gptPrompt } = user;
+        const { gptToken } = user;
 
-        socket.emit("gptConfigReceive", { success: true, config: { gptToken, gptPrompt } });
+        socket.emit("gptConfigReceive", { success: true, config: { gptToken } });
       } catch (error) {
         socket.emit("errorNotification", { error: "Failed to retrieve GPT config" });
       }
