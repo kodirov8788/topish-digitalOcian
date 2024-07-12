@@ -14,6 +14,15 @@ const Profession = new Schema({
 
 const Professions = mongoose.model('Profession', Profession);
 
-module.exports = { Professions }
+
+const promptCode = new Schema({
+    code: {
+        type: String,
+        required: true
+    }
+});
+
+const PromptCode = mongoose.model('PromptCode', promptCode);
+module.exports = { Professions, PromptCode }
 
 

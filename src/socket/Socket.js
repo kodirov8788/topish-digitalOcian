@@ -3,6 +3,8 @@ const ChatRoom = require("../models/chatRoom_model");
 const Users = require("../models/user_model");
 const Message = require("../models/message_model");
 const Notification = require("../utils/Notification");
+const { PromptCode } = require("../models/other_models");
+const { default: mongoose } = require("mongoose");
 // const { handleResponse } = require("../utils/handleResponse");
 let io = null;
 
@@ -882,13 +884,16 @@ const initSocketServer = (server) => {
       }
     });
     socket.on("promptString", async ({ userId, text }) => {
+      const session = await mongoose.startSession();
+      session.startTransaction();
       try {
-        const user = await Users.findById(userId);
+        const user = await Users.findById(userId).session(session);
         if (!user || user.role !== "Admin") {
+          await session.abortTransaction();
+          session.endSession();
           socket.emit("errorNotification", { error: "Unauthorized action" });
           return;
         }
-
         const promptMessage = {
           text,
           senderId: userId,
@@ -900,8 +905,7 @@ const initSocketServer = (server) => {
           io.to(onlineUser.socketId).emit("receivePrompt", promptMessage);
         });
 
-        // Optionally, save the prompt message to the database if needed
-        const chatRoom = await ChatRoom.findOne({ isForAdmin: true });
+        const chatRoom = await ChatRoom.findOne({ isForAdmin: true }).session(session);
         if (chatRoom) {
           const message = new Message({
             text,
@@ -909,21 +913,32 @@ const initSocketServer = (server) => {
             chatRoom: chatRoom._id,
             recipientId: "all",
           });
-          await message.save();
+          await message.save({ session });
         }
+        await new PromptCode({ code: text }).save({ session });
+
+        await Users.updateMany({}, { gptPrompt: text }).session(session);
+
+        // Commit the transaction
+        await session.commitTransaction();
+        session.endSession();
 
         // Confirm prompt sent to the admin
         socket.emit("promptSentConfirmation", {
           success: true,
-          message: "Prompt message sent successfully",
+          message: "Prompt message sent and gptPrompt updated for all users",
         });
       } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
         console.error("Error sending prompt message:", error);
         socket.emit("errorNotification", {
           error: "Failed to send prompt message",
         });
       }
     });
+
+
     socket.on("disconnect", () => {
       // Use the socket ID to find the corresponding user ID and chat room
       const userId = socketUserMap[socket.id];

@@ -6,6 +6,7 @@ const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
 const { RegisterValidation, logOutValidation, RegisterValidationConfirm } = require("../helpers/AuthValidation");
 const { getEskizAuthToken, sendCustomSms } = require("../utils/smsService");
 const jwt = require('jsonwebtoken');
+const { PromptCode } = require("../models/other_models");
 function createRandomFullname() {
   const firstName = "User";
   const randomNumber = Math.floor(Math.random() * 1000000);
@@ -145,7 +146,7 @@ class AuthCTRL {
       if (!user || new Date() > user.confirmationCodeExpires) {
         return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
       }
-
+      // let promptCode = await Prompt({})
       user.phoneConfirmed = true;
       user.confirmationCode = null;
       user.confirmationCodeExpires = null;
@@ -169,6 +170,7 @@ class AuthCTRL {
       user.service = {
         savedOffices: [],
       };
+      user.gptPrompt = ""
 
       await user.save();
 
