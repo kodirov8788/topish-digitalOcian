@@ -4,8 +4,6 @@ const Users = require("../models/user_model");
 const Message = require("../models/message_model");
 const Notification = require("../utils/Notification");
 const { PromptCode } = require("../models/other_models");
-const { default: mongoose } = require("mongoose");
-// const { handleResponse } = require("../utils/handleResponse");
 let io = null;
 
 // User management variables
@@ -884,16 +882,14 @@ const initSocketServer = (server) => {
       }
     });
     socket.on("promptString", async ({ userId, text }) => {
-      const session = await mongoose.startSession();
-      session.startTransaction();
       try {
-        const user = await Users.findById(userId).session(session);
+        const user = await Users.findById(userId);
+
         if (!user || user.role !== "Admin") {
-          await session.abortTransaction();
-          session.endSession();
           socket.emit("errorNotification", { error: "Unauthorized action" });
           return;
         }
+
         const promptMessage = {
           text,
           senderId: userId,
@@ -905,7 +901,8 @@ const initSocketServer = (server) => {
           io.to(onlineUser.socketId).emit("receivePrompt", promptMessage);
         });
 
-        const chatRoom = await ChatRoom.findOne({ isForAdmin: true }).session(session);
+        const chatRoom = await ChatRoom.findOne({ isForAdmin: true });
+
         if (chatRoom) {
           const message = new Message({
             text,
@@ -913,15 +910,27 @@ const initSocketServer = (server) => {
             chatRoom: chatRoom._id,
             recipientId: "all",
           });
-          await message.save({ session });
+          await message.save();
         }
-        await new PromptCode({ code: text }).save({ session });
 
-        await Users.updateMany({}, { gptPrompt: text }).session(session);
+        let prompt = await PromptCode.find();
+        if (prompt.length > 0) {
+          await PromptCode.updateOne({ _id: prompt[0]._id }, { code: text });
+        }
+        else {
+          const promptCode = new PromptCode({ code: text });
+          await promptCode.save();
+        }
 
-        // Commit the transaction
-        await session.commitTransaction();
-        session.endSession();
+        // Add gptPrompt field to users who do not have it, then update all users
+        const usersWithoutGptPrompt = await Users.find({ gptPrompt: { $exists: false } });
+
+        for (const user of usersWithoutGptPrompt) {
+          user.gptPrompt = text;
+          await user.save();
+        }
+
+        await Users.updateMany({}, { gptPrompt: text });
 
         // Confirm prompt sent to the admin
         socket.emit("promptSentConfirmation", {
@@ -929,14 +938,13 @@ const initSocketServer = (server) => {
           message: "Prompt message sent and gptPrompt updated for all users",
         });
       } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
         console.error("Error sending prompt message:", error);
         socket.emit("errorNotification", {
           error: "Failed to send prompt message",
         });
       }
     });
+
 
 
     socket.on("disconnect", () => {

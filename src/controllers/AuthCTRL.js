@@ -146,7 +146,8 @@ class AuthCTRL {
       if (!user || new Date() > user.confirmationCodeExpires) {
         return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
       }
-      // let promptCode = await Prompt({})
+      let prompt = await PromptCode.find();
+
       user.phoneConfirmed = true;
       user.confirmationCode = null;
       user.confirmationCodeExpires = null;
@@ -170,7 +171,8 @@ class AuthCTRL {
       user.service = {
         savedOffices: [],
       };
-      user.gptPrompt = ""
+      user.fullName = createRandomFullname();
+      user.gptPrompt = prompt[0]?.code || "";
 
       await user.save();
 
