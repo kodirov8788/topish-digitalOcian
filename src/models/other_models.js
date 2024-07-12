@@ -6,6 +6,10 @@ const Profession = new Schema({
         type: Array,
         required: false
     },
+    language: {
+        type: String,
+        required: true
+    }
 });
 
 const Professions = mongoose.model('Profession', Profession);

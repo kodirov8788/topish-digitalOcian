@@ -10,6 +10,18 @@ const othersEndpoint = {
             summary: 'Fetch all professions',
             tags: ['AddProfessions'],
             description: 'Fetches all professions available in the database.',
+            parameters: [
+                {
+                    name: 'language',
+                    in: 'query',
+                    required: true,
+                    description: 'The language of the professions to fetch.',
+                    schema: {
+                        type: 'string',
+                        example: 'en',
+                    },
+                },
+            ],
             responses: {
                 "200": {
                     "description": "Professions fetched successfully.",
@@ -28,6 +40,22 @@ const othersEndpoint = {
                                         "example": ["Teacher", "Doctor", "Engineer"]
                                     },
                                     "totalCount": { "type": "number", "example": 3 }
+                                }
+                            }
+                        }
+                    }
+                },
+                "400": {
+                    "description": "Bad request. Missing language parameter.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "result": { "type": "string", "example": "error" },
+                                    "msg": { "type": "string", "example": "Language is required" },
+                                    "data": { "type": "null", "example": null },
+                                    "totalCount": { "type": "number", "example": 0 }
                                 }
                             }
                         }
@@ -54,7 +82,7 @@ const othersEndpoint = {
         post: {
             summary: 'Add or update professions',
             tags: ['AddProfessions'],
-            description: 'Allows a user to add or update professions in their resume. Requires user authentication.',
+            description: 'Allows a user to add or update professions in their resume.',
             security: [
                 {
                     bearerAuth: [],
@@ -67,14 +95,21 @@ const othersEndpoint = {
                         schema: {
                             type: 'object',
                             properties: {
+                                language: {
+                                    type: 'string',
+                                    description: 'The language for the professions.',
+                                    example: 'en',
+                                },
                                 professions: {
                                     type: 'array',
                                     items: {
                                         type: 'string',
                                     },
+                                    description: 'Array of professions to add or update.',
                                 },
                             },
                             example: {
+                                language: 'en',
                                 professions: ["Teacher", "Doctor", "Engineer"],
                             },
                         },
@@ -112,7 +147,7 @@ const othersEndpoint = {
                                 "type": "object",
                                 "properties": {
                                     "result": { "type": "string", "example": "error" },
-                                    "msg": { "type": "string", "example": "Professions should be an array of strings." },
+                                    "msg": { "type": "string", "example": "Professions should be a non-empty array of strings." },
                                     "data": { "type": "null", "example": null },
                                     "totalCount": { "type": "number", "example": 0 }
                                 }

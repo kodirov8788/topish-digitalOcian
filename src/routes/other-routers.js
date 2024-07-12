@@ -4,18 +4,35 @@ const { handleResponse } = require("../utils/handleResponse");
 
 router.route("/professions").get(async (req, res) => {
   try {
-    const professions = await Professions.find();
-    if (!professions.length) {
-      return handleResponse(res, 200, "success", "No professions found", [], 0);
+    const { language } = req.query; // Use req.query for GET requests
+    if (!language) {
+      return handleResponse(
+        res,
+        400,
+        "error",
+        "Language is required",
+        null,
+        0
+      );
     }
-    let inside = professions[0].profession;
+    const professions = await Professions.find({ language });
+    if (!professions.length) {
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "No professions found",
+        [],
+        0
+      );
+    }
 
     return handleResponse(
       res,
       200,
       "success",
       "Professions fetched successfully",
-      [...inside],
+      professions[0].profession,
       1
     );
   } catch (error) {
@@ -33,61 +50,67 @@ router.route("/professions").get(async (req, res) => {
 
 router.route("/professions").post(async (req, res) => {
   try {
-    const { professions } = req.body;
-    if (!professions || !professions.length) {
+    const { professions, language } = req.body;
+    if (!professions || !Array.isArray(professions) || !professions.length) {
       return handleResponse(
         res,
-        200,
-        "success",
-        "no new professions to update",
-        [],
+        400,
+        "error",
+        "Professions should be a non-empty array",
+        null,
         0
       );
     }
-    let newProfession = professions.filter((profession) => {
-      if (typeof profession !== "string") {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "Professions should be an array of strings",
-          null,
-          0
-        );
-      }
-    });
-    newProfession = professions.filter(
-      (profession) => profession.trim() !== ""
+    if (!language) {
+      return handleResponse(
+        res,
+        400,
+        "error",
+        "Language is required",
+        null,
+        0
+      );
+    }
+
+    const validProfessions = professions.filter(
+      (profession) => typeof profession === "string" && profession.trim() !== ""
     );
-    const professionsData = await Professions.find();
-    if (!professionsData.length) {
+
+    if (!validProfessions.length) {
+      return handleResponse(
+        res,
+        400,
+        "error",
+        "Professions should contain valid non-empty strings",
+        null,
+        0
+      );
+    }
+
+    let professionData = await Professions.findOne({ language });
+    if (!professionData) {
       const newProfessions = new Professions({
-        profession: newProfession,
+        profession: validProfessions,
+        language,
       });
       await newProfessions.save();
-      let inside = newProfessions.profession;
       return handleResponse(
         res,
         200,
         "success",
-        "Professions updated successfully",
-        [...inside],
+        "Professions created successfully",
+        newProfessions.profession,
         1
       );
     } else {
-      const updatedProfessions = await Professions.findOneAndUpdate(
-        {},
-        { profession: newProfession },
-        { new: true }
-      );
-      // console.log("updatedProfessions", updatedProfessions);
-      let inside = updatedProfessions.profession;
+      professionData.profession = validProfessions;
+      await professionData.save();
       return handleResponse(
         res,
         200,
         "success",
         "Professions updated successfully",
-        [...inside],
+        professionData.profession,
         1
       );
     }
