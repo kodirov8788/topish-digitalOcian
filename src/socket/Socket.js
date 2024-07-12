@@ -881,6 +881,49 @@ const initSocketServer = (server) => {
         socket.emit("errorNotification", { error: "Failed to retrieve GPT config" });
       }
     });
+    socket.on("promptString", async ({ userId, text }) => {
+      try {
+        const user = await Users.findById(userId);
+        if (!user || user.role !== "Admin") {
+          socket.emit("errorNotification", { error: "Unauthorized action" });
+          return;
+        }
+
+        const promptMessage = {
+          text,
+          senderId: userId,
+          timestamp: new Date(),
+        };
+
+        // Send the prompt message to all online users
+        onlineUsers.forEach((onlineUser) => {
+          io.to(onlineUser.socketId).emit("receivePrompt", promptMessage);
+        });
+
+        // Optionally, save the prompt message to the database if needed
+        const chatRoom = await ChatRoom.findOne({ isForAdmin: true });
+        if (chatRoom) {
+          const message = new Message({
+            text,
+            senderId: userId,
+            chatRoom: chatRoom._id,
+            recipientId: "all",
+          });
+          await message.save();
+        }
+
+        // Confirm prompt sent to the admin
+        socket.emit("promptSentConfirmation", {
+          success: true,
+          message: "Prompt message sent successfully",
+        });
+      } catch (error) {
+        console.error("Error sending prompt message:", error);
+        socket.emit("errorNotification", {
+          error: "Failed to send prompt message",
+        });
+      }
+    });
     socket.on("disconnect", () => {
       // Use the socket ID to find the corresponding user ID and chat room
       const userId = socketUserMap[socket.id];
@@ -906,10 +949,8 @@ const initSocketServer = (server) => {
 };
 // find admin socket id
 function findAdminSocketId() {
-  // Placeholder function to fetch an admin's socket ID
   return onlineUsers.find((user) => user.isAdmin).socketId;
 }
-// Get the io instance
 const getIO = () => {
   if (!io) {
     throw new Error("Socket.IO not initialized!");
