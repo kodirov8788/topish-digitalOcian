@@ -84,6 +84,9 @@ function PrivatePolicy(req, res) {
           line-height: 1.6;
           margin: 20px;
         }
+          .head_text {
+            margin-top: 100px;
+          }
         h1 {
           text-align: center;
         }
@@ -161,7 +164,7 @@ function PrivatePolicy(req, res) {
     </select>
     <div class="arrow-icon"></div>
   </div>
-      <h1 data-eng="Topish AI Privacy Policy" data-rus="Политика конфиденциальности Topish AI" data-uzb="Topish AI Maxfiylik Siyosati">Topish AI Privacy Policy</h1>
+      <h1 class="head_text" data-eng="Topish AI Privacy Policy" data-rus="Политика конфиденциальности Topish AI" data-uzb="Topish AI Maxfiylik Siyosati">Topish AI Privacy Policy</h1>
       <ol>
         <li data-eng="Topish AI is dedicated to assisting unemployed individuals by providing a platform to search and apply for jobs. This SERVICE is provided at no cost and is intended for use 'as is'. This page is to inform visitors regarding our policies with the collection, use, and disclosure of Personal Information for anyone who decides to use our Service. By using our Service, you agree to the collection and use of information in relation to this policy. The Personal Information collected is used for connecting job seekers with potential employers and improving the Service."
           data-rus="Topish AI посвящен помощи безработным, предоставляя платформу для поиска и подачи заявлений на работу. ЭТА УСЛУГА предоставляется бесплатно и предназначена для использования 'как есть'. Эта страница информирует посетителей о наших политиках, связанных с сбором, использованием и раскрытием Личной информации для тех, кто решит использовать нашу Службу. Используя нашу Службу, вы соглашаетесь на сбор и использование информации в соответствии с этой политикой. Собранная личная информация используется для связи ищущих работу с потенциальными работодателями и для улучшения Службы."
