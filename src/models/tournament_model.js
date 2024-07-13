@@ -25,7 +25,7 @@ const TournamentSchema = new mongoose.Schema(
         participants: { type: [ParticipantSchema], default: [] },
         status: {
             type: String,
-            enum: ["open", "closed", "expired"],
+            enum: ["open", "closed", "expired", "coming"],
             default: "open",
         },
     },
