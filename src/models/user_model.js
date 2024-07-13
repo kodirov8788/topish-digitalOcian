@@ -136,7 +136,7 @@ const UsersSchema = new Schema(
     birthday: { type: String, default: "" },
     active: { type: Boolean, default: true },
     location: { type: String, default: "Tashkent", required: false },
-    coins: { type: Number, default: 50 },
+    coins: { type: Number, default: 1000 },
     favorites: [{ type: Schema.Types.ObjectId, ref: "Users" }],
     avatar: {
       type: String,
