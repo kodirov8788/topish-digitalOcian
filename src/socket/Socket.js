@@ -148,8 +148,8 @@ const initSocketServer = (server) => {
               otherUser && otherUser.fullName
                 ? otherUser.fullName
                 : "Unknown User";
-
-            if (lastMessage !== null) {
+            console.log("lastMessage", lastMessage)
+            if (lastMessage !== null && lastMessage.deleted !== true) {
               return {
                 _id: chatRoom._id,
                 otherUser: {
