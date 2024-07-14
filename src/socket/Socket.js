@@ -149,27 +149,31 @@ const initSocketServer = (server) => {
                 ? otherUser.fullName
                 : "Unknown User";
 
-            return {
-              _id: chatRoom._id,
-              otherUser: {
-                _id: otherUser._id,
-                fullName: fullName,
-                avatar: otherUser.avatar,
-                role: otherUser.role,
-              },
-              lastMessage: lastMessage
-                ? {
-                  text: lastMessage.text,
-                  timestamp: lastMessage.timestamp,
-                  senderId: lastMessage.senderId._id,
-                  recipientId:
-                    lastMessage.senderId._id.toString() === userId.toString()
-                      ? otherUserId
-                      : userId,
-                }
-                : null,
-              unreadMessagesCount,
-            };
+            if (lastMessage !== null) {
+              return {
+                _id: chatRoom._id,
+                otherUser: {
+                  _id: otherUser._id,
+                  fullName: fullName,
+                  avatar: otherUser.avatar,
+                  role: otherUser.role,
+                },
+                lastMessage: lastMessage
+                  ? {
+                    text: lastMessage.text,
+                    timestamp: lastMessage.timestamp,
+                    senderId: lastMessage.senderId._id,
+                    recipientId:
+                      lastMessage.senderId._id.toString() === userId.toString()
+                        ? otherUserId
+                        : userId,
+                  }
+                  : null,
+                unreadMessagesCount,
+              };
+            } else {
+              return null;
+            }
           })
         );
         const filteredChatRooms = chatRoomsWithInfo.filter(
@@ -944,9 +948,6 @@ const initSocketServer = (server) => {
         });
       }
     });
-
-
-
     socket.on("disconnect", () => {
       // Use the socket ID to find the corresponding user ID and chat room
       const userId = socketUserMap[socket.id];
