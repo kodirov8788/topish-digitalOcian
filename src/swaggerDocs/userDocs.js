@@ -1358,7 +1358,7 @@ const UsersEndpoint = {
             schema: {
               type: "object",
               properties: {
-                newCoinValue: {
+                coins: {
                   type: "number",
                   example: 500,
                   required: true,
@@ -1370,7 +1370,7 @@ const UsersEndpoint = {
                 },
               },
 
-              required: ["newCoinValue"],
+              required: ["coins"],
             },
           },
         },

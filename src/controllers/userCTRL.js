@@ -751,17 +751,17 @@ class UserCTRL {
 
       const user = await Users.findOne({ _id: req.user.id });
       // console.log(role);
-      if (user.role !== "Admin") {
-        return handleResponse(res, 403, "error", "You are not authorized to perform this action", null, 0);
-      }
+      // if (user.role !== "Admin") {
+      //   return handleResponse(res, 403, "error", "You are not authorized to perform this action", null, 0);
+      // }
 
-      const { newCoinValue } = req.body;
-
-      if (typeof newCoinValue !== 'number') {
+      const { coins } = req.body;
+      console.log(coins)
+      if (typeof coins !== 'number') {
         return handleResponse(res, 400, "error", "Invalid coin value", null, 0);
       }
 
-      const result = await Users.updateMany({}, { coins: newCoinValue });
+      const result = await Users.updateMany({}, { coins: coins });
       console.log(`Successfully updated coins for ${result.nModified} users.`);
 
       return handleResponse(res, 200, "success", `Coins updated for ${result.nModified} users.`, null, 1);
@@ -777,9 +777,9 @@ class UserCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const { userId, newCoinValue } = req.body;
+      const { userId, coins } = req.body;
 
-      if (typeof newCoinValue !== 'number') {
+      if (typeof coins !== 'number') {
         return handleResponse(res, 400, "error", "Invalid coin value", null, 0);
       }
 
@@ -789,7 +789,7 @@ class UserCTRL {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      user.coins = newCoinValue;
+      user.coins = coins;
       await user.save();
 
       console.log(`Successfully updated coins for user with ID: ${userId}.`);
