@@ -756,13 +756,13 @@ class UserCTRL {
       // }
 
       const { coins } = req.body;
-      console.log(coins)
+      // console.log(coins)
       if (typeof coins !== 'number') {
         return handleResponse(res, 400, "error", "Invalid coin value", null, 0);
       }
 
       const result = await Users.updateMany({}, { coins: coins });
-      console.log(`Successfully updated coins for ${result.nModified} users.`);
+      // console.log(`Successfully updated coins for ${result.nModified} users.`);
 
       return handleResponse(res, 200, "success", `Coins updated for ${result.nModified} users.`, null, 1);
     } catch (error) {
@@ -792,7 +792,7 @@ class UserCTRL {
       user.coins = coins;
       await user.save();
 
-      console.log(`Successfully updated coins for user with ID: ${userId}.`);
+      // console.log(`Successfully updated coins for user with ID: ${userId}.`);
 
       return handleResponse(res, 200, "success", "Coins updated successfully.", null, 1);
     } catch (error) {
