@@ -309,6 +309,7 @@ class AuthCTRL {
       const User = await Users.findById(req.user.id);
       if (User) {
         User.mobileToken = User.mobileToken.filter(token => token !== req.body.mobileToken);
+        User.refreshTokens = User.refreshTokens.filter(token => token.token !== req.body.refreshToken);
         await User.save();
         return handleResponse(res, 200, "success", "User logged out!", null, 0);
       } else {
