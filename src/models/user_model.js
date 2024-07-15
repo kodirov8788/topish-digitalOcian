@@ -18,6 +18,7 @@ const refreshSchema = new Schema({
   os: { type: String, required: false },
   browser: { type: String, required: false },
   ip: { type: String, required: false },
+  mobileToken: { type: String, required: false },
 });
 
 const UsersSchema = new Schema(

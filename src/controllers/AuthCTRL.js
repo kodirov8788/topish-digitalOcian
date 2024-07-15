@@ -68,69 +68,12 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-  // async confirmRegisterCode(req, res) {
-  //   try {
-  //     const { error } = RegisterValidationConfirm(req.body);
-  //     if (error) {
-  //       return handleResponse(res, 400, "error", error.details[0].message);
-  //     }
-  //     const { phoneNumber, confirmationCode, } = req.body;
-  //     let user = null;
-
-  //     const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-  //     user = await Users.findOne({
-  //       phoneNumber: phoneNumberWithCountryCode,
-  //       confirmationCode,
-  //     });
-
-  //     if (!user || new Date() > user.confirmationCodeExpires) {
-  //       return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
-  //     }
-
-  //     user.phoneConfirmed = true;
-  //     user.confirmationCode = null;
-  //     user.confirmationCodeExpires = null;
-  //     user.jobSeeker = {
-  //       skills: [],
-  //       professions: [],
-  //       expectedSalary: "",
-  //       jobTitle: "",
-  //       nowSearchJob: true,
-  //       workingExperience: "",
-  //       employmentType: "full-time",
-  //       educationalBackground: "",
-  //     };
-  //     user.employer = {
-  //       aboutCompany: "",
-  //       industry: "",
-  //       contactNumber: "",
-  //       contactEmail: "",
-  //       jobs: [],
-  //     };
-  //     user.service = {
-  //       savedOffices: [],
-  //     };
-
-  //     await user.save();
-
-  //     const tokenUser = createTokenUser(user);
-  //     const { accessToken, refreshToken } = generateTokens(tokenUser);
-
-  //     user.refreshTokens = [{ token: refreshToken }];
-  //     await user.save();
-
-  //     return handleResponse(res, 201, "success", "User registered successfully.", { accessToken, refreshToken, role: user.role });
-  //   } catch (error) {
-  //     return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
-  //   }
-  // }
 
   async confirmRegisterCode(req, res) {
-    console.log("confirmRegisterCode", req.body)
     try {
 
 
-      const { phoneNumber, confirmationCode, deviceId, deviceName, region, os, browser, ip } = req.body;
+      const { phoneNumber, confirmationCode, mobileToken, deviceId, deviceName, region, os, browser, ip } = req.body;
 
       if (!phoneNumber || !confirmationCode) {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
@@ -179,14 +122,6 @@ class AuthCTRL {
       const tokenUser = createTokenUser(user);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
 
-      // Generate a custom random ID
-      // token: { type: String, required: true },
-      // deviceId: { type: String, required: false },
-      // deviceName: { type: String, required: false },
-      // region: { type: String, required: false },
-      // os: { type: String, required: false },
-      // browser: { type: String, required: false },
-      // ip: { type: String, required: false },
       user.refreshTokens = [{
         token: refreshToken,
         deviceId: deviceId || 'unknown-device-id', // Use 'unknown-device-id' if deviceId is not provided
@@ -203,6 +138,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async resendConfirmationCode(req, res) {
     try {
       const { phoneNumber } = req.body;
@@ -247,6 +183,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async sendLoginCode(req, res) {
     // console.log("sendLoginCode", req.body)
     try {
@@ -292,48 +229,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-  // async confirmLogin(req, res) {
-  //   try {
 
-  //     const { phoneNumber, confirmationCode, mobileToken } = req.body;
-
-  //     if (!phoneNumber || !confirmationCode) {
-  //       return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
-  //     }
-  //     const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-  //     let user = null;
-
-  //     user = await Users.findOne({
-  //       phoneNumber: phoneNumberWithCountryCode,
-  //       confirmationCode,
-  //     });
-
-  //     if (!user || new Date() > user.confirmationCodeExpires) {
-  //       return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
-  //     }
-
-  //     user.phoneConfirmed = true;
-  //     user.confirmationCode = null;
-  //     user.confirmationCodeExpires = null;
-
-  //     if (mobileToken && (!user.mobileToken || !user.mobileToken.includes(mobileToken))) {
-  //       user.mobileToken = user.mobileToken || [];
-  //       user.mobileToken.push(mobileToken);
-  //     }
-
-  //     await user.save();
-
-  //     const tokenUser = createTokenUser(user);
-  //     const { accessToken, refreshToken } = generateTokens(tokenUser);
-  //     user.refreshTokens = user.refreshTokens || [];
-  //     user.refreshTokens.push({ token: refreshToken });
-  //     await user.save();
-
-  //     return handleResponse(res, 200, "success", "Login successful", { accessToken, refreshToken, role: user.role });
-  //   } catch (error) {
-  //     return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
-  //   }
-  // }
   async confirmLogin(req, res) {
     try {
       const { phoneNumber, confirmationCode, mobileToken, deviceId, deviceName, region, os, browser, ip } = req.body;
@@ -342,9 +238,7 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
       }
       const phoneNumberWithCountryCode = `+998${phoneNumber}`;
-      let user = null;
-
-      user = await Users.findOne({
+      const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
         confirmationCode,
       });
@@ -362,21 +256,30 @@ class AuthCTRL {
         user.mobileToken.push(mobileToken);
       }
 
-      await user.save();
-
       const tokenUser = createTokenUser(user);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
 
       user.refreshTokens = user.refreshTokens || [];
-      user.refreshTokens.push({
-        token: refreshToken,
-        deviceId: deviceId || 'unknown-device-id', // Use 'unknown-device-id' if deviceId is not provided
-        deviceName: deviceName || 'unknown-device-name', // Use 'unknown-device-name' if deviceName is not provided
-        region: region || 'unknown-region', // Use 'unknown-region' if region is not provided
-        os: os || 'unknown-os', // Use 'unknown-os' if os is not provided
-        browser: browser || 'unknown-browser', // Use 'unknown-browser' if browser is not provided
-        ip: ip || 'unknown-ip', // Use 'unknown-ip' if ip is not provided
-      });
+
+      const existingTokenIndex = user.refreshTokens.findIndex(
+        (tokenObj) => tokenObj.mobileToken === mobileToken
+      );
+
+      if (existingTokenIndex !== -1) {
+        user.refreshTokens[existingTokenIndex].token = refreshToken;
+      } else {
+        user.refreshTokens.push({
+          token: refreshToken,
+          mobileToken: mobileToken,
+          deviceId: deviceId || 'unknown-device-id', // Use 'unknown-device-id' if deviceId is not provided
+          deviceName: deviceName || 'unknown-device-name', // Use 'unknown-device-name' if deviceName is not provided
+          region: region || 'unknown-region', // Use 'unknown-region' if region is not provided
+          os: os || 'unknown-os', // Use 'unknown-os' if os is not provided
+          browser: browser || 'unknown-browser', // Use 'unknown-browser' if browser is not provided
+          ip: ip || 'unknown-ip', // Use 'unknown-ip' if ip is not provided
+        });
+      }
+
       await user.save();
 
       return handleResponse(res, 200, "success", "Login successful", { accessToken, refreshToken, role: user.role });
@@ -384,6 +287,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async signOut(req, res) {
     try {
       if (!req.user) {

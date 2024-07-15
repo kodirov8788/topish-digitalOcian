@@ -20,7 +20,6 @@ const authMiddleware = async (req, res, next) => {
       id: payload.id,
       role: payload.role,
       avatar: payload.avatar,
-      mobileToken: payload.mobileToken,
       fullName: payload.fullName,
     };
     next();

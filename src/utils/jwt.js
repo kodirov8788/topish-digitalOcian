@@ -21,7 +21,6 @@ const generateTokens = (user) => {
     jobSeeker: user.jobSeeker,
     service: user.service,
     avatar: user.avatar,
-    mobileToken: user.mobileToken,
     fullName: user.fullName,
   };
 
@@ -56,7 +55,6 @@ const createTokenUser = (user) => ({
   jobSeeker: user.jobSeeker,
   service: user.service,
   avatar: user.avatar,
-  mobileToken: user.mobileToken,
   fullName: user.fullName,
 });
 
