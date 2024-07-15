@@ -740,6 +740,67 @@ class UserCTRL {
     }
   }
 
+
+  async updateCoinsForAllUsers(req, res) {
+    try {
+      // Check if the user is authenticated
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+
+      const user = await Users.findOne({ _id: req.user.id });
+      // console.log(role);
+      if (user.role !== "Admin") {
+        return handleResponse(res, 403, "error", "You are not authorized to perform this action", null, 0);
+      }
+
+      const { newCoinValue } = req.body;
+
+      if (typeof newCoinValue !== 'number') {
+        return handleResponse(res, 400, "error", "Invalid coin value", null, 0);
+      }
+
+      const result = await Users.updateMany({}, { coins: newCoinValue });
+      console.log(`Successfully updated coins for ${result.nModified} users.`);
+
+      return handleResponse(res, 200, "success", `Coins updated for ${result.nModified} users.`, null, 1);
+    } catch (error) {
+      console.error("Error updating coins for users:", error);
+      return handleResponse(res, 500, "error", "Failed to update coins for all users.", null, 0);
+    }
+  }
+  async updateCoinsForUser(req, res) {
+    try {
+      // Check if the user is authenticated
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { userId, newCoinValue } = req.body;
+
+      if (typeof newCoinValue !== 'number') {
+        return handleResponse(res, 400, "error", "Invalid coin value", null, 0);
+      }
+
+      const user = await Users.findById(userId);
+
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+
+      user.coins = newCoinValue;
+      await user.save();
+
+      console.log(`Successfully updated coins for user with ID: ${userId}.`);
+
+      return handleResponse(res, 200, "success", "Coins updated successfully.", null, 1);
+    } catch (error) {
+      console.error("Error updating coins for user:", error);
+      return handleResponse(res, 500, "error", "Failed to update coins for user.", null, 0);
+    }
+  }
+
 }
 
 module.exports = new UserCTRL();

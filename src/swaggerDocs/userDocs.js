@@ -1240,6 +1240,225 @@ const UsersEndpoint = {
       },
     },
   },
+  // router.route("/updateCoinsForUser").patch(authMiddleware, updateCoinsForUser); // updateUser
+  "/users/updateCoinsForAllUsers": {
+    patch: {
+      summary: "Update coins for all users",
+      tags: ["Users"],
+      description: "Endpoint to update coins for all users.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                coins: {
+                  type: "number",
+                  example: 500,
+                },
+              },
+              required: ["coins"],
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Username updated successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Username updated successfully",
+                  },
+                  data: { $ref: "#/components/schemas/Users" },
+                  totalCount: { type: "integer", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Bad Request, username already exists",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Username already in use" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "User not found",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "User not found" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Internal server error" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+  },
+  "/users/updateCoinsForUser": {
+    patch: {
+      summary: "Update coins for a single user",
+      tags: ["Users"],
+      description: "Endpoint to update coins for a single user.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                newCoinValue: {
+                  type: "number",
+                  example: 500,
+                  required: true,
+                },
+                userId: {
+                  type: "string",
+                  example: "65c32d9a161b1868b18862c7",
+                  required: true,
+                },
+              },
+
+              required: ["newCoinValue"],
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Username updated successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Username updated successfully",
+                  },
+                  data: { $ref: "#/components/schemas/Users" },
+                  totalCount: { type: "integer", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Bad Request, username already exists",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Username already in use" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "User not found",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "User not found" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Internal server error" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+
 };
 
 module.exports = { UsersEndpoint };
