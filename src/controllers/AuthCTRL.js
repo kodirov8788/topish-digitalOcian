@@ -296,24 +296,27 @@ class AuthCTRL {
 
       const { error } = logOutValidation(req.body);
       if (error) {
-        return handleResponse(res, 400, "error", error.details[0].message);
+        return handleResponse(res, 400, "error", error.details[0].message, null, 0);
       }
 
-
-      const User = await Users.findById(req.user.id);
-      if (User) {
-        User.mobileToken = User.mobileToken.filter(token => token !== req.body.mobileToken);
-        User.refreshTokens = User.refreshTokens.filter(token => token.token !== req.body.refreshToken);
-        await User.save();
-        return handleResponse(res, 200, "success", "User logged out!", null, 0);
-      } else {
+      const user = await Users.findById(req.user.id);
+      if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
+
+      user.mobileToken = user.mobileToken.filter(token => token !== req.body.mobileToken);
+      user.refreshTokens = user.refreshTokens.filter(tokenObj => tokenObj.mobileToken !== req.body.mobileToken);
+
+      await user.save();
+
+      return handleResponse(res, 200, "success", "User logged out!", null, 0);
     } catch (error) {
       console.error("Logout error:", error);
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
+
   async deleteAccount(req, res) {
     try {
       if (!req.user) {
