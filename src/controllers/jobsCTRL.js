@@ -123,23 +123,14 @@ class JobsCTRL {
   async getSearchTitle(req, res) {
     try {
       const { jobTitle, page = 1, limit = 10 } = req.query;
-
+      let queryObject
       if (!jobTitle || !jobTitle.trim()) {
-        return handleResponse(
-          res,
-          200,
-          "error",
-          "Job title is required",
-          [],
-          0
-        );
+        queryObject = {};
+      } else {
+        queryObject = {
+          jobTitle: { $regex: jobTitle, $options: "i" },
+        };
       }
-
-      // Create query object with case-insensitive regex for jobTitle
-      let queryObject = {
-        jobTitle: { $regex: jobTitle, $options: "i" },
-      };
-
       // Execute queries on both collections
       const jobsPromise = Jobs.find(queryObject)
         .skip((page - 1) * limit)
@@ -304,7 +295,9 @@ class JobsCTRL {
       }
 
       if (jobType) {
-        queryObject.jobType = { $in: jobType.split(",") };
+        // queryObject.jobType = { $in: jobType.split(",") };
+
+        queryObject = { jobType: { $regex: jobType, $options: "i" } };
       }
 
       if (location) {
@@ -851,6 +844,90 @@ class JobsCTRL {
         currentPage: parseInt(page),
         totalPages: Math.ceil(totalJobs / limit),
         limit: parseInt(limit),
+        totalDocuments: totalJobs,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Jobs retrieved successfully",
+        NewSearchedJobs,
+        NewSearchedJobs.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+  async searchByJobType(req, res) {
+    try {
+      const { jobType, page = 1, limit = 10 } = req.query;
+      let queryObject
+      if (!jobType || !jobType.trim()) {
+
+        queryObject = {};
+        // return handleResponse(res, 400, "error", "Job type is required", [], 0);
+      } else {
+        queryObject = { jobType: { $regex: jobType, $options: "i" } };
+      }
+
+
+
+      const resultJobs = await Jobs.find(queryObject)
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
+        .limit(parseInt(limit, 10))
+        .sort("-createdAt");
+
+      const totalJobs = await Jobs.countDocuments(queryObject);
+
+      if (resultJobs.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      const userIds = resultJobs.map((job) => job.createdBy);
+      const users = await Users.find({ _id: { $in: userIds } });
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id.toString()] = user;
+        return acc;
+      }, {});
+
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJobs = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()];
+        if (!user) {
+          return {
+            ...job._doc,
+            hr_name: "deleted user",
+            hr_avatar: "default_avatar.png",
+            issuedBy: null,
+          };
+        } else {
+          return {
+            ...job._doc,
+            hr_name: user.employer ? user.fullName : "No employer name",
+            hr_avatar: user.avatar || "default_avatar.png",
+            issuedBy: companyMap[job.createdBy.toString()] || null,
+          };
+        }
+      });
+
+      const pagination = {
+        currentPage: parseInt(page, 10),
+        totalPages: Math.ceil(totalJobs / parseInt(limit, 10)),
+        limit: parseInt(limit, 10),
         totalDocuments: totalJobs,
       };
 

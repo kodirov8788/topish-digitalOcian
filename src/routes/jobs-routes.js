@@ -7,7 +7,8 @@ const {
   getAllJobs,
   getRecentJobs,
   getRecommendedJobs,
-  getSearchTitle
+  getSearchTitle,
+  searchByJobType
 } = require("../controllers/jobsCTRL");
 const { applyForJob, getApplicantsForJob } = require("../controllers/applicationCTRL");
 const authMiddleware = require("../middleware/auth-middleware");
@@ -19,6 +20,7 @@ router.get("/myJobs", authMiddleware, getEmployerPosts);
 router.get("/", getAllJobs);
 router.post("/", authMiddleware, createJobs);
 router.get("/search", getSearchTitle);
+router.get("/searchViaJobType", searchByJobType);
 router.get("/recentjobs", getRecentJobs)
 router.get("/recommendedjobs", getRecommendedJobs)
 router.get("/:id", getSingleJob)

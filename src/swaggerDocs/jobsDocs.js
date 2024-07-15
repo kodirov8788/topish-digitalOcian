@@ -506,6 +506,112 @@ const JobsEndpoint = {
       ],
     },
   },
+  "/jobs/searchViaJobType": {
+    get: {
+      summary: "Get all jobs",
+      tags: ["Jobs"],
+      description:
+        "Endpoint to retrieve all job listings with optional filtering, sorting, and field selection. Requires authentication.",
+      parameters: [
+        {
+          in: "query",
+          name: "jobType",
+          schema: {
+            type: "string",
+          },
+          description: "Filter jobs by jobType with regex search.",
+        },
+        {
+          in: "query",
+          name: "page",
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+          description: "Page number for pagination.",
+        },
+        {
+          in: "query",
+          name: "limit",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+          description: "Number of items per page for pagination.",
+        },
+      ],
+      responses: {
+        200: {
+          description:
+            "A list of jobs with optional filtering, sorting, and field selection.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Jobs retrieved successfully.",
+                  },
+                  data: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Jobs" },
+                  },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description:
+            "Unauthorized access, no or invalid authentication token provided.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Unauthorized access, no or invalid authentication token provided.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error or exception thrown.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example: "Internal server error or exception thrown.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+  },
   "/jobs/myJobs": {
     get: {
       summary: "Get all job posts created by the authenticated employer",
