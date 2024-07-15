@@ -293,8 +293,8 @@ class AuthCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized!", null, 0);
       }
-      // console.log("signOut: ", req.user)
-      // console.log("req body: ", req.body)
+      console.log("signOut: ", req.user)
+      console.log("req body: ", req.body)
       const { error } = logOutValidation(req.body);
       if (error) {
         return handleResponse(res, 400, "error", error.details[0].message, null, 0);
