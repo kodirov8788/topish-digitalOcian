@@ -336,10 +336,9 @@ class AuthCTRL {
     }
   }
   async renewAccessToken(req, res) {
-    // console.log("renewAccessToken called");
     try {
       const { refreshToken } = req.body;
-      // console.log("Received refreshToken:", refreshToken);
+
       if (!refreshToken) {
         return handleResponse(res, 400, "error", "Refresh token is required", null, 0);
       }
@@ -360,18 +359,15 @@ class AuthCTRL {
           const tokenUser = createTokenUser(user);
           const { accessToken, refreshToken: newRefreshToken } = generateTokens(tokenUser);
 
-          // Use atomic update operation
-          const result = await Users.updateOne(
-            { _id: user._id, 'refreshTokens.token': refreshToken },
-            {
-              $set: { 'refreshTokens.$.token': newRefreshToken }
-            }
-          );
-
-          if (result.nModified === 0) {
-            console.log("Failed to update the refresh token in the database");
+          // Find the specific refresh token and replace it
+          const tokenIndex = user.refreshTokens.findIndex(tokenObj => tokenObj.token === refreshToken);
+          if (tokenIndex === -1) {
+            console.log("Failed to find the refresh token in the database");
             return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
           }
+
+          user.refreshTokens[tokenIndex].token = newRefreshToken;
+          await user.save();
 
           return handleResponse(res, 200, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
         } catch (dbError) {
@@ -384,6 +380,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
 
   async getRefreshTokens(req, res) {
     try {
@@ -399,6 +396,7 @@ class AuthCTRL {
       const refreshTokens = user.refreshTokens.map(token => ({
         id: token._id,
         token: token.token,
+        mobileToken: token.mobileToken,
         deviceId: token.deviceId,
         deviceName: token.deviceName,
         region: token.region,
