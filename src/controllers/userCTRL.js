@@ -751,9 +751,9 @@ class UserCTRL {
 
       const user = await Users.findOne({ _id: req.user.id });
       // console.log(role);
-      // if (user.role !== "Admin") {
-      //   return handleResponse(res, 403, "error", "You are not authorized to perform this action", null, 0);
-      // }
+      if (user.role !== "Admin") {
+        return handleResponse(res, 403, "error", "You are not authorized to perform this action", null, 0);
+      }
 
       const { coins } = req.body;
       // console.log(coins)
