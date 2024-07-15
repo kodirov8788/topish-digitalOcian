@@ -298,13 +298,7 @@ class AuthCTRL {
       if (error) {
         return handleResponse(res, 400, "error", error.details[0].message);
       }
-      const isSecure = res.req.secure || res.req.headers["x-forwarded-proto"] === "https";
-      res.cookie("token", "", {
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: isSecure ? "None" : "Lax",
-        expires: new Date(0),
-      });
+
 
       const User = await Users.findById(req.user.id);
       if (User) {

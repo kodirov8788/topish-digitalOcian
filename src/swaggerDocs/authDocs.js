@@ -543,11 +543,6 @@ const AuthEndpoints = {
       summary: "Sign out the current user",
       tags: ["Auth"],
       description: "Endpoint for signing out the current user. This clears the user's auth token.",
-      security: [
-        {
-          cookieAuth: [], // Assuming you are using cookie-based authentication
-        },
-      ],
       requestBody: {
         required: true,
         content: {
