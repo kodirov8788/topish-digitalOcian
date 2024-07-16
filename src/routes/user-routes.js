@@ -14,6 +14,7 @@ const {
   postFavoriteQuickJob,
   getFavoriteJobs,
   deleteFavoriteJob,
+  getExperiencedJobseekers
   // getJobSeekersQuery,
 } = require("../controllers/jobSeekersCTRL");
 const {
@@ -58,15 +59,20 @@ router.route("/allUsers/:id").get(authMiddleware, getUser); // GET A SINGLE USER
 router.route("/currentUser").get(authMiddleware, showCurrentUser); // showCurrentUser
 router.route("/updateUsername").patch(authMiddleware, updateUsername); // updateUser
 router.route("/updateRole").patch(authMiddleware, updateRole); // updateUser
-router
-  .route("/getRecommendedJobSeekers")
-  .get(authMiddleware, getRecommendedJobSeekers);
+
 
 router.route("/updateCoinsForAllUsers").patch(authMiddleware, updateCoinsForAllUsers); // updateUser
 router.route("/updateCoinsForUser").patch(authMiddleware, updateCoinsForUser); // updateUser
 
-router.route("/getAllJobSeekers").get(authMiddleware, getAllJobSeekers); // ALL JOB SEEKERS
+// ALL JOB SEEKERS
 router.route("/searchJobSeekers").get(authMiddleware, getJobSeekersBySkills); // Search JOB SEEKERS By skill
+router.route("/getAllJobSeekers").get(authMiddleware, getAllJobSeekers);
+router
+  .route("/getRecommendedJobSeekers")
+  .get(authMiddleware, getRecommendedJobSeekers);
+router
+  .route("/getExperiencedJobseekers")
+  .get(authMiddleware, getRecommendedJobSeekers);
 router.route("/getJobSeekersByName").get(authMiddleware, getJobSeekersByName); // Search JOB SEEKERS By name
 router
   .route("/searchJobseekersParams")
@@ -74,9 +80,7 @@ router
 router
   .route("/getJobseekersSavedjob")
   .get(authMiddleware, getJobSeekersSavedJobs);
-router
-  .route("/getExperiencedJobseekers")
-  .get(authMiddleware, getRecommendedJobSeekers);
+
 // router.route("/getJobSeekersQuery").get(authMiddleware, getJobSeekersQuery);
 router
   .route("/deleteJobseekersSavedjob/:id")

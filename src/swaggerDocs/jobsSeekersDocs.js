@@ -35,6 +35,14 @@ const JobSeekersEndpoint = {
           },
           description: "Number of job seekers to return per page",
         },
+        {
+          in: "query",
+          name: "jobTitle",
+          schema: {
+            type: "string",
+          },
+          description: "Job title to filter the job seekers",
+        },
       ],
       responses: {
         200: {
@@ -151,6 +159,14 @@ const JobSeekersEndpoint = {
           },
           description: "Number of job seekers to return per page",
         },
+        {
+          in: "query",
+          name: "jobTitle",
+          schema: {
+            type: "string",
+          },
+          description: "Job title to filter the job seekers",
+        },
       ],
       responses: {
         200: {
@@ -266,6 +282,14 @@ const JobSeekersEndpoint = {
             default: 10,
           },
           description: "Number of job seekers to return per page",
+        },
+        {
+          in: "query",
+          name: "jobTitle",
+          schema: {
+            type: "string",
+          },
+          description: "Job title to filter the job seekers",
         },
       ],
       responses: {

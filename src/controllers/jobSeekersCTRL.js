@@ -10,27 +10,21 @@ class JobSeekerCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      // Pagination parameters
-      const page = parseInt(req.query.page) || 1; // Default to page 1 if not specified
-      const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items if not specified
-      const skip = (page - 1) * limit; // Calculate the number of documents to skip
+      const { jobTitle = "", page = 1, limit = 10 } = req.query;
+      const skip = (page - 1) * limit;
 
-      // Modify the query to include pagination
-      const resultUsers = await Users.find({ jobSeeker: { $exists: true } })
-        .skip(skip) // Skip the documents for the current page
-        .limit(limit) // Limit the number of documents returned
-        .exec(); // Execute the query
+      const query = { jobSeeker: { $exists: true } };
+      if (jobTitle) {
+        query["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
+      }
 
-      // Count the total documents that match the query (without limit and skip) for pagination metadata
-      const total = await Users.countDocuments({
-        jobSeeker: { $exists: true },
-      });
+      const resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+      const total = await Users.countDocuments(query);
 
       if (resultUsers.length === 0) {
         return handleResponse(res, 200, "error", "No job seekers found", [], 0);
       }
 
-      // Prepare pagination metadata
       const pagination = {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
@@ -58,6 +52,7 @@ class JobSeekerCTRL {
       );
     }
   }
+
   async getRecommendedJobSeekers(req, res) {
     try {
       if (!req.user) {
@@ -65,37 +60,24 @@ class JobSeekerCTRL {
       }
       const user = await Users.findById(req.user.id);
       if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
+        return handleResponse(res, 401, "error", "You are not allowed!", null, 0);
       }
 
-      // Pagination parameters
-      const page = parseInt(req.query.page) || 1; // Default to page 1 if not specified
-      const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items if not specified
-      const skip = (page - 1) * limit; // Calculate the number of documents to skip
+      const { jobTitle = "", page = 1, limit = 10 } = req.query;
+      const skip = (page - 1) * limit;
 
-      // Modify the query to include pagination
-      const resultUsers = await Users.find({ jobSeeker: { $exists: true } })
-        .skip(skip) // Skip the documents for the current page
-        .limit(limit) // Limit the number of documents returned
-        .exec(); // Execute the query
-      // console.log("resultUsers: ", resultUsers);
-      // Count the total documents that match the query (without limit and skip) for pagination metadata
-      const total = await Users.countDocuments({
-        jobSeeker: { $exists: true },
-      });
+      const query = { jobSeeker: { $exists: true } };
+      if (jobTitle) {
+        query["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
+      }
+
+      const resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+      const total = await Users.countDocuments(query);
 
       if (resultUsers.length === 0) {
         return handleResponse(res, 200, "error", "No job seekers found", [], 0);
       }
 
-      // Prepare pagination metadata
       const pagination = {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
@@ -123,6 +105,60 @@ class JobSeekerCTRL {
       );
     }
   }
+
+  async getExperiencedJobseekers(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      const user = await Users.findById(req.user.id);
+      if (user.role !== "Employer") {
+        return handleResponse(res, 401, "error", "You are not allowed!", null, 0);
+      }
+
+      const { jobTitle = "", page = 1, limit = 10 } = req.query;
+      const skip = (page - 1) * limit;
+
+      const query = { jobSeeker: { $exists: true } };
+      if (jobTitle) {
+        query["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
+      }
+
+      const resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+      const total = await Users.countDocuments(query);
+
+      if (resultUsers.length === 0) {
+        return handleResponse(res, 200, "error", "No job seekers found", [], 0);
+      }
+
+      const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        limit: limit,
+        totalDocuments: total,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Job seekers retrieved successfully",
+        resultUsers,
+        resultUsers.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+
   async getJobSeekersSavedJobs(req, res) {
     let { page = 1, limit = 10 } = req.query;
     page = parseInt(page, 10);
@@ -803,6 +839,7 @@ class JobSeekerCTRL {
       );
     }
   }
+
 }
 
 module.exports = new JobSeekerCTRL();
