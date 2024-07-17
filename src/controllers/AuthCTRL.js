@@ -68,7 +68,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async confirmRegisterCode(req, res) {
     try {
 
@@ -138,7 +137,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async resendConfirmationCode(req, res) {
     try {
       const { phoneNumber } = req.body;
@@ -183,7 +181,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async sendLoginCode(req, res) {
     // console.log("sendLoginCode", req.body)
     try {
@@ -229,7 +226,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async confirmLogin(req, res) {
     try {
       const { phoneNumber, confirmationCode, mobileToken, deviceId, deviceName, region, os, browser, ip } = req.body;
@@ -237,6 +233,7 @@ class AuthCTRL {
       if (!phoneNumber || !confirmationCode) {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
       }
+
       const phoneNumberWithCountryCode = `+998${phoneNumber}`;
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
@@ -261,25 +258,30 @@ class AuthCTRL {
 
       user.refreshTokens = user.refreshTokens || [];
 
-      const existingTokenIndex = user.refreshTokens.findIndex(
-        (tokenObj) => tokenObj.mobileToken === mobileToken
-      );
-
-      if (existingTokenIndex !== -1) {
-        user.refreshTokens[existingTokenIndex].token = refreshToken;
-      } else {
+      let tokenUpdated = false;
+      for (let tokenObj of user.refreshTokens) {
+        if (tokenObj.mobileToken === mobileToken &&
+          tokenObj.os === os &&
+          tokenObj.browser === browser) {
+          tokenObj.token = refreshToken;
+          tokenUpdated = true;
+          break;
+        }
+      }
+      // console.log("tokenUpdated: ", tokenUpdated)
+      if (!tokenUpdated) {
         user.refreshTokens.push({
           token: refreshToken,
           mobileToken: mobileToken,
-          deviceId: deviceId || 'unknown-device-id', // Use 'unknown-device-id' if deviceId is not provided
-          deviceName: deviceName || 'unknown-device-name', // Use 'unknown-device-name' if deviceName is not provided
-          region: region || 'unknown-region', // Use 'unknown-region' if region is not provided
-          os: os || 'unknown-os', // Use 'unknown-os' if os is not provided
-          browser: browser || 'unknown-browser', // Use 'unknown-browser' if browser is not provided
-          ip: ip || 'unknown-ip', // Use 'unknown-ip' if ip is not provided
+          deviceId: deviceId || 'unknown-device-id',
+          deviceName: deviceName || 'unknown-device-name',
+          region: region || 'unknown-region',
+          os: os || 'unknown-os',
+          browser: browser || 'unknown-browser',
+          ip: ip || 'unknown-ip',
         });
       }
-
+      // console.log(" user.refreshTokens: ", user.refreshTokens)
       await user.save();
 
       return handleResponse(res, 200, "success", "Login successful", { accessToken, refreshToken, role: user.role });
@@ -316,8 +318,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
-
   async deleteAccount(req, res) {
     try {
       if (!req.user) {
@@ -381,8 +381,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
-
   async getRefreshTokens(req, res) {
     try {
       if (!req.user) {
@@ -434,10 +432,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
-
-
-
 }
 
 module.exports = new AuthCTRL();
