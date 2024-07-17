@@ -360,14 +360,20 @@ class AuthCTRL {
           const tokenUser = createTokenUser(user);
           const { accessToken, refreshToken: newRefreshToken } = generateTokens(tokenUser);
 
-          // Find the specific refresh token and replace it
-          const tokenIndex = user.refreshTokens.findIndex(tokenObj => tokenObj.token === refreshToken);
-          if (tokenIndex === -1) {
+          let tokenUpdated = false;
+          for (let tokenObj of user.refreshTokens) {
+            if (tokenObj.token === refreshToken) {
+              tokenObj.token = newRefreshToken;
+              tokenUpdated = true;
+              break;
+            }
+          }
+
+          if (!tokenUpdated) {
             console.log("Failed to find the refresh token in the database");
             return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
           }
 
-          user.refreshTokens[tokenIndex].token = newRefreshToken;
           await user.save();
 
           return handleResponse(res, 200, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
@@ -381,6 +387,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async getRefreshTokens(req, res) {
     try {
       if (!req.user) {
