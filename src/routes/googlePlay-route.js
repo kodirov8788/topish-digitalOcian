@@ -9,57 +9,103 @@ function DeleteAccount(req, res) {
               <meta charset="UTF-8">
               <title>Delete Account - Play Market</title>
               <style nonce="${res.locals.nonce}">
-                  body { font-family: Arial, sans-serif; padding-top: 150px;}
+                  body { font-family: Arial, sans-serif; padding-top: 150px; background-color: #f9f9f9; }
                   .error { color: red; }
                   .success { color: green; }
-                  h2, p { text-align: center; }
-                  form { margin-top: 20px; background: #f4f4f4; padding: 20px; border-radius: 5px; display:flex; flex-direction: column; width: 30%; flex-align: center;jusify-content: center; margin: 0 auto}
+                  h2, p { text-align: center; color: #333; }
+                  form { margin-top: 20px; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 400px; margin: 0 auto; }
                   label, input, button { display: block; width: 100%; margin-bottom: 10px; }
-                  input, button { padding: 10px; border: 1px solid #ccc; border-radius: 4px;  box-sizing: border-box;}
-                  button { background-color: #4caf50; color: white; cursor: pointer; }
-                  button:hover { background-color: #45a049; }
+                  input, button { padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+                  button { background-color: #007bff; color: white; cursor: pointer; border: none; }
+                  button:hover { background-color: #0056b3; }
+                  .hidden { display: none; }
               </style>
           </head>
           <body>
               <h2>Delete Account</h2>
-              <p>Enter your phone number and password to delete your account</p>
-              <form id="deleteAccountForm">
+              <p>Enter your phone number to receive a confirmation code for deleting your Play Market account</p>
+              <form id="sendDeleteAccountCodeForm">
                   <label for="phoneNumber">Phone Number (9-digit):</label>
                   <input type="text" id="phoneNumber" name="phoneNumber" pattern="\\d{9}" placeholder="123456789" required>
-                  <label for="password">Password:</label>
-                  <input type="password" id="password" name="password" required>
-                  <button type="submit">Delete Account</button>
+                  <button type="submit">Send Confirmation Code</button>
                   <p id="message"></p>
+              </form>
+              <h2 id="confirmSectionTitle" class="hidden">Confirm Account Deletion</h2>
+              <p id="confirmSectionText" class="hidden">Enter the confirmation code sent to your phone number</p>
+              <form id="confirmDeleteAccountForm" class="">
+                  <label for="confirmationCode">Confirmation Code:</label>
+                  <input type="text" id="confirmationCode" name="confirmationCode" required>
+                  <button type="submit">Confirm Deletion</button>
+                  <p id="confirmMessage"></p>
               </form>
               <script nonce="${res.locals.nonce}">
                   document.addEventListener('DOMContentLoaded', () => {
-                      const form = document.getElementById('deleteAccountForm');
-                      form.addEventListener('submit', function (e) {
-                          e.preventDefault();
-                          const phoneNumber = document.getElementById('phoneNumber').value;
-                          const password = document.getElementById('password').value;
-                          const formData = { phoneNumber:  phoneNumber, password: password };
+                      const sendCodeForm = document.getElementById('sendDeleteAccountCodeForm');
+                      const confirmSectionTitle = document.getElementById('confirmSectionTitle');
+                      const confirmSectionText = document.getElementById('confirmSectionText');
+                      const confirmDeleteForm = document.getElementById('confirmDeleteAccountForm');
+                      const phoneNumberInput = document.getElementById('phoneNumber');
+                      const confirmationCodeInput = document.getElementById('confirmationCode');
 
-                            fetch('http://localhost:8080/api/v1/google/deleteAccount', {
-                              method: 'DELETE',
+                      sendCodeForm.addEventListener('submit', function (e) {
+                          e.preventDefault();
+                          const phoneNumber = phoneNumberInput.value;
+                          const formData = { phoneNumber: phoneNumber };
+
+                          fetch('/api/v1/auth/sendDeleteAccountCode', {
+                              method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify(formData)
                           })
-                          .then(response => {
-                              if (!response.ok) throw new Error('Network response was not ok');
-
-                              return response.json();
-                          })
+                          .then(response => response.json())
                           .then(data => {
-                              document.getElementById('message').textContent = data.message || 'Account deleted successfully';
-                              document.getElementById('message').className = 'success';
-                              document.getElementById('phoneNumber').value = ""
-                              document.getElementById('password').value = ""
+                              const messageElem = document.getElementById('message');
+                              if (data.status === 'success') {
+                                  messageElem.textContent = data.message;
+                                  messageElem.className = 'success';
+                                  confirmSectionTitle.classList.remove('hidden');
+                                  confirmSectionText.classList.remove('hidden');
+                                  confirmDeleteForm.classList.remove('hidden');
+                              } else {
+                                  throw new Error(data.message);
+                              }
                           })
                           .catch(error => {
-                              console.error('There has been a problem with your fetch operation:', error);
-                              document.getElementById('message').textContent = error.message;
-                              document.getElementById('message').className = 'error';
+                              const messageElem = document.getElementById('message');
+                              messageElem.textContent = error.message;
+                              messageElem.className = 'error';
+                          });
+                      });
+
+                      confirmDeleteForm.addEventListener('submit', function (e) {
+                          e.preventDefault();
+                          const phoneNumber = phoneNumberInput.value;
+                          const confirmationCode = confirmationCodeInput.value;
+                          const formData = { phoneNumber: phoneNumber, confirmationCode: confirmationCode };
+
+                          fetch('/api/v1/auth/confirmDeleteAccount', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify(formData)
+                          })
+                          .then(response => response.json())
+                          .then(data => {
+                              const confirmMessageElem = document.getElementById('confirmMessage');
+                              if (data.status === 'success') {
+                                  confirmMessageElem.textContent = data.message;
+                                  confirmMessageElem.className = 'success';
+                                  phoneNumberInput.value = "";
+                                  confirmationCodeInput.value = "";
+                                  sendCodeForm.reset();
+                                  confirmDeleteForm.reset();
+                              } else {
+                                  throw new Error(data.message);
+                              }
+                          })
+                          .catch(error => {
+                              const confirmMessageElem = document.getElementById('confirmMessage');
+                              confirmMessageElem.textContent = error.message;
+                              confirmMessageElem.className = 'error';
                           });
                       });
                   });
@@ -67,8 +113,9 @@ function DeleteAccount(req, res) {
           </body>
           </html>
       `);
+}
 
-};
+
 
 function PrivatePolicy(req, res) {
   res.send(`

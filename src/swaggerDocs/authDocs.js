@@ -620,7 +620,6 @@ const AuthEndpoints = {
       summary: "Delete a user account",
       tags: ["Auth"],
       description: "This endpoint deletes a user's account. It requires the user to be authenticated.",
-
       responses: {
         200: {
           description: "Account deleted successfully.",

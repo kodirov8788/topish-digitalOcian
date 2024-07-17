@@ -439,6 +439,77 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
+  async sendDeleteAccountCode(req, res) {
+    try {
+      const { phoneNumber } = req.body;
+
+      if (!phoneNumber) {
+        return handleResponse(res, 400, "error", "Phone number is required", null, 0);
+      }
+
+      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      const user = await Users.findOne({ phoneNumber: phoneNumberWithCountryCode });
+
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found with this phone number", null, 0);
+      }
+
+      const now = Date.now();
+      let confirmationCode;
+      let confirmationCodeExpires;
+
+      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
+        confirmationCode = 112233;
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      } else {
+        confirmationCode = Math.floor(100000 + Math.random() * 900000);
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      }
+
+      user.confirmationCode = confirmationCode;
+      user.confirmationCodeExpires = confirmationCodeExpires;
+      await user.save();
+
+      if (phoneNumberWithCountryCode !== "+998996730970" && phoneNumberWithCountryCode !== "+998507039990" && phoneNumberWithCountryCode !== "+998954990501") {
+        const token = await getEskizAuthToken();
+        const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
+        await sendCustomSms(token, phoneNumberWithCountryCode, message);
+      }
+
+      return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
+
+  async confirmDeleteAccount(req, res) {
+    try {
+      const { phoneNumber, confirmationCode } = req.body;
+
+      if (!phoneNumber || !confirmationCode) {
+        return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
+      }
+
+      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      const user = await Users.findOne({
+        phoneNumber: phoneNumberWithCountryCode,
+        confirmationCode,
+      });
+
+      if (!user || new Date() > user.confirmationCodeExpires) {
+        return handleResponse(res, 400, "error", "Invalid or expired confirmation code", null, 0);
+      }
+
+      await deleteUserAvatar(user._id);
+      await deleteUserCv(user._id);
+      await user.deleteOne();
+
+      return handleResponse(res, 200, "success", "Account and associated data deleted successfully", null, 0);
+    } catch (err) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + err.message, null, 0);
+    }
+  }
 }
 
 module.exports = new AuthCTRL();
