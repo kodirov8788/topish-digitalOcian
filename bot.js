@@ -39,7 +39,8 @@ const addTelegram = async (msg, phoneNumber) => {
     // Remove non-numeric characters and leading zeros
     phoneNumber = phoneNumber.replace(/\D/g, '').replace(/^0+/, '');
 
-    // console.log("Formatted phoneNumber: ", phoneNumber);
+    console.log("Formatted phoneNumber: ", phoneNumber);
+    console.log("telegramId: ", telegramId);
 
     if (phoneNumber.length !== 9) {
         bot.sendMessage(msg.chat.id, 'Please provide a valid 9-digit phone number with the command, e.g., /addtelegram 954446666');
