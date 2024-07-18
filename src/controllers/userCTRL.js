@@ -807,30 +807,27 @@ class UserCTRL {
 
       const user = await Users.findOne({ _id: req.user.id });
 
-      // Check if the user has the right role (Admin)
-      if (user.role !== "JobSeeker") {
-        return handleResponse(res, 403, "error", "You are not authorized to perform this action", null, 0);
-      }
-
-      const { visible } = req.body;
 
       // Validate the 'visible' field
       if (typeof visible !== 'boolean') {
         return handleResponse(res, 400, "error", "Invalid value for visible", null, 0);
       }
 
-      // Update the 'visible' field for all users, adding it if it doesn't exist
-      const result = await Users.updateMany(
-        { visible: { $exists: false } },
-        { $set: { visible: visible } },
-        { upsert: true }
-      );
 
-      return handleResponse(res, 200, "success", `Visibility updated for ${result.nModified} users.`, null, 1);
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+
+      user.visible = visible;
+      await user.save();
+
+      return handleResponse(res, 200, "success", "Visibility updated successfully.", user, 1);
     } catch (error) {
-      console.error("Error updating visibility for users:", error);
-      return handleResponse(res, 500, "error", "Failed to update visibility for users.", null, 0);
+      console.error("Error updating visibility for user:", error);
+      return handleResponse(res, 500, "error", "Failed to update visibility for user.", null, 0);
     }
+
+
   }
 
 }
