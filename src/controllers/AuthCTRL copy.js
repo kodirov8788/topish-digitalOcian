@@ -289,6 +289,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async signOut(req, res) {
     try {
       if (!req.user) {
@@ -336,8 +337,6 @@ class AuthCTRL {
     }
   }
   async renewAccessToken(req, res) {
-    // console.log("renew refresh token is called")
-
     try {
       const { refreshToken } = req.body;
 
@@ -388,6 +387,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async getRefreshTokens(req, res) {
     try {
       if (!req.user) {
@@ -439,6 +439,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async sendDeleteAccountCode(req, res) {
     try {
       const { phoneNumber } = req.body;
@@ -481,6 +482,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async confirmDeleteAccount(req, res) {
     try {
       const { phoneNumber, confirmationCode } = req.body;

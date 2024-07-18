@@ -739,8 +739,6 @@ class UserCTRL {
       );
     }
   }
-
-
   async updateCoinsForAllUsers(req, res) {
     try {
       // Check if the user is authenticated
