@@ -145,6 +145,7 @@ const UsersSchema = new Schema(
         "https://upload.wikimedia.org/wikipedia/commons/1/1e/Default-avatar.jpg",
     },
     telegramChannelIds: [telegramChannelSchema],
+    telegramId: { type: String, default: "" },
     gptToken: { type: String, default: "" },
     gptPrompt: { type: String, default: "" },
   },
