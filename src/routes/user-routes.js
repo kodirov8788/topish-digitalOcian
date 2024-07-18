@@ -44,7 +44,8 @@ const {
   updateRole,
   updateUsername,
   updateCoinsForAllUsers,
-  updateCoinsForUser
+  updateCoinsForUser,
+  updateUserVisibility
 } = require("../controllers/userCTRL");
 // const { showCurrentUser } = require("../controllers/all-Users/current-user");
 // const {
@@ -63,7 +64,7 @@ router.route("/updateRole").patch(authMiddleware, updateRole); // updateUser
 
 router.route("/updateCoinsForAllUsers").patch(authMiddleware, updateCoinsForAllUsers); // updateUser
 router.route("/updateCoinsForUser").patch(authMiddleware, updateCoinsForUser); // updateUser
-
+router.route("/updateUserVisibility").patch(authMiddleware, updateUserVisibility);
 // ALL JOB SEEKERS
 router.route("/searchJobSeekers").get(authMiddleware, getJobSeekersBySkills); // Search JOB SEEKERS By skill
 router.route("/getAllJobSeekers").get(authMiddleware, getAllJobSeekers);

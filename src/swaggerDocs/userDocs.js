@@ -1458,6 +1458,96 @@ const UsersEndpoint = {
       },
     },
   },
+  "/users/updateUserVisibility": {
+    patch: {
+      summary: "Update visibility for all users",
+      tags: ["Users"],
+      description: "Endpoint to update visibility for all users.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                visible: {
+                  type: "boolean",
+                  example: true,
+                  required: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Visibility updated successfully for all users",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Visibility updated successfully for all users",
+                  },
+                  data: { $ref: "#/components/schemas/Users" },
+                  totalCount: { type: "integer", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Bad Request",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Invalid visibility value" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Internal server error" },
+                  data: { type: "null", example: null },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 
 };
 

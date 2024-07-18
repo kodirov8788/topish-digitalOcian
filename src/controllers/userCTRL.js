@@ -798,6 +798,40 @@ class UserCTRL {
       return handleResponse(res, 500, "error", "Failed to update coins for user.", null, 0);
     }
   }
+  async updateUserVisibility(req, res) {
+    try {
+      // Check if the user is authenticated
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: req.user.id });
+
+      // Check if the user has the right role (Admin)
+      if (user.role !== "JobSeeker") {
+        return handleResponse(res, 403, "error", "You are not authorized to perform this action", null, 0);
+      }
+
+      const { visible } = req.body;
+
+      // Validate the 'visible' field
+      if (typeof visible !== 'boolean') {
+        return handleResponse(res, 400, "error", "Invalid value for visible", null, 0);
+      }
+
+      // Update the 'visible' field for all users, adding it if it doesn't exist
+      const result = await Users.updateMany(
+        { visible: { $exists: false } },
+        { $set: { visible: visible } },
+        { upsert: true }
+      );
+
+      return handleResponse(res, 200, "success", `Visibility updated for ${result.nModified} users.`, null, 1);
+    } catch (error) {
+      console.error("Error updating visibility for users:", error);
+      return handleResponse(res, 500, "error", "Failed to update visibility for users.", null, 0);
+    }
+  }
 
 }
 
