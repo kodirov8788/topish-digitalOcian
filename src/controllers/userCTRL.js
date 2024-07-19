@@ -807,8 +807,9 @@ class UserCTRL {
 
       const user = await Users.findOne({ _id: req.user.id });
 
-
+      const { visible } = req.body;
       // Validate the 'visible' field
+      // console.log("visible: ", visible)
       if (typeof visible !== 'boolean') {
         return handleResponse(res, 400, "error", "Invalid value for visible", null, 0);
       }
