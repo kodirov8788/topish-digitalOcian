@@ -14,7 +14,7 @@ const {
   postFavoriteQuickJob,
   getFavoriteJobs,
   deleteFavoriteJob,
-  getExperiencedJobseekers
+  getExperiencedJobseekers,
   // getJobSeekersQuery,
 } = require("../controllers/jobSeekersCTRL");
 const {
@@ -45,7 +45,7 @@ const {
   updateUsername,
   updateCoinsForAllUsers,
   updateCoinsForUser,
-  updateUserVisibility
+  updateUserVisibility,
 } = require("../controllers/userCTRL");
 // const { showCurrentUser } = require("../controllers/all-Users/current-user");
 // const {
@@ -73,7 +73,7 @@ router
   .get(authMiddleware, getRecommendedJobSeekers);
 router
   .route("/getExperiencedJobseekers")
-  .get(authMiddleware, getRecommendedJobSeekers);
+  .get(authMiddleware, getExperiencedJobseekers);
 router.route("/getJobSeekersByName").get(authMiddleware, getJobSeekersByName); // Search JOB SEEKERS By name
 router
   .route("/searchJobseekersParams")

@@ -65,17 +65,53 @@ class JobSeekerCTRL {
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
-      const query = {
+      // Step 1: Fetch recommended users with matching job title
+      const recommendedTitleQuery = {
         jobSeeker: { $exists: true },
-        recommending: true
+        recommending: true,
+        "jobSeeker.jobTitle": { $regex: jobTitle, $options: "i" }
       };
 
-      if (jobTitle) {
-        query["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
-      }
+      const recommendedTitleUsers = await Users.find(recommendedTitleQuery).exec();
 
-      const resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
-      const total = await Users.countDocuments(query);
+      // Step 2: Fetch recommended users without matching job title
+      const recommendedQuery = {
+        jobSeeker: { $exists: true },
+        recommending: true,
+        "jobSeeker.jobTitle": { $not: { $regex: jobTitle, $options: "i" } }
+      };
+
+      const recommendedUsers = await Users.find(recommendedQuery).exec();
+
+      // Step 3: Fetch other users with matching job title
+      const otherTitleQuery = {
+        jobSeeker: { $exists: true },
+        recommending: false,
+        "jobSeeker.jobTitle": { $regex: jobTitle, $options: "i" }
+      };
+
+      const otherTitleUsers = await Users.find(otherTitleQuery).exec();
+
+      // Step 4: Fetch other users without matching job title
+      const otherQuery = {
+        jobSeeker: { $exists: true },
+        recommending: false,
+        "jobSeeker.jobTitle": { $not: { $regex: jobTitle, $options: "i" } }
+      };
+
+      const otherUsers = await Users.find(otherQuery).exec();
+
+      // Combine results in the desired order
+      const resultUsers = [
+        ...recommendedTitleUsers,
+        ...recommendedUsers,
+        ...otherTitleUsers,
+        ...otherUsers
+      ].slice(skip, skip + limit);
+
+      const total = await Users.countDocuments({
+        jobSeeker: { $exists: true }
+      });
 
       if (resultUsers.length === 0) {
         return handleResponse(res, 200, "error", "No job seekers found", [], 0);
@@ -108,6 +144,7 @@ class JobSeekerCTRL {
       );
     }
   }
+
   async getExperiencedJobseekers(req, res) {
     try {
       if (!req.user) {
@@ -121,22 +158,42 @@ class JobSeekerCTRL {
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
-      const query = {
+      // Step 1: Fetch users with working experience
+      const experiencedQuery = {
         jobSeeker: { $exists: true },
         "jobSeeker.workingExperience": { $exists: true, $ne: "" }
       };
 
       if (jobTitle) {
-        query["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
+        experiencedQuery["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
       }
 
-      const resultUsers = await Users.find(query)
+      const experiencedUsers = await Users.find(experiencedQuery)
         .sort({ "jobSeeker.workingExperience": -1 })
-        .skip(skip)
-        .limit(limit)
         .exec();
 
-      const total = await Users.countDocuments(query);
+      // Step 2: Fetch other users without working experience
+      const otherQuery = {
+        jobSeeker: { $exists: true },
+        $or: [
+          { "jobSeeker.workingExperience": { $exists: false } },
+          { "jobSeeker.workingExperience": "" }
+        ]
+      };
+
+      if (jobTitle) {
+        otherQuery["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
+      }
+
+      const otherUsers = await Users.find(otherQuery).exec();
+
+      // Combine results in the desired order
+      const allUsers = [...experiencedUsers, ...otherUsers];
+      const resultUsers = allUsers.slice(skip, skip + limit);
+
+      const total = await Users.countDocuments({
+        jobSeeker: { $exists: true }
+      });
 
       if (resultUsers.length === 0) {
         return handleResponse(res, 200, "error", "No job seekers found", [], 0);
@@ -169,6 +226,7 @@ class JobSeekerCTRL {
       );
     }
   }
+
   async getJobSeekersSavedJobs(req, res) {
     let { page = 1, limit = 10 } = req.query;
     page = parseInt(page, 10);
