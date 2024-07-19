@@ -52,7 +52,6 @@ class JobSeekerCTRL {
       );
     }
   }
-
   async getRecommendedJobSeekers(req, res) {
     try {
       if (!req.user) {
@@ -66,7 +65,11 @@ class JobSeekerCTRL {
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
-      const query = { jobSeeker: { $exists: true } };
+      const query = {
+        jobSeeker: { $exists: true },
+        recommending: true
+      };
+
       if (jobTitle) {
         query["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
       }
@@ -105,7 +108,6 @@ class JobSeekerCTRL {
       );
     }
   }
-
   async getExperiencedJobseekers(req, res) {
     try {
       if (!req.user) {
@@ -119,12 +121,21 @@ class JobSeekerCTRL {
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
-      const query = { jobSeeker: { $exists: true } };
+      const query = {
+        jobSeeker: { $exists: true },
+        "jobSeeker.workingExperience": { $exists: true, $ne: "" }
+      };
+
       if (jobTitle) {
         query["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
       }
 
-      const resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+      const resultUsers = await Users.find(query)
+        .sort({ "jobSeeker.workingExperience": -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
       const total = await Users.countDocuments(query);
 
       if (resultUsers.length === 0) {
@@ -158,7 +169,6 @@ class JobSeekerCTRL {
       );
     }
   }
-
   async getJobSeekersSavedJobs(req, res) {
     let { page = 1, limit = 10 } = req.query;
     page = parseInt(page, 10);
