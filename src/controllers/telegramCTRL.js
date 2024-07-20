@@ -2,8 +2,9 @@ const bot = require("../../bot");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const Joi = require("joi");
-const axios = require("axios");
 const { getIO } = require('../socket/Socket');
+const { upload, deletePostImages, deleteSinglePostImage } = require("../utils/telegramImagesUpload");
+
 // Define the schema for validation
 const telegramChannelSchema = Joi.object({
     name: Joi.string().required().messages({
@@ -52,11 +53,11 @@ class TelegramCTRL {
 
             const { name, id, link, available } = value;
 
-            if (user.telegramChannelIds.find(channel => channel.id === id)) {
+            if (user.telegram.channels.find(channel => channel.id === id)) {
                 return handleResponse(res, 400, "error", "Channel already exists", null, 0);
             }
 
-            if (user.telegramChannelIds.length >= 5) {
+            if (user.telegram.channels.length >= 5) {
                 return handleResponse(res, 400, "error", "You can add up to 5 channels", null, 0);
             }
 
@@ -67,7 +68,7 @@ class TelegramCTRL {
                 available: available !== undefined ? available : true,
             };
 
-            user.telegramChannelIds.push(channel);
+            user.telegram.channels.push(channel);
             await user.save();
 
             return handleResponse(res, 201, "success", "Telegram channel added successfully", channel, 1);
@@ -87,7 +88,7 @@ class TelegramCTRL {
                 return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
             }
 
-            return handleResponse(res, 200, "success", "Telegram channels fetched successfully", user.telegramChannelIds, user.telegramChannelIds.length);
+            return handleResponse(res, 200, "success", "Telegram channels fetched successfully", user.telegram.channels, user.telegram.channels.length);
         } catch (error) {
             return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
         }
@@ -111,16 +112,16 @@ class TelegramCTRL {
             }
 
             // Find the channel to be deleted
-            const channel = user.telegramChannelIds.find(channel => channel._id.toString() === id);
+            const channel = user.telegram.channels.find(channel => channel._id.toString() === id);
 
             if (!channel) {
                 return handleResponse(res, 404, "error", "Channel not found", null, 0);
             }
 
             // Remove the channel from the array
-            user.telegramChannelIds = user.telegramChannelIds.filter(channel => channel._id.toString() !== id);
+            user.telegram.channels = user.telegram.channels.filter(channel => channel._id.toString() !== id);
 
-            // console.log("user.telegramChannelIds: ", user.telegramChannelIds);
+            // console.log("user.telegram.channels: ", user.telegram.channels);
 
             await user.save();
 
@@ -157,7 +158,7 @@ class TelegramCTRL {
             const { name, link, available } = value;
 
             // Find the channel to be updated
-            const channel = user.telegramChannelIds.find(channel => channel._id.toString() === id);
+            const channel = user.telegram.channels.find(channel => channel._id.toString() === id);
 
             if (!channel) {
                 return handleResponse(res, 404, "error", "Channel not found", null, 0);
@@ -221,15 +222,16 @@ class TelegramCTRL {
             if (!user) {
                 return res.status(404).json({ error: "User not found with this phone number" });
             }
-            if (user.telegramId === telegramIdString) {
-                return res.status(200).json({ message: "Telegram ID already added" });
-            }
+            console.log("user: ", user.telegram.id);
+            // if (user.telegram.id === telegramIdString) {
+            //     return res.status(200).json({ message: "Telegram ID already added" });
+            // }
 
-            if (user.telegramId && user.telegramId !== telegramIdString) {
+            if (user.telegram.id && user.telegram.id !== telegramIdString) {
                 return res.status(400).json({ error: "Telegram ID does not match" });
             }
 
-            user.telegramId = telegramIdString;
+            user.telegram.id = telegramIdString;
             await user.save();
             io.emit('telegramIdAdded', { telegramId: telegramIdString });
 
@@ -254,9 +256,9 @@ class TelegramCTRL {
             if (!user) {
                 return handleResponse(res, 400, "error", "User not found", null, 0);
             }
-            user.telegramId = null; // Remove the telegramId
+            user.telegram.id = null; // Remove the telegramId
             await user.save();
-            io.emit('telegramIdRemoved', { telegramId: user.telegramId });
+            io.emit('telegramIdRemoved', { telegramId: user.telegram.id });
             return handleResponse(res, 200, "success", "Telegram ID removed successfully", null, 0);
         } catch (error) {
             return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
@@ -266,19 +268,20 @@ class TelegramCTRL {
         const io = getIO();
         try {
             const { chatId, chatTitle, addedById, addedByUsername } = req.body;
-            let user = await Users.findOne({ telegramId: addedById });
+            // let user = await Users.findOne({ telegram.id: addedById });
+            let user = await Users.findOne({ 'telegram.id': addedById.toString() });
             let newChatId = chatId.toString();
 
             if (!user) {
                 return res.status(404).send("User not found");
             }
 
-            if (user.telegramChannelIds.some(channel => channel.id === newChatId)) {
+            if (user.telegram.channels.some(channel => channel.id === newChatId)) {
                 console.log("Channel already exists");
                 return res.status(400).send("Channel already exists");
             }
 
-            user.telegramChannelIds.push({
+            user.telegram.channels.push({
                 name: chatTitle,
                 id: newChatId,
                 available: true
@@ -291,17 +294,15 @@ class TelegramCTRL {
             //     id: newChatId,
             //     available: true
             // }
-            // add _id to the saved user's telegramChannelIds last added channel 
-
+            // add _id to the saved user's telegram.channels last added channel 
             io.emit('telegramChannelAdded',
                 {
                     name: chatTitle,
                     id: newChatId,
                     available: true,
-                    _id: savedUser.telegramChannelIds[savedUser.telegramChannelIds.length - 1]._id
+                    _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
                 }
             );
-
 
             // console.log(`Channel info saved: ${chatTitle} (${chatId})`);
             res.status(200).send("OK");
@@ -318,19 +319,19 @@ class TelegramCTRL {
             if (!chatId) {
                 return res.status(400).send("chatId is required");
             }
-            let user = await Users.findOne({ 'telegramChannelIds.id': chatId.toString() });
+            let user = await Users.findOne({ 'telegram.channels.id': chatId.toString() });
             if (!user) {
                 return res.status(404).send("User not found");
             }
-            let channel = user.telegramChannelIds.find(channel => channel.id === chatId.toString());
+            let channel = user.telegram.channels.find(channel => channel.id === chatId.toString());
             if (!channel) {
                 return res.status(404).send("Channel not found");
             }
-            user.telegramChannelIds = user.telegramChannelIds.filter(channel => channel.id !== chatId.toString());
+            user.telegram.channels = user.telegram.channels.filter(channel => channel.id !== chatId.toString());
             await user.save();
             console.log(`Channel info removed: ${chatId}`);
             io.emit('telegramChannelRemoved', chatId);
-            bot.sendMessage(user.telegramId, `I have been removed from ${channel.name}`);
+            bot.sendMessage(user.telegram.id, `I have been removed from ${channel.name}`);
             return res.status(200).send("OK");
 
         } catch (error) {
@@ -338,6 +339,207 @@ class TelegramCTRL {
             res.status(500).send("Internal Server Error");
         }
     }
+    async addOrUpdateTelegramData(req, res) {
+        try {
+            if (!req.user) {
+                return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+            }
+
+            // Find the user by their ID
+            const user = await Users.findById(req.user.id);
+
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+
+            const { postNumber, contactNumber, companyName, telegram, link, additionalInfo } = req.body;
+
+            // Update the telegram field with provided values only
+            if (postNumber !== undefined && postNumber !== "") {
+                user.telegram.postNumber = postNumber;
+            }
+            if (contactNumber !== undefined && contactNumber !== "") {
+                user.telegram.contactNumber = contactNumber;
+            }
+            if (companyName !== undefined && companyName !== "") {
+                user.telegram.companyName = companyName;
+            }
+            if (telegram !== undefined && telegram !== "") {
+                user.telegram.telegram = telegram;
+            }
+            if (link !== undefined && link !== "") {
+                user.telegram.link = link;
+            }
+            if (additionalInfo !== undefined && additionalInfo !== "") {
+                user.telegram.additionalInfo = additionalInfo;
+            }
+
+            await user.save();
+
+            return res.status(200).json({ message: "Telegram data added/updated successfully", telegram: user.telegram });
+        } catch (error) {
+            console.error("Error adding/updating Telegram data:", error.message);
+            return res.status(500).json({ error: "Something went wrong: " + error.message });
+        }
+    }
+    async deleteTelegramData(req, res) {
+        try {
+            if (!req.user) {
+                return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+            }
+
+            // Find the user by their ID
+            const user = await Users.findById(req.user.id);
+
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+
+            // Set the fields in the telegram object to default empty values
+            user.telegram.postNumber = 0;
+            user.telegram.contactNumber = "";
+            user.telegram.companyName = "";
+            user.telegram.telegram = "";
+            user.telegram.link = "";
+            user.telegram.additionalInfo = "";
+
+            await user.save();
+
+            return res.status(200).json({ message: "Telegram data reset successfully", telegram: user.telegram });
+        } catch (error) {
+            console.error("Error resetting Telegram data:", error.message);
+            return res.status(500).json({ error: "Something went wrong: " + error.message });
+        }
+    }
+    async uploadTelegramImages(req, res) {
+        try {
+            if (!req.user) {
+                return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+            }
+
+            const user = await Users.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+
+            upload(req, res, async (err) => {
+                if (err) {
+                    return handleResponse(res, 400, "error", "Failed to upload images", err.message, 0);
+                }
+
+                if (!req.files || req.files.length === 0) {
+                    return handleResponse(res, 400, "error", "No images uploaded", null, 0);
+                }
+
+                const imageUrls = req.files.map((file) => file.location);
+
+                user.telegram.post.images = user.telegram.post.images.concat(imageUrls);
+                await user.save();
+
+                return handleResponse(res, 200, "success", "Images uploaded successfully", imageUrls, imageUrls.length);
+            });
+        } catch (error) {
+            console.error("Error uploading images:", error.message);
+            return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+        }
+    }
+    async deleteTelegramImages(req, res) {
+        try {
+            if (!req.user) {
+                return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+            }
+
+            const { imageUrls } = req.body;
+
+            if (!imageUrls || !Array.isArray(imageUrls)) {
+                return res.status(400).json({ error: "Invalid image URLs provided" });
+            }
+
+            await deletePostImages(req.user.id, imageUrls);
+
+            return handleResponse(res, 200, "success", "Images deleted successfully", null, 1);
+        } catch (error) {
+            console.error("Error deleting images:", error.message);
+            return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+        }
+    }
+    async deleteSingleTelegramImage(req, res) {
+        try {
+            if (!req.user) {
+                return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+            }
+
+            const { imageUrl } = req.body;
+            console.log("imageUrl: ", imageUrl);
+            if (!imageUrl || typeof imageUrl !== "string") {
+                return res.status(400).json({ error: "Invalid image URL provided" });
+            }
+
+            await deleteSinglePostImage(req.user.id, imageUrl);
+
+            return handleResponse(res, 200, "success", "Image deleted successfully", null, 1);
+        } catch (error) {
+            console.error("Error deleting image:", error.message);
+            return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+        }
+    }
+    // telegram: {
+    //     id: { type: String, required: false },
+    //     channels: [telegramChannelSchema],
+    //     post: {
+    //       selectedImage: { type: Number, default: 0 },
+    //       images: { type: Array, default: [] },
+    //       selectedPost: { type: Number, default: 0 },
+    //     },
+
+    //     contactNumber: { type: String, default: "" },
+    //     companyName: { type: String, default: "" },
+    //     additionalInfo: { type: String, default: "" },
+    //   }
+    async changeSelectedImage(req, res) {
+        try {
+            if (!req.user) {
+                return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+            }
+            const { selectedImage } = req.body;
+            console.log("selectedImage: ", selectedImage);
+            const user = await Users.findById(req.user.id)
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+            user.telegram.post.selectedImage = selectedImage;
+
+            console.log("user.telegram.post.selectedImage: ", user.telegram.post.selectedImage);
+            await user.save();
+            return handleResponse(res, 200, "success", "Selected image changed successfully", user.telegram.post.selectedImage, 1);
+        } catch (error) {
+            console.error("Error changing selected image:", error.message);
+            return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+        }
+    }
+
+    async changeSelectedPost(req, res) {
+        try {
+            if (!req.user) {
+                return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+            }
+            const { selectedPost } = req.body;
+
+            const user = await Users.findById(req.user.id)
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+            user.telegram.post.selectedPost = selectedPost;
+            await user.save();
+            return handleResponse(res, 200, "success", "Selected post changed successfully", user.telegram.post.selectedPost, 1);
+        } catch (error) {
+            console.error("Error changing selected post:", error.message);
+            return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+        }
+    }
+
 }
+
+
 
 module.exports = new TelegramCTRL();

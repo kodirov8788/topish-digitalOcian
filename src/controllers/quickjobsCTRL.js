@@ -41,11 +41,8 @@ class QuickJobsCTRL {
 
       await Users.findByIdAndUpdate(req.user.id, { $inc: { coins: -5 } });
 
-      // Prepare the message for Telegram
-      const message = `New Quick Job Posted:\nTitle: ${jobDetails.title}\nDescription: ${jobDetails.description}\nCreated by: ${user.fullName}`;
-
       // Send message to Telegram channels
-      await sendTelegramChannels(user.telegramChannelIds, message);
+      await sendTelegramChannels(user.telegram, jobDetails);
 
       return handleResponse(res, 201, "success", "Quick Job created successfully", job, 1);
     } catch (error) {

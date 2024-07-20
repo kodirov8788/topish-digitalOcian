@@ -144,8 +144,23 @@ const UsersSchema = new Schema(
       default:
         "https://upload.wikimedia.org/wikipedia/commons/1/1e/Default-avatar.jpg",
     },
-    telegramChannelIds: [telegramChannelSchema],
-    telegramId: { type: String, default: "" },
+    // telegramChannelIds: [telegramChannelSchema],
+    telegram: {
+      id: { type: String, required: false },
+      channels: [telegramChannelSchema],
+      post: {
+        selectedImage: { type: Number, default: 0 },
+        images: { type: Array, default: [] },
+        selectedPost: { type: Number, default: 0 },
+      },
+
+      contactNumber: { type: String, default: "" },
+      companyName: { type: String, default: "" },
+      telegram: { type: String, default: "" },
+      link: { type: String, default: "" },
+      additionalInfo: { type: String, default: "" },
+    },
+    // telegramId: { type: String, default: "" },
     gptToken: { type: String, default: "" },
     gptPrompt: { type: String, default: "" },
     visible: { type: Boolean, default: true },
