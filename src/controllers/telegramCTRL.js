@@ -344,7 +344,7 @@ class TelegramCTRL {
                 name: chatTitle,
                 id: newChatId,
                 available: true,
-                _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
+                // _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
             });
 
             console.log(`Channel info saved: ${chatTitle} (${chatId})`);
