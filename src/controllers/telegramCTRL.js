@@ -279,10 +279,12 @@ class TelegramCTRL {
             console.log("saveChannel - addedByUsername:", addedByUsername);
 
             const user = await Users.findOne({ 'telegram.id': addedById.toString() });
+            console.log("User_1:", user);
             if (!user) {
                 console.error("User not found with telegram id:", addedById);
                 return res.status(404).send("User not found");
             }
+            console.log("User_2:", user);
             const telegramChannel = await TelegramChannel.findOne({ id: newChatId })
             // console.log("telegramChannel:", telegramChannel);
 

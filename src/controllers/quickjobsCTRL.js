@@ -42,7 +42,7 @@ class QuickJobsCTRL {
 
       await Users.findByIdAndUpdate(req.user.id, { $inc: { coins: -5 } });
 
-      const telegramChannel = await TelegramChannel.find({ createdBy: req.user.id })
+      const telegramChannel = await TelegramChannel.find({ createdBy: user._id })
       // Send message to Telegram channels
       await sendTelegramChannels(user.telegram, telegramChannel, jobDetails);
 
