@@ -227,7 +227,8 @@ class TelegramCTRL {
             if (!user) {
                 return handleResponse(res, 404, "error", "User not found with this phone number", null, 0);
             }
-
+            console.log("telegramIdString: ", telegramIdString);
+            console.log("user.telegram.id: ", user.telegram.id);
             // Check if the Telegram ID is already added for the user
             if (user.telegram.id === telegramIdString) {
                 bot.sendMessage(user.telegram.id, "Bu telegram oldin ro'yxatdan o'tgan, iltimos boshqa telegramni ulang yoki admin bilan bog'laning");
