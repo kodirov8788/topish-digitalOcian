@@ -7,7 +7,6 @@ const telegramChannelSchema = new Schema({
   id: { type: String, required: true },
   link: { type: String, required: false },
   available: { type: Boolean, default: true },
-
 });
 
 const refreshSchema = new Schema({
