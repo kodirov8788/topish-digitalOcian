@@ -62,9 +62,9 @@ const addTelegram = async (msg, phoneNumber) => {
         } else if (error.response && error.response.status === 400) {
             bot.sendMessage(msg.chat.id, 'Telegram ID does not match.');
         } else if (error.response && error.response.status === 406) {
-            bot.sendMessage(user.telegram.id, "Bu telegram oldin ro'yxatdan o'tgan, iltimos boshqa telegramni ulang yoki admin bilan bog'laning");
+            bot.sendMessage(user.telegram.id, 'Bu telegram oldin ro\'yxatdan o\'tgan, iltimos boshqa telegramni ulang yoki admin bilan bog\'laning');
         } else if (error.response && error.response.status === 407) {
-            bot.sendMessage(user.telegram.id, "Bu telefon raqam oldin ro'yxatdan o'tgan, iltimos boshqa raqamni ulang yoki admin bilan bog'laning");
+            bot.sendMessage(user.telegram.id, 'Bu telefon raqam oldin ro\'yxatdan o\'tgan, iltimos boshqa raqamni ulang yoki admin bilan bog\'laning');
         } else {
             bot.sendMessage(msg.chat.id, 'There was an error adding the Telegram ID. Please contact the administrator.');
         }
