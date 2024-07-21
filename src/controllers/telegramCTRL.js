@@ -88,8 +88,13 @@ class TelegramCTRL {
             if (user.role !== "Employer") {
                 return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
             }
+            const channels = await TelegramChannel.find({ createdBy: user._id });
 
-            return handleResponse(res, 200, "success", "Telegram channels fetched successfully", user.telegram.channels, user.telegram.channels.length);
+            if (channels.length === 0) {
+                return handleResponse(res, 200, "success", "No channels found", null, 0);
+            }
+
+            return handleResponse(res, 200, "success", "Telegram channels fetched successfully", channels, channels.length);
         } catch (error) {
             return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
         }
@@ -112,19 +117,14 @@ class TelegramCTRL {
                 return handleResponse(res, 400, "error", "Channel ID is required", null, 0);
             }
 
-            // Find the channel to be deleted
-            const channel = user.telegram.channels.find(channel => channel._id.toString() === id);
+            const channel = await TelegramChannel.deleteOne({
+                _id: id,
+                createdBy: user._id
+            });
 
             if (!channel) {
                 return handleResponse(res, 404, "error", "Channel not found", null, 0);
             }
-
-            // Remove the channel from the array
-            user.telegram.channels = user.telegram.channels.filter(channel => channel._id.toString() !== id);
-
-            // console.log("user.telegram.channels: ", user.telegram.channels);
-
-            await user.save();
 
             return handleResponse(res, 200, "success", "Telegram channel deleted successfully", null, 1);
         } catch (error) {
@@ -159,7 +159,10 @@ class TelegramCTRL {
             const { name, link, available } = value;
 
             // Find the channel to be updated
-            const channel = user.telegram.channels.find(channel => channel._id.toString() === id);
+            const channel = await TelegramChannel.findOne({
+                _id: id,
+                createdBy: user._id
+            });
 
             if (!channel) {
                 return handleResponse(res, 404, "error", "Channel not found", null, 0);
@@ -170,8 +173,7 @@ class TelegramCTRL {
             if (link !== undefined) channel.link = link;
             if (available !== undefined) channel.available = available;
 
-            await user.save();
-
+            await channel.save();
             return handleResponse(res, 200, "success", "Telegram channel updated successfully", channel, 1);
         } catch (error) {
             return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
@@ -281,10 +283,10 @@ class TelegramCTRL {
                 console.error("User not found with telegram id:", addedById);
                 return res.status(404).send("User not found");
             }
+            const telegramChannel = TelegramChannel.findOne({ id: newChatId })
 
-            if (user.telegram.channels.some(channel => channel.id === newChatId)) {
-                console.log("Channel already exists with id:", newChatId);
-                return res.status(400).send("Channel already exists");
+            if (telegramChannel) {
+                return hubdleResponse(res, 400, "error", "Channel already exists", null, 0);
             }
 
             // user.telegram.channels.push({
@@ -325,21 +327,19 @@ class TelegramCTRL {
             if (!chatId) {
                 return res.status(400).send("chatId is required");
             }
-            let user = await Users.findOne({ 'telegram.channels.id': chatId.toString() });
-            if (!user) {
-                return res.status(404).send("User not found");
-            }
-            let channel = user.telegram.channels.find(channel => channel.id === chatId.toString());
+
+            const channel = await TelegramChannel.findOneAndDelete({ id: chatId });
             if (!channel) {
                 return res.status(404).send("Channel not found");
             }
-            user.telegram.channels = user.telegram.channels.filter(channel => channel.id !== chatId.toString());
-            await user.save();
+            const user = await Users.findById(channel.createdBy);
+            if (!user) {
+                return res.status(404).send("User not found");
+            }
             console.log(`Channel info removed: ${chatId}`);
             io.emit('telegramChannelRemoved', chatId);
             bot.sendMessage(user.telegram.id, `I have been removed from ${channel.name}`);
             return res.status(200).send("OK");
-
         } catch (error) {
             console.error("Error removing channel info:", error.message);
             res.status(500).send("Internal Server Error");
