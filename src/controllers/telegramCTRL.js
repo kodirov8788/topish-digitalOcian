@@ -268,18 +268,23 @@ class TelegramCTRL {
         const io = getIO();
         try {
             const { chatId, chatTitle, addedById, addedByUsername } = req.body;
-            // let user = await Users.findOne({ telegram.id: addedById });
-            let user = await Users.findOne({ 'telegram.id': addedById.toString() });
-            let newChatId = chatId.toString();
-            console.log("saveChannel newChatId: ", newChatId);
+            const newChatId = chatId.toString();
+
+            console.log("saveChannel - chatId:", chatId);
+            console.log("saveChannel - chatTitle:", chatTitle);
+            console.log("saveChannel - addedById:", addedById);
+            console.log("saveChannel - addedByUsername:", addedByUsername);
+
+            const user = await Users.findOne({ 'telegram.id': addedById.toString() });
             if (!user) {
+                console.error("User not found with telegram id:", addedById);
                 return res.status(404).send("User not found");
             }
+
             if (user.telegram.channels.some(channel => channel.id === newChatId)) {
-                console.log("Channel already exists");
+                console.log("Channel already exists with id:", newChatId);
                 return res.status(400).send("Channel already exists");
             }
-            console.log("saveChannel second");
 
             user.telegram.channels.push({
                 name: chatTitle,
@@ -287,24 +292,17 @@ class TelegramCTRL {
                 available: true
             });
 
-            let savedUser = await user.save();
-            console.log("savedUser: ", savedUser);
-            //   give saved user info like {
-            //     name: chatTitle,
-            //     id: newChatId,
-            //     available: true
-            // }
-            // add _id to the saved user's telegram.channels last added channel 
-            io.emit('telegramChannelAdded',
-                {
-                    name: chatTitle,
-                    id: newChatId,
-                    available: true,
-                    _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
-                }
-            );
+            const savedUser = await user.save();
+            console.log("Saved user channels:", savedUser.telegram.channels);
 
-            // console.log(`Channel info saved: ${chatTitle} (${chatId})`);
+            io.emit('telegramChannelAdded', {
+                name: chatTitle,
+                id: newChatId,
+                available: true,
+                _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
+            });
+
+            console.log(`Channel info saved: ${chatTitle} (${chatId})`);
             res.status(200).send("OK");
         } catch (error) {
             console.error("Error saving channel info:", error.message);
