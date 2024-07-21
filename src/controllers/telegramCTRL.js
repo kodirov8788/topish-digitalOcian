@@ -279,7 +279,7 @@ class TelegramCTRL {
                 console.log("Channel already exists");
                 return res.status(400).send("Channel already exists");
             }
-            console.log("saveChannel second: ");
+            console.log("saveChannel second");
 
             user.telegram.channels.push({
                 name: chatTitle,
@@ -288,7 +288,7 @@ class TelegramCTRL {
             });
 
             let savedUser = await user.save();
-
+            console.log("savedUser: ", savedUser);
             //   give saved user info like {
             //     name: chatTitle,
             //     id: newChatId,
