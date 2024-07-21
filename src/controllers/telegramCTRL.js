@@ -285,14 +285,14 @@ class TelegramCTRL {
                 return res.status(404).send("User not found");
             }
             console.log("User_2:", user);
-            const telegramChannel = await TelegramChannel.findOne({ id: newChatId })
-            // console.log("telegramChannel:", telegramChannel);
+            const telegramChannel = await TelegramChannel.findOne({ id: newChatId, createdBy: user._id });
+            console.log("telegramChannel:", telegramChannel);
 
             if (telegramChannel) {
                 return handleResponse(res, 400, "error", "Channel already exists", null, 0);
             }
 
-            // console.log("telegramChannel 2:", telegramChannel);
+            console.log("telegramChannel 2:", telegramChannel);
             // user.telegram.channels.push({
             //     name: chatTitle,
             //     id: newChatId,
@@ -307,7 +307,7 @@ class TelegramCTRL {
 
 
             // const savedUser = await user.save();
-            // console.log("Saved user channels:", savedUser.telegram.channels);
+            console.log("Saved channel:", saveTelegramChannel);
             await saveTelegramChannel.save();
             io.emit('telegramChannelAdded', {
                 name: chatTitle,
