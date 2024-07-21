@@ -1,5 +1,6 @@
 const bot = require("../../bot");
 const Users = require("../models/user_model");
+const TelegramChannel = require("../models/telegram_channel_modal");
 const { handleResponse } = require("../utils/handleResponse");
 const Joi = require("joi");
 const { getIO } = require('../socket/Socket');
@@ -264,51 +265,6 @@ class TelegramCTRL {
             return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
         }
     }
-    // async saveChannel(req, res) {
-    //     const io = getIO();
-    //     try {
-    //         const { chatId, chatTitle, addedById, addedByUsername } = req.body;
-    //         const newChatId = chatId.toString();
-
-    //         console.log("saveChannel - chatId:", chatId);
-    //         console.log("saveChannel - chatTitle:", chatTitle);
-    //         console.log("saveChannel - addedById:", addedById);
-    //         console.log("saveChannel - addedByUsername:", addedByUsername);
-
-    //         const user = await Users.findOne({ 'telegram.id': addedById.toString() });
-    //         if (!user) {
-    //             console.error("User not found with telegram id:", addedById);
-    //             return res.status(404).send("User not found");
-    //         }
-
-    //         if (user.telegram.channels.some(channel => channel.id === newChatId)) {
-    //             console.log("Channel already exists with id:", newChatId);
-    //             return res.status(400).send("Channel already exists");
-    //         }
-
-    //         user.telegram.channels.push({
-    //             name: chatTitle,
-    //             id: newChatId,
-    //             available: true
-    //         });
-
-    //         const savedUser = await user.save();
-    //         console.log("Saved user channels:", savedUser.telegram.channels);
-
-    //         io.emit('telegramChannelAdded', {
-    //             name: chatTitle,
-    //             id: newChatId,
-    //             available: true,
-    //             _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
-    //         });
-
-    //         console.log(`Channel info saved: ${chatTitle} (${chatId})`);
-    //         res.status(200).send("OK");
-    //     } catch (error) {
-    //         console.error("Error saving channel info:", error.message);
-    //         res.status(500).send("Internal Server Error");
-    //     }
-    // }
     async saveChannel(req, res) {
         const io = getIO();
         try {
@@ -331,23 +287,30 @@ class TelegramCTRL {
                 return res.status(400).send("Channel already exists");
             }
 
-            user.telegram.channels.push({
+            // user.telegram.channels.push({
+            //     name: chatTitle,
+            //     id: newChatId,
+            //     available: true
+            // });
+            const saveTelegramChannel = new TelegramChannel({
                 name: chatTitle,
                 id: newChatId,
-                available: true
-            });
+                available: true,
+                createdBy: user._id,
+            })
 
-            const savedUser = await user.save();
-            console.log("Saved user channels:", savedUser.telegram.channels);
 
+            // const savedUser = await user.save();
+            // console.log("Saved user channels:", savedUser.telegram.channels);
+            saveTelegramChannel.save();
             io.emit('telegramChannelAdded', {
                 name: chatTitle,
                 id: newChatId,
                 available: true,
-                // _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
+                _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
             });
 
-            console.log(`Channel info saved: ${chatTitle} (${chatId})`);
+            console.log(`Channel info saved: ${chatTitle} - (${saveTelegramChannel})`);
             res.status(200).send("OK");
         } catch (error) {
             console.error("Error saving channel info:", error.message);
