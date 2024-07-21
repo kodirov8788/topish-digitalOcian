@@ -10,7 +10,7 @@ async function sendTelegramChannels(telegram, message) {
         console.error("Telegram bot token is required");
         return;
     }
-
+    console.log("telegram.channels: ", telegram.channels);
     if (!telegram.channels || telegram.channels.length === 0) {
         console.error("No channels to send message to");
         return;

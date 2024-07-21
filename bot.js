@@ -50,6 +50,7 @@ const addTelegram = async (msg, phoneNumber) => {
     phoneNumber = `+998${phoneNumber}`;
 
     try {
+        // console.log("phoneNumber: ", phoneNumber);
         const response = await axios.post(`${URL}telegram/add-telegram-id`, { phoneNumber, telegramId });
         bot.sendMessage(msg.chat.id, response.data.message);
     } catch (error) {
