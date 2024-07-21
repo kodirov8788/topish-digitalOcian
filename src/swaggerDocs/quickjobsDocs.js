@@ -65,6 +65,11 @@ const QuickjobsEndpoint = {
                   default: false,
                   example: false,
                 },
+                telegramOnly: {
+                  type: "boolean",
+                  default: false,
+                  example: false,
+                },
               },
               required: ["title", "location"],
             },

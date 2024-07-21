@@ -319,6 +319,16 @@ const QuickjobsSchema = {
         },
         example: ["5f8d0d55b54764421b7156fb", "5f8d0d55b54764421b7156fd"],
       },
+      callOnly: {
+        type: "boolean",
+        default: false,
+        example: false,
+      },
+      telegramOnly: {
+        type: "boolean",
+        default: false,
+        example: false,
+      },
     },
   },
 };
