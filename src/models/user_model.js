@@ -2,13 +2,6 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Schema = mongoose.Schema;
 
-const telegramChannelSchema = new Schema({
-  name: { type: String, required: true },
-  id: { type: String, required: true },
-  link: { type: String, required: false },
-  available: { type: Boolean, default: true },
-}, _id = false);
-
 const refreshSchema = new Schema({
   token: { type: String, required: true },
   deviceId: { type: String, required: false },
@@ -146,7 +139,14 @@ const UsersSchema = new Schema(
     // telegramChannelIds: [telegramChannelSchema],
     telegram: {
       id: { type: String, required: false },
-      channels: [telegramChannelSchema],
+      channels: [
+        {
+          name: { type: String, required: false },
+          id: { type: String, required: false },
+          link: { type: String, required: false },
+          available: { type: Boolean, default: true },
+        }
+      ],
       post: {
         selectedImage: { type: Number, default: 0 },
         images: { type: Array, default: [] },
