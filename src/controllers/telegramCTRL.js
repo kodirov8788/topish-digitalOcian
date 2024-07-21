@@ -216,35 +216,39 @@ class TelegramCTRL {
     async addTelegramId(req, res) {
         let io = getIO();
         const { phoneNumber, telegramId } = req.body;
-        console.log("phoneNumber: ", phoneNumber);
-        console.log("telegramId: ", telegramId);
+        // console.log("phoneNumber: ", phoneNumber); 
+        // console.log("telegramId: ", telegramId);
         const telegramIdString = telegramId.toString();
+
         try {
+            // Find the user by phone number
             const user = await Users.findOne({ phoneNumber });
 
             if (!user) {
-                return res.status(404).json({ error: "User not found with this phone number" });
-            }
-            console.log("user: ", user.telegram.id);
-            // if (user.telegram.id === telegramIdString) {
-            //     return res.status(200).json({ message: "Telegram ID already added" });
-            // }
-
-            if (user.telegram.id && user.telegram.id !== telegramIdString) {
-                return res.status(400).json({ error: "Telegram ID does not match" });
+                return handleResponse(res, 404, "error", "User not found with this phone number", null, 0);
             }
 
+            // Check if the Telegram ID is already added for the user
+            if (user.telegram.id === telegramIdString) {
+                bot.sendMessage(user.telegram.id, "Bu telegram oldin ro'yxatdan o'tgan, iltimos boshqa telegramni ulang yoki admin bilan bog'laning");
+                return handleResponse(res, 200, "success", "Telegram ID already added", null, 0);
+            }
+
+            // Update the user's Telegram ID
             user.telegram.id = telegramIdString;
             await user.save();
-            io.emit('telegramIdAdded', { telegramId: telegramIdString });
 
-            return res.status(200).json({ message: "Telegram ID added successfully" });
+            // Emit the event to notify other parts of the application
+            io.emit('telegramIdAdded', { telegramId: telegramIdString });
+            bot.sendMessage(user.telegram.id, "Telegram ID muvaffaqiyatli qo'shildi");
+            return handleResponse(res, 200, "success", "Telegram ID added successfully", null, 1);
 
         } catch (error) {
             console.error("Error adding Telegram ID:", error.message);
-            return res.status(500).json({ error: "Something went wrong: " + error.message });
+            return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
         }
     }
+
     async removeTelegramId(req, res) {
         // console.log("remove telegram id")
         let io = getIO();
