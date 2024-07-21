@@ -55,14 +55,9 @@ const addTelegram = async (msg, phoneNumber) => {
         bot.sendMessage(msg.chat.id, response.data.message);
     } catch (error) {
         console.error('Error adding Telegram ID:', error.message);
-
         // Handling different error statuses
         if (error.response && error.response.status === 404) {
             bot.sendMessage(msg.chat.id, 'User not found with this phone number.');
-        } else if (error.response && error.response.status === 400) {
-            bot.sendMessage(msg.chat.id, 'Telegram ID does not match.');
-        } else {
-            bot.sendMessage(msg.chat.id, 'Something went wrong: ' + error.message);
         }
     }
 };

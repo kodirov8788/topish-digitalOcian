@@ -236,6 +236,7 @@ class TelegramCTRL {
             const isTelegramIdAdded = await Users.findOne({ 'telegram.id': telegramIdString });
 
             if (isTelegramIdAdded) {
+                bot.sendMessage(user.telegram.id, "bu telegram ID boshqa foydalanuvchi tomonidan qo'shilgan, iltimos boshqa telegramni ulang yoki admin bilan bog'laning");
                 return handleResponse(res, 400, "error", "Telegram ID already added by another user", null, 0);
             }
             // Update the user's Telegram ID
