@@ -1,7 +1,7 @@
 const bot = require('../../bot');
 const { Form_0_uz, Form_1_uz } = require('./telegramForm');
 
-async function sendTelegramChannels(telegram, message) {
+async function sendTelegramChannels(telegram, telegramChannel, message) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     // console.log("botToken: ", botToken);
     // console.log("channels: ", channels);
@@ -10,15 +10,15 @@ async function sendTelegramChannels(telegram, message) {
         console.error("Telegram bot token is required");
         return;
     }
-    console.log("telegram.channels: ", telegram.channels);
-    if (!telegram.channels || telegram.channels.length === 0) {
+    console.log("telegram.channels: ", telegramChannel);
+    if (!telegramChannel || telegramChannel.length === 0) {
         console.error("No channels to send message to");
         return;
     }
 
 
     // console.log("Form_1(message): ", Form_1(message));
-    for (const channel of telegram.channels) {
+    for (const channel of telegramChannel) {
         try {
 
             if (channel.available) {

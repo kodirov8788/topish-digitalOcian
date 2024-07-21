@@ -1,5 +1,6 @@
 const Company = require("../models/company_model");
 const QuickJobs = require("../models/quickjob_model");
+const TelegramChannel = require("../models/telegram_channel_modal");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const { sendTelegramChannels } = require("../utils/sendingTelegram");
@@ -41,8 +42,9 @@ class QuickJobsCTRL {
 
       await Users.findByIdAndUpdate(req.user.id, { $inc: { coins: -5 } });
 
+      const telegramChannel = await TelegramChannel.find({ createdBy: req.user.id })
       // Send message to Telegram channels
-      await sendTelegramChannels(user.telegram, jobDetails);
+      await sendTelegramChannels(user.telegram, telegramChannel, jobDetails);
 
       return handleResponse(res, 201, "success", "Quick Job created successfully", job, 1);
     } catch (error) {
