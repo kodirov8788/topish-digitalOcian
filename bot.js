@@ -80,12 +80,13 @@ bot.on('my_chat_member', async (msg) => {
         const chat = msg.chat;
         const newChatMember = msg.new_chat_member;
 
-        // console.log("botId: ", botId);
-        // console.log("newChatMember: ", newChatMember.user.id);
+        console.log("botId: ", botId);
+        console.log("newChatMember: ", newChatMember.user.id);
 
         if (newChatMember.user.id === botId) {
             if (newChatMember.status === 'administrator') {
                 // Bot added as admin to a channel
+                console.log('Bot added as admin to a channel');
                 const chatInfo = await bot.getChat(chat.id);
                 const chatDetails = {
                     chatId: chat.id,
@@ -103,7 +104,7 @@ bot.on('my_chat_member', async (msg) => {
 
                 try {
                     let response = await axios.post(`${URL}telegram/save-channel`, chatDetails);
-                    // console.log("response: ", response.data);
+                    console.log("response: ", response.data);
 
                     bot.sendMessage(chatDetails.addedById, `I have been added as an admin to ${chatDetails.chatTitle} by ${chatDetails.addedByUsername}`);
                 } catch (axiosError) {

@@ -271,15 +271,15 @@ class TelegramCTRL {
             // let user = await Users.findOne({ telegram.id: addedById });
             let user = await Users.findOne({ 'telegram.id': addedById.toString() });
             let newChatId = chatId.toString();
-
+            console.log("saveChannel newChatId: ", newChatId);
             if (!user) {
                 return res.status(404).send("User not found");
             }
-
             if (user.telegram.channels.some(channel => channel.id === newChatId)) {
                 console.log("Channel already exists");
                 return res.status(400).send("Channel already exists");
             }
+            console.log("saveChannel second: ");
 
             user.telegram.channels.push({
                 name: chatTitle,
