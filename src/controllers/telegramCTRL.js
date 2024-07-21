@@ -230,14 +230,14 @@ class TelegramCTRL {
             // Check if the Telegram ID is already added for the user
             if (user.telegram.id === telegramIdString) {
                 bot.sendMessage(user.telegram.id, "Bu telegram oldin ro'yxatdan o'tgan, iltimos boshqa telegramni ulang yoki admin bilan bog'laning");
-                return handleResponse(res, 400, "error", "Telegram ID already added", null, 0);
+                return handleResponse(res, 406, "error", "Telegram ID already added", null, 0);
             }
 
             const isTelegramIdAdded = await Users.findOne({ 'telegram.id': telegramIdString });
 
             if (isTelegramIdAdded) {
                 bot.sendMessage(user.telegram.id, "bu telegram ID boshqa foydalanuvchi tomonidan qo'shilgan, iltimos boshqa telegramni ulang yoki admin bilan bog'laning");
-                return handleResponse(res, 400, "error", "Telegram ID already added by another user", null, 0);
+                return handleResponse(res, 407, "error", "Telegram ID already added by another user", null, 0);
             }
             // Update the user's Telegram ID
             user.telegram.id = telegramIdString;
