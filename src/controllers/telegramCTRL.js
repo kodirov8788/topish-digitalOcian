@@ -283,18 +283,20 @@ class TelegramCTRL {
                 console.error("User not found with telegram id:", addedById);
                 return res.status(404).send("User not found");
             }
-            const telegramChannel = TelegramChannel.findOne({ id: newChatId })
+            const telegramChannel = await TelegramChannel.findOne({ id: newChatId })
+            // console.log("telegramChannel:", telegramChannel);
 
             if (telegramChannel) {
-                return hubdleResponse(res, 400, "error", "Channel already exists", null, 0);
+                return handleResponse(res, 400, "error", "Channel already exists", null, 0);
             }
 
+            // console.log("telegramChannel 2:", telegramChannel);
             // user.telegram.channels.push({
             //     name: chatTitle,
             //     id: newChatId,
             //     available: true
             // });
-            const saveTelegramChannel = new TelegramChannel({
+            const saveTelegramChannel = await new TelegramChannel({
                 name: chatTitle,
                 id: newChatId,
                 available: true,
@@ -304,12 +306,12 @@ class TelegramCTRL {
 
             // const savedUser = await user.save();
             // console.log("Saved user channels:", savedUser.telegram.channels);
-            saveTelegramChannel.save();
+            await saveTelegramChannel.save();
             io.emit('telegramChannelAdded', {
                 name: chatTitle,
                 id: newChatId,
                 available: true,
-                // _id: savedUser.telegram.channels[savedUser.telegram.channels.length - 1]._id
+                // _id: saveTelegramChannel[saveTelegramChannel.length - 1]._id
             });
 
             console.log(`Channel info saved: ${chatTitle} - (${saveTelegramChannel})`);
@@ -489,19 +491,6 @@ class TelegramCTRL {
             return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
         }
     }
-    // telegram: {
-    //     id: { type: String, required: false },
-    //     channels: [telegramChannelSchema],
-    //     post: {
-    //       selectedImage: { type: Number, default: 0 },
-    //       images: { type: Array, default: [] },
-    //       selectedPost: { type: Number, default: 0 },
-    //     },
-
-    //     contactNumber: { type: String, default: "" },
-    //     companyName: { type: String, default: "" },
-    //     additionalInfo: { type: String, default: "" },
-    //   }
     async changeSelectedImage(req, res) {
         try {
             if (!req.user) {
@@ -523,7 +512,6 @@ class TelegramCTRL {
             return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
         }
     }
-
     async changeSelectedPost(req, res) {
         try {
             if (!req.user) {

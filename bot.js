@@ -128,47 +128,47 @@ bot.on('my_chat_member', async (msg) => {
         bot.sendMessage(msg.from.id, 'There was an error with the bot. Please contact the administrator.');
     }
 });
-bot.onText(/\/register(:\d+)?/, async (msg, match) => {
-    console.log('Received /register command');
-    const telegramId = msg.from.id;
-    const number = match[1] ? match[1].slice(1) : null; // Extract the number if provided
+// bot.onText(/\/register(:\d+)?/, async (msg, match) => {
+//     console.log('Received /register command');
+//     const telegramId = msg.from.id;
+//     const number = match[1] ? match[1].slice(1) : null; // Extract the number if provided
 
-    // try {
-    //     // Check if the user is already registered
-    //     const userResponse = await axios.post(`auth/check-user`, { telegramId });
+//     // try {
+//     //     // Check if the user is already registered
+//     //     const userResponse = await axios.post(`auth/check-user`, { telegramId });
 
-    //     if (userResponse.data.isRegistered) {
-    //         bot.sendMessage(msg.chat.id, 'You are already registered. Please use /login to login.');
-    //     } else {
-    //         // User is not registered, proceed with registration
-    //         await axios.post(`auth/register-telegram`, { telegramId, number });
-    //         bot.sendMessage(msg.chat.id, 'Welcome! Please check your Telegram for the registration confirmation code.');
-    //     }
-    // } catch (error) {
-    //     console.error('Error handling Telegram registration:', error);
-    //     bot.sendMessage(msg.chat.id, 'There was an error with your registration.');
-    // }
-});
-// /login command
-bot.onText(/\/login/, async (msg) => {
-    console.log('Received /login command');
-    const telegramId = msg.from.id;
+//     //     if (userResponse.data.isRegistered) {
+//     //         bot.sendMessage(msg.chat.id, 'You are already registered. Please use /login to login.');
+//     //     } else {
+//     //         // User is not registered, proceed with registration
+//     //         await axios.post(`auth/register-telegram`, { telegramId, number });
+//     //         bot.sendMessage(msg.chat.id, 'Welcome! Please check your Telegram for the registration confirmation code.');
+//     //     }
+//     // } catch (error) {
+//     //     console.error('Error handling Telegram registration:', error);
+//     //     bot.sendMessage(msg.chat.id, 'There was an error with your registration.');
+//     // }
+// });
+// // /login command
+// bot.onText(/\/login/, async (msg) => {
+//     console.log('Received /login command');
+//     const telegramId = msg.from.id;
 
-    try {
-        // Check if the user is already registered
-        const userResponse = await axios.post(`${URL}auth/check-user`, { telegramId });
+//     try {
+//         // Check if the user is already registered
+//         const userResponse = await axios.post(`${URL}auth/check-user`, { telegramId });
 
-        if (userResponse.data.isRegistered) {
-            // User is registered, send login code
-            await axios.post(`auth/login-telegram`, { telegramId });
-            bot.sendMessage(msg.chat.id, 'Welcome back! Please check your Telegram for the login confirmation code.');
-        } else {
-            bot.sendMessage(msg.chat.id, 'You are not registered yet. Please use /register to register.');
-        }
-    } catch (error) {
-        console.error('Error handling Telegram login:', error);
-        bot.sendMessage(msg.chat.id, 'There was an error with your login.');
-    }
-});
+//         if (userResponse.data.isRegistered) {
+//             // User is registered, send login code
+//             await axios.post(`auth/login-telegram`, { telegramId });
+//             bot.sendMessage(msg.chat.id, 'Welcome back! Please check your Telegram for the login confirmation code.');
+//         } else {
+//             bot.sendMessage(msg.chat.id, 'You are not registered yet. Please use /register to register.');
+//         }
+//     } catch (error) {
+//         console.error('Error handling Telegram login:', error);
+//         bot.sendMessage(msg.chat.id, 'There was an error with your login.');
+//     }
+// });
 
 module.exports = bot;
