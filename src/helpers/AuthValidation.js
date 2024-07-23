@@ -1,7 +1,7 @@
 const Joi = require('joi');
 //  phoneNumber, confirmationCode, deviceId, deviceName, region, os, browser, ip 
 const userValidationSchema = Joi.object({
-    phoneNumber: Joi.string().pattern(/^\d{9}$/).required(),
+    phoneNumber: Joi.string().required(),
     role: Joi.string().valid('JobSeeker', 'Employer', 'Service', 'Admin').required(),
     mobileToken: Joi.string().min(1).required(),
     deviceId: Joi.string().allow("", null),

@@ -22,7 +22,7 @@ const AuthEndpoints = {
                   type: "string",
                   description: "User's phone number",
                   example: "996730970",
-                  pattern: "^[0-9]+$",
+
                 },
                 role: {
                   type: "string",
@@ -334,7 +334,6 @@ const AuthEndpoints = {
                   type: "string",
                   description: "User's phone number",
                   example: "996730970",
-                  pattern: "^[0-9]+$",
                 },
               },
             },

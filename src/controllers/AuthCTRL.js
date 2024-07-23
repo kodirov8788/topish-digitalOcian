@@ -22,7 +22,14 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", error.details[0].message);
       }
       const { phoneNumber, role, mobileToken } = req.body;
-      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+
+      let phoneNumberWithCountryCode = null
+
+      if (!phoneNumber.includes("+")) {
+        phoneNumberWithCountryCode = `${'+998' + phoneNumber}`;
+      } else {
+        phoneNumberWithCountryCode = phoneNumber;
+      }
       let existingUser = await Users.findOne({ phoneNumber: phoneNumberWithCountryCode });
 
       if (existingUser) {
@@ -71,15 +78,20 @@ class AuthCTRL {
   async confirmRegisterCode(req, res) {
     try {
 
-
-      const { phoneNumber, confirmationCode, mobileToken, deviceId, deviceName, region, os, browser, ip } = req.body;
+      const { phoneNumber, confirmationCode, deviceId, deviceName, region, os, browser, ip } = req.body;
 
       if (!phoneNumber || !confirmationCode) {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
       }
       let user = null;
 
-      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      let phoneNumberWithCountryCode = null
+
+      if (!phoneNumber.includes("+")) {
+        phoneNumberWithCountryCode = `${'+998' + phoneNumber}`;
+      } else {
+        phoneNumberWithCountryCode = phoneNumber;
+      }
       user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
         confirmationCode,
@@ -145,7 +157,13 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "Phone number is required", null, 0);
       }
 
-      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      let phoneNumberWithCountryCode = null
+
+      if (!phoneNumber.includes("+")) {
+        phoneNumberWithCountryCode = `${'+998' + phoneNumber}`;
+      } else {
+        phoneNumberWithCountryCode = phoneNumber;
+      }
       const user = await Users.findOne({ phoneNumber: phoneNumberWithCountryCode });
 
       if (!user) {
@@ -190,7 +208,13 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "Phone number is required", null, 0);
       }
 
-      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      let phoneNumberWithCountryCode = null
+
+      if (!phoneNumber.includes("+")) {
+        phoneNumberWithCountryCode = `${'+998' + phoneNumber}`;
+      } else {
+        phoneNumberWithCountryCode = phoneNumber;
+      }
       let user = await Users.findOne({ phoneNumber: phoneNumberWithCountryCode });
 
       if (!user) {
@@ -234,7 +258,13 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
       }
 
-      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      let phoneNumberWithCountryCode = null
+
+      if (!phoneNumber.includes("+")) {
+        phoneNumberWithCountryCode = `${'+998' + phoneNumber}`;
+      } else {
+        phoneNumberWithCountryCode = phoneNumber;
+      }
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
         confirmationCode,
@@ -447,7 +477,7 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "Phone number is required", null, 0);
       }
 
-      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      const phoneNumberWithCountryCode = phoneNumber;
       const user = await Users.findOne({ phoneNumber: phoneNumberWithCountryCode });
 
       if (!user) {
@@ -489,7 +519,7 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "Phone number and confirmation code are required", null, 0);
       }
 
-      const phoneNumberWithCountryCode = `+998${phoneNumber}`;
+      const phoneNumberWithCountryCode = phoneNumber;
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
         confirmationCode,
