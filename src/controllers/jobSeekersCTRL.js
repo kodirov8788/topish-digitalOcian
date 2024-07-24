@@ -736,7 +736,7 @@ class JobSeekerCTRL {
     }
 
     // Normalize the fullName by removing spaces and converting to lowercase
-    fullname = fullname.replace(/\s+/g, "").toLowerCase();
+    const fullname = fullName.replace(/\s+/g, "").toLowerCase();
     try {
       // Create a case-insensitive regex pattern to match the normalized fullName
       // The \s* between each character allows for any number of spaces to appear between letters

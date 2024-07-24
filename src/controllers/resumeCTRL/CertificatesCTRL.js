@@ -86,16 +86,16 @@ class Certificates {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      if (!user.resume || !user.resume.certificates) {
-        return handleResponse(
-          res,
-          404,
-          "error",
-          "Certificates not found",
-          null,
-          0
-        );
-      }
+      // if (!user.resume || !user.resume.certificates) {
+      //   return handleResponse(
+      //     res,
+      //     404,
+      //     "error",
+      //     "Certificates not found",
+      //     null,
+      //     0
+      //   );
+      // }
 
       return handleResponse(
         res,

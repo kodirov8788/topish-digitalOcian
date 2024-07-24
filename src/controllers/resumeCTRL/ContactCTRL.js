@@ -7,10 +7,7 @@ function validateEmail(email) {
   return re.test(email);
 }
 
-function validatePhone(phone) {
-  const re = /^\d{9}$/; // Adjust the regex based on your phone number format
-  return re.test(phone);
-}
+
 
 class Contact {
   async addContact(req, res) {
@@ -30,7 +27,7 @@ class Contact {
         0
       );
     }
-    if (!phone || !validatePhone(phone)) {
+    if (!phone) {
       return handleResponse(
         res,
         400,

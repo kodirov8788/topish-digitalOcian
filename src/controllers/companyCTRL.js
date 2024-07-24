@@ -303,6 +303,7 @@ class CompanyCTRL {
   }
 
   async updateCompany(req, res) {
+    // console.log("req.body: ", req.body);
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
@@ -310,6 +311,7 @@ class CompanyCTRL {
 
       const allowedRoles = ["Admin", "Employer"];
       const user = await Users.findOne({ _id: req.user.id });
+      console.log("user: ", user);
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,

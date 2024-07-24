@@ -45,7 +45,11 @@ class ReportUserCTRL {
       reportData.reportedBy = req.user.id;
       // ReportUserModel is the model for the report
       const report = new ReportUserModel({
-        ...reportData,
+        reportedUserId: reportData.reportedUserId,
+        reportReason: reportData.reportReason,
+        details: reportData.details,
+        reportedBy: reportData.reportedBy,
+        jobPostId: reportData.jobPostId ? reportData.jobPostId : null,
       });
       // create a new report
       const user = await Users.findById(reportedUserId);

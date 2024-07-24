@@ -728,83 +728,33 @@ class JobsCTRL {
   }
   async getRecommendedJobs(req, res) {
     try {
-      // if (!req.user) {
-      //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      // }
-
-      const { recommended, page = 1, limit = 10 } = req.query;
+      const { recommended = "true", page = 1, limit = 10 } = req.query;
       let queryObject = {};
-
-      if (recommended) {
-        queryObject.recommended = recommended === "true";
-      }
-      if (salary) {
-        queryObject.salary = salary; // Assuming salary is a simple value for now
-      }
-      if (title) {
-        queryObject.title = { $regex: title, $options: "i" };
+      if (recommended === "true") {
+        queryObject.recommended = true;
       }
 
-      // Numeric Filters
-      if (numericFilters) {
-        const operatorMap = {
-          ">": "$gt",
-          ">=": "$gte",
-          "=": "$eq",
-          "<": "$lt",
-          "<=": "$lte",
-        };
-        const regEx = /\b(<|>|>=|=|<|<=)\b/g;
-        let filters = numericFilters.replace(
-          regEx,
-          (match) => `-${operatorMap[match]}-`
-        );
-        const options = ["salary"];
-        filters.split(",").forEach((item) => {
-          const [field, operator, value] = item.split("-");
-          if (options.includes(field)) {
-            queryObject[field] = { [operator]: Number(value) };
-          }
-        });
-      }
+      const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
 
-      let resultJobs = Jobs.find(queryObject);
-
-      // Pagination
-      const skip = (page - 1) * limit;
-
-      resultJobs = resultJobs.skip(skip).limit(parseInt(limit));
-
-      // Sort
-      if (sort) {
-        const sortList = sort.split(",").join(" ");
-        resultJobs = resultJobs.sort(sortList);
-      } else {
-        resultJobs = resultJobs.sort("-createdAt");
-      }
-
-      // Fields selection
-      if (field) {
-        const fieldList = field.split(",").join(" ");
-        resultJobs = resultJobs.select(fieldList);
-      }
-
-      const searchedJobs = await resultJobs;
-
-      // Total count for pagination metadata
+      let resultJobs = await Jobs.find(queryObject)
+        .skip(skip)
+        .limit(parseInt(limit, 10))
+        .sort("-createdAt");
       const totalJobs = await Jobs.countDocuments(queryObject);
 
-      if (searchedJob.length === 0) {
+      if (resultJobs.length === 0) {
         return handleResponse(res, 200, "success", "No jobs found", [], 0);
       }
+
       // Fetching user details for the 'createdBy' field
-      const userIds = searchedJobs.map((job) => job.createdBy);
+      const userIds = resultJobs.map((job) => job.createdBy);
       const users = await Users.find({ _id: { $in: userIds } });
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
       }, {});
 
+      // Fetching company details
       const companies = await Company.find({
         "workers.userId": { $in: userIds },
       });
@@ -819,31 +769,29 @@ class JobsCTRL {
       }, {});
 
       let NewSearchedJobs = resultJobs.map((job) => {
-        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
+        const user = userMap[job.createdBy.toString()];
         if (!user) {
           return {
-            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
-            hr_name: "deleted user", // Fallback if user is not found
-            hr_avatar: "default_avatar.png", // Fallback avatar image path
-            issuedBy: null, // Fallback to null if company not found
+            ...job._doc,
+            hr_name: "deleted user",
+            hr_avatar: "default_avatar.png",
+            issuedBy: null,
           };
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
-            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
-            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
+            hr_name: user.employer ? user.fullName : "No employer name",
+            hr_avatar: user.avatar || "default_avatar.png",
+            issuedBy: companyMap[job.createdBy.toString()] || null,
           };
         }
       });
 
       // Prepare pagination data
       const pagination = {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalJobs / limit),
-        limit: parseInt(limit),
+        currentPage: parseInt(page, 10),
+        totalPages: Math.ceil(totalJobs / parseInt(limit, 10)),
+        limit: parseInt(limit, 10),
         totalDocuments: totalJobs,
       };
 
@@ -860,6 +808,7 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
+
   async searchByJobType(req, res) {
     try {
       const { jobType, page = 1, limit = 10 } = req.query;

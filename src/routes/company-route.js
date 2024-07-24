@@ -28,7 +28,7 @@ router.route("/:id").put(authMiddleware, uploadFiles, updateCompany);
 router
   .route("/:id/minorChange")
   .patch(authMiddleware, updateCompanyMinorChange);
-router.route("/:id").get(getSingleCompany);
+router.route("/:id").get(authMiddleware, getSingleCompany);
 router.route("/:id").delete(authMiddleware, deleteCompany);
 router.route("/:id/addingAdmin").post(authMiddleware, addAdminCompany);
 router.route("/:id/removeAdmin").delete(authMiddleware, deleteAdminCompany);

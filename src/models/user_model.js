@@ -101,6 +101,7 @@ const UsersSchema = new Schema(
       contact: {
         email: { type: String, default: null },
         phone: { type: String, default: null },
+        location: { type: String, default: null },
       },
       workExperience: { type: Array, default: [] },
       education: { type: Array, default: [] },

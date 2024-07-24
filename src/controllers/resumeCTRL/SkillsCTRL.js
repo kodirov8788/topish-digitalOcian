@@ -21,14 +21,14 @@ class Skills {
       }
 
       // Check if the user has the 'JobSeeker' role
-      if (user.role !== "JobSeeker") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "This operation is only allowed for JobSeekers."
-        );
-      }
+      // if (user.role !== "JobSeeker") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "This operation is only allowed for JobSeekers."
+      //   );
+      // }
 
       // Ensure jobSeeker field is not null
       if (!user.jobSeeker) {

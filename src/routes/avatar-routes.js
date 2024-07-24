@@ -6,6 +6,7 @@ const {
 } = require("@aws-sdk/client-s3");
 const multer = require("multer");
 const sharp = require("sharp");
+const { handleResponse } = require("../utils/handleResponse");
 require("dotenv").config();
 
 const s3 = new S3Client({
@@ -75,13 +76,13 @@ router.get("/", async (req, res) => {
     if (!user) throw new Error("User not found.");
 
     if (user.avatar) {
-      res.status(200).json({ avatar: user.avatar });
+      return handleResponse(res, 200, "success", "Avatar found", { url: user.avatar }, 1);
     } else {
-      res.status(200).json({ message: "No avatar found" });
+      return handleResponse(res, 404, "error", "Avatar not found", null, 0);
     }
   } catch (error) {
     console.error("Error fetching avatar:", error);
-    res.status(500).json({ error: error.message });
+    return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
   }
 });
 router.post("/", upload.single("avatar"), async (req, res) => {
@@ -100,12 +101,10 @@ router.post("/", upload.single("avatar"), async (req, res) => {
       "image/jpeg"
     );
     await updateUserAvatarUrl(req.user.id, fileUrl);
-    res.status(200).json({
-      message: "Avatar uploaded successfully",
-      url: fileUrl,
-    });
+    return handleResponse(res, 200, "success", "Avatar uploaded successfully", { url: fileUrl }, 1);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error uploading avatar:", error);
+    return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
   }
 });
 router.patch("/", upload.single("avatar"), async (req, res) => {
@@ -138,12 +137,10 @@ router.patch("/", upload.single("avatar"), async (req, res) => {
     // Update the user's avatar URL in the database
     await updateUserAvatarUrl(req.user.id, fileUrl);
 
-    res.status(200).json({
-      message: "Avatar updated successfully",
-      url: fileUrl,
-    });
+    return handleResponse(res, 200, "success", "Avatar updated successfully", { url: fileUrl }, 1);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error updating avatar:", error);
+    return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
   }
 });
 router.delete("/", async (req, res) => {
@@ -160,13 +157,13 @@ router.delete("/", async (req, res) => {
       // Update the user's record to remove the avatar URL
       await Users.findByIdAndUpdate(req.user.id, { $unset: { avatar: "" } });
 
-      res.status(200).json({ message: "Avatar deleted successfully" });
+      return handleResponse(res, 200, "success", "Avatar deleted successfully", null, 1);
     } else {
       throw new Error("No avatar to delete.");
     }
   } catch (error) {
     console.error("Error deleting avatar:", error);
-    res.status(500).json({ error: error.message });
+    return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
   }
 });
 

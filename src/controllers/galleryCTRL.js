@@ -65,16 +65,16 @@ class GalleryCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const user = await Users.findById(req.user.id);
-      if (user.role !== "JobSeeker") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (user.role !== "JobSeeker") {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
       if (!user || !user.jobSeeker) {
         return handleResponse(
           res,
@@ -214,16 +214,16 @@ class GalleryCTRL {
       }
 
       const user = await Users.findById(req.user.id);
-      if (user.role !== "JobSeeker") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (user.role !== "JobSeeker") {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const userId = req.user.id;
       const galleryPosts = await Gallery.find({ createdBy: userId });

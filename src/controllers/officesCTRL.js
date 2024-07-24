@@ -71,6 +71,7 @@ class OfficesCTRL {
     }
   }
   async deleteOffice(req, res, next) {
+    console.log("deleteOffice");
     try {
       // Check if the user is authenticated
       if (!req.user) {
