@@ -538,6 +538,34 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + err.message, null, 0);
     }
   }
+  async addUsernamesToAllUsers(req, res) {
+    try {
+
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized!", null, 0);
+      }
+
+
+      // Find all users
+      const users = await Users.find();
+
+      // Iterate over each user
+      for (let user of users) {
+
+        // Ensure fullName is set if username is empty
+        if (!user.fullName || user.fullName.trim() === '') {
+          user.fullName = createRandomFullname();
+        }
+
+        // Save the updated user
+        await user.save();
+      }
+
+      return handleResponse(res, 200, "success", "Usernames and fullNames updated successfully", null, 0);
+    } catch (error) {
+      console.error('Error updating usernames and fullNames:', error);
+    }
+  }
 }
 
 module.exports = new AuthCTRL();
