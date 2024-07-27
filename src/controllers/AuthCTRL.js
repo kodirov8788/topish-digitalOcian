@@ -10,7 +10,7 @@ const { PromptCode } = require("../models/other_models");
 function createRandomFullname() {
   const firstName = "User";
   const randomNumber = Math.floor(Math.random() * 1000000);
-  return `${firstName} ${randomNumber}`;
+  return `${firstName}-${randomNumber}`;
 }
 
 class AuthCTRL {
