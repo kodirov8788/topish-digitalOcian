@@ -9,7 +9,7 @@ const {
     deleteFavoriteOffice,
     updateOffice
 } = require("../controllers/officesCTRL");
-const { uploadFiles } = require("../utils/officeImageUpload");
+const { uploadFiles } = require("../utils/imageUploads/officeImageUpload");
 const router = require("express").Router();
 router.route("/").post(uploadFiles, createOffice).get(getAllOffices);
 router.route("/myposts").get(getServicePosts);

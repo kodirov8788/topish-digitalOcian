@@ -19,7 +19,7 @@ const {
 } = require("../controllers/companyCTRL");
 const authMiddleware = require("../middleware/auth-middleware");
 const router = require("express").Router();
-const { uploadFiles } = require("../utils/companyImageUpload");
+const { uploadFiles } = require("../utils/imageUploads/companyImageUpload");
 
 router.route("/").get(getAllCompany);
 router.route("/").post(authMiddleware, uploadFiles, createCompany);

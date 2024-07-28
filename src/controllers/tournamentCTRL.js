@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const Tournament = require("../models/tournament_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
-const { deleteFiles } = require("../utils/TurnerUpload");
+const { deleteFiles } = require("../utils/imageUploads/TurnerImageUpload");
 
 class TournamentsCTRL {
 

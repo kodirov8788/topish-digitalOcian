@@ -4,7 +4,7 @@ const TelegramChannel = require("../models/telegram_channel_modal");
 const { handleResponse } = require("../utils/handleResponse");
 const Joi = require("joi");
 const { getIO } = require('../socket/Socket');
-const { upload, deletePostImages, deleteSinglePostImage } = require("../utils/telegramImagesUpload");
+const { upload, deletePostImages, deleteSinglePostImage } = require("../utils/imageUploads/telegramImagesUpload");
 
 // Define the schema for validation
 const telegramChannelSchema = Joi.object({

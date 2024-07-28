@@ -4,7 +4,7 @@ const QuickJobs = require("../models/quickjob_model");
 const CompanyEmploymentReq = require("../models/companyEmploymentReq_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
-const { deleteFiles } = require("../utils/companyImageUpload");
+const { deleteFiles } = require("../utils/imageUploads/companyImageUpload");
 const sendNotification = require("../utils/Notification");
 
 class CompanyCTRL {

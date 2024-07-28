@@ -1,7 +1,7 @@
 const Offices = require("../models/office_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
-const { deleteFiles } = require("../utils/officeImageUpload");
+const { deleteFiles } = require("../utils/imageUploads/officeImageUpload");
 class OfficesCTRL {
   async createOffice(req, res) {
     try {

@@ -1,7 +1,7 @@
 const { S3Client, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
-const User = require("../models/user_model");
+const User = require("../../models/user_model");
 
 // Configure dotenv only once
 require("dotenv/config");

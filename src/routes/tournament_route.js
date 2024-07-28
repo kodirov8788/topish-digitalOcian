@@ -1,7 +1,7 @@
 const TournamentsCTRL = require("../controllers/tournamentCTRL");
 const router = require("express").Router();
 const authMiddleware = require("../middleware/auth-middleware");
-const { uploadFiles } = require("../utils/TurnerUpload");
+const { uploadFiles } = require("../utils/imageUploads/TurnerImageUpload");
 
 router.post("/", authMiddleware, uploadFiles, TournamentsCTRL.createTournament);
 router.delete("/:id", authMiddleware, TournamentsCTRL.deleteTournament);
