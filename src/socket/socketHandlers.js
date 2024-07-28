@@ -187,11 +187,10 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
                 fileUrls.push(uploadedUrl);
             }
         }
-        console.log("fileUrls:", fileUrls);
+        // console.log("fileUrls:", fileUrls);
         // --------------------------------- File Uploads ---------------------------------
-
+        // console.log("recipientId", recipientId);
         const recipientUser = await Users.findById(recipientId);
-
         if (!recipientUser) {
             socket.emit("errorNotification", { error: "Recipient not found" });
             return;

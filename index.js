@@ -12,9 +12,11 @@ const bodyParser = require("body-parser");
 const rateLimit = require("express-rate-limit");
 const connnectDB = require("./src/db/connect");
 const setupSwagger = require("./src/utils/swaggerConfig");
+// const swaggerJsDoc = require('swagger-jsdoc');
 const MainRouter = require("./src/routes/index");
 const { initSocketServer } = require("./src/socket/Socket");
 const http = require("http");
+const path = require("path");
 const server = http.createServer(app);
 initSocketServer(server);
 app.set("trust proxy", 1);
@@ -24,7 +26,8 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use(bodyParser.json({ limit: "20mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
 app.use(helmet());
-app.use(express.static("public"));
+// app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, 'public')));
 const corsOptions = {
   origin: '*', // Allow all origins
   credentials: false, // Do not allow credentials when using '*'
@@ -78,9 +81,14 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+app.get('/swagger-spec.json', (req, res) => {
+  res.json(swaggerSpecs);
+});
 setupSwagger(app);
 
 const port = process.env.PORT || 8080;
+console.log("MONO URI", process.env.MONGO_URI);
 const start = async () => {
   try {
     await connnectDB(process.env.MONGO_URI),
