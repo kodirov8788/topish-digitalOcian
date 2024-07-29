@@ -364,7 +364,7 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
 
         if (recipient && recipient.socketId) {
             console.log("recipient.socketId:=>", recipient.socketId);
-            io.to(recipient.socketId).emit("getMessage", messageToSend);
+            io.to(recipient.socketId).emit("getMessage", "hello");
             console.log("messageToSend:=>", messageToSend);
         } else {
             console.log("Recipient not found online or no socketId");
