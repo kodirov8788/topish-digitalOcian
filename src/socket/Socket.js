@@ -42,6 +42,15 @@ const initSocketServer = (server) => {
     socket.on("heartbeat", (userId) => handleHeartbeat(socket, userId, onlineUsers, io));
     socket.on("requestChatRooms", (data) => handleRequestChatRooms(socket, data));
     socket.on("sendMessage", (data) => handleSendMessage(socket, data, userChatRoomMap, onlineUsers, io));
+
+
+    socket.on("sendMessage", (data) => {
+      const success = handleSendMessage(socket, data, userChatRoomMap, onlineUsers, io);
+      if (!success) {
+        console.log('Buffer is full, pausing socket.');
+        socket.pause();
+      }
+    });
     socket.on("singleChatRoom", (data) => handleSingleChatRoom(socket, data, onlineUsers));
     socket.on("createChatRoom", (data) => handleCreateChatRoom(socket, data));
     socket.on("adminChatRoom", (data) => handleAdminChatRoom(socket, data, onlineUsers));
