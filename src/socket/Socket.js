@@ -36,6 +36,8 @@ const initSocketServer = (server) => {
     },
   });
   io.on("connection", (socket) => {
+    console.log('User connected:', socket.id);
+
     socket.on("joinRoom", (data) => handleJoinRoom(socket, data, userChatRoomMap, socketUserMap));
     socket.on("adminLogin", (userId) => handleAdminLogin(socket, userId, onlineUsers));
     socket.on("leaveRoom", (data) => handleLeaveRoom(socket, data, userChatRoomMap, socketUserMap));
@@ -82,32 +84,6 @@ const getOnlineUsers = () => {
   return onlineUsers;
 };
 
-
-// Message Queue Functions
-const enqueueMessage = (socket, messageData, userChatRoomMap, onlineUsers, io) => {
-  const { senderId } = messageData;
-  if (!messageQueue.has(senderId)) {
-    messageQueue.set(senderId, []);
-  }
-  messageQueue.get(senderId).push(messageData);
-  processMessageQueue(socket, senderId, userChatRoomMap, onlineUsers, io);
-};
-
-const processMessageQueue = async (socket, senderId, userChatRoomMap, onlineUsers, io) => {
-  const queue = messageQueue.get(senderId);
-  if (!queue || queue.processing) return;
-
-  queue.processing = true;
-  while (queue.length > 0) {
-    const messageData = queue.shift();
-    try {
-      await handleSendMessage(socket, messageData, userChatRoomMap, onlineUsers, io);
-    } catch (error) {
-      console.error("Error processing message queue:", error);
-    }
-  }
-  queue.processing = false;
-};
 module.exports = {
   initSocketServer,
   getIO,
