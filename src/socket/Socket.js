@@ -26,7 +26,6 @@ let onlineUsers = [];
 let userChatRoomMap = {};
 let socketUserMap = {};
 const typingDebounceTimers = {};
-const messageQueue = new Map();
 
 const initSocketServer = (server) => {
   io = new Server(server, {
@@ -42,7 +41,7 @@ const initSocketServer = (server) => {
     socket.on("leaveRoom", (data) => handleLeaveRoom(socket, data, userChatRoomMap, socketUserMap));
     socket.on("heartbeat", (userId) => handleHeartbeat(socket, userId, onlineUsers, io));
     socket.on("requestChatRooms", (data) => handleRequestChatRooms(socket, data));
-    socket.on("sendMessage", (data) => enqueueMessage(socket, data, userChatRoomMap, onlineUsers, io));
+    socket.on("sendMessage", (data) => handleSendMessage(socket, data, userChatRoomMap, onlineUsers, io));
     socket.on("singleChatRoom", (data) => handleSingleChatRoom(socket, data, onlineUsers));
     socket.on("createChatRoom", (data) => handleCreateChatRoom(socket, data));
     socket.on("adminChatRoom", (data) => handleAdminChatRoom(socket, data, onlineUsers));
@@ -83,6 +82,7 @@ const getOnlineUsers = () => {
   return onlineUsers;
 };
 
+
 // Message Queue Functions
 const enqueueMessage = (socket, messageData, userChatRoomMap, onlineUsers, io) => {
   const { senderId } = messageData;
@@ -108,7 +108,6 @@ const processMessageQueue = async (socket, senderId, userChatRoomMap, onlineUser
   }
   queue.processing = false;
 };
-
 module.exports = {
   initSocketServer,
   getIO,
@@ -117,4 +116,3 @@ module.exports = {
   getUser,
   getOnlineUsers,
 };
-
