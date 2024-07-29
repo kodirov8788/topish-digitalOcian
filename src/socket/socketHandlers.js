@@ -169,15 +169,16 @@ const handleRequestChatRooms = async (socket, { userId }) => {
 
 const handleSendMessage = async (socket, { text, recipientId, senderId, files }, userChatRoomMap, onlineUsers, io) => {
     // console.log("files", files);
-    // console.log("text", text);
-    // console.log("recipientId", recipientId);
-    // console.log("senderId", senderId);
+    console.log("text", text);
+    console.log("recipientId", recipientId);
+    console.log("senderId", senderId);
     try {
         const sender = onlineUsers.find((user) => user.userId == senderId);
         if (!sender) {
             socket.emit("errorNotification", { error: "Sender not found" });
             return;
         }
+        console.log("sender", sender);
         // --------------------------------- File Uploads ---------------------------------
         let fileUrls = [];
         if (files && files.length > 0) {
@@ -189,12 +190,12 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
         }
         // console.log("fileUrls:", fileUrls);
         // --------------------------------- File Uploads ---------------------------------
-        // console.log("recipientId", recipientId);
         const recipientUser = await Users.findById(recipientId);
         if (!recipientUser) {
             socket.emit("errorNotification", { error: "Recipient not found" });
             return;
         }
+        console.log("recipientId_id:=> ", recipientId._id);
 
         let chatRoom = await ChatRoom.findOne({
             users: { $all: [senderId, recipientId] },
@@ -210,6 +211,8 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
             chatRoom: chatRoom._id,
             fileUrls: fileUrls.length > 0 ? fileUrls : [],
         });
+
+
         const senderChatRoom = userChatRoomMap[senderId];
         const recipientChatRoom = userChatRoomMap[recipientId];
 
@@ -243,10 +246,13 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
         const recipient = onlineUsers.find((user) => user.userId == recipientId);
 
         if (recipient && recipient.socketId) {
+            console.log("recipient.socketId:=>", recipient.socketId);
             io.to(recipient.socketId).emit("getMessage", messageToSend);
             socket.emit("getMessage", messageToSend); // Emit to sender
         } else {
             socket.emit("getMessage", messageToSend); // Emit to sender
+            console.log("recipient.socketId 2 :=>", recipient.socketId);
+
         }
 
         const fullName =
