@@ -343,21 +343,21 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
                 read: true,
             });
         }
-        await message.save();
+        let savedMessage = await message.save();
 
         const senderFromStorage = await Users.findById(senderId);
         const messageToSend = {
-            _id: message._id,
-            text: message.text,
-            timestamp: message.timestamp,
-            read: message.read,
+            _id: savedMessage._id,
+            text: savedMessage.text,
+            timestamp: savedMessage.timestamp,
+            read: savedMessage.read,
             chatRoomId: chatRoom._id,
             senderId: {
                 _id: sender?.userId,
                 avatar: senderFromStorage?.avatar,
             },
-            deleted: message.deleted,
-            recipientId: message.recipientId,
+            deleted: savedMessage.deleted,
+            recipientId: savedMessage.recipientId,
             fileUrls: fileUrls.length > 0 ? fileUrls : [],
         };
 
@@ -376,16 +376,16 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
 
         socket.emit("messageSentConfirmation", {
             success: true,
-            messageId: message._id,
+            messageId: savedMessage._id,
         });
 
         let customData = {
             chatRoomId: chatRoom._id.toString(),
-            messageId: message._id.toString(),
+            messageId: savedMessage._id.toString(),
             timestamp: new Date().toISOString(),
             senderId: sender.userId,
             senderAvatar: senderFromStorage.avatar,
-            recipientId: message.recipientId.toString(),
+            recipientId: savedMessage.recipientId.toString(),
         };
         Notification(
             recipientUser.mobileToken,
