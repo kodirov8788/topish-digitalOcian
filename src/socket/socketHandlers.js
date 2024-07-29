@@ -350,7 +350,6 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
             _id: savedMessage._id,
             text: savedMessage.text,
             timestamp: savedMessage.timestamp,
-            read: savedMessage.read,
             chatRoomId: chatRoom._id,
             senderId: {
                 _id: sender?.userId,
@@ -363,12 +362,12 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
 
         const recipient = onlineUsers.find((user) => user.userId == recipientId);
 
-
         if (recipient && recipient.socketId) {
             console.log("recipient.socketId:=>", recipient.socketId);
             io.to(recipient.socketId).emit("getMessage", messageToSend);
             console.log("messageToSend:=>", messageToSend);
-            io.to(recipient.socketId).emit("getMessage", messageToSend); // Emit to recipient
+        } else {
+            console.log("Recipient not found online or no socketId");
         }
         socket.emit("getMessage", messageToSend); // Emit to sender
 
@@ -399,6 +398,7 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
         });
     }
 };
+
 
 
 const handleSingleChatRoom = async (socket, { userId, chatRoomId }, onlineUsers) => {
