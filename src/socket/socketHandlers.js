@@ -195,7 +195,7 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
             socket.emit("errorNotification", { error: "Recipient not found" });
             return;
         }
-        console.log("recipientId_id:=> ", recipientId._id);
+        console.log("recipientId_id:=> ", recipientUser._id);
 
         let chatRoom = await ChatRoom.findOne({
             users: { $all: [senderId, recipientId] },
