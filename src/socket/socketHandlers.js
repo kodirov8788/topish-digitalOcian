@@ -366,7 +366,7 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
             io.to(recipient.socketId).emit("getMessage", messageToSend);
             io.to(recipient.socketId).emit("getMessageToOther", messageToSend);
         }
-        console.log("re and se", recipient && recipient.socketId);
+        console.log("re and se", recipient && recipient.socketId, "=");
         // Always emit the message to the sender
         socket.emit("getMessage", messageToSend); // Emit to sender
 
