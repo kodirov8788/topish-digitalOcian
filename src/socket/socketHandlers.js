@@ -282,16 +282,16 @@ const handleRequestChatRooms = async (socket, { userId }) => {
 // };
 
 const handleSendMessage = async (socket, { text, recipientId, senderId, files }, userChatRoomMap, onlineUsers, io) => {
-    console.log("text", text);
-    console.log("recipientId", recipientId);
-    console.log("senderId", senderId);
+    // console.log("text", text);
+    // console.log("recipientId", recipientId);
+    // console.log("senderId", senderId);
     try {
         const sender = onlineUsers.find((user) => user.userId == senderId);
         if (!sender) {
             socket.emit("errorNotification", { error: "Sender not found" });
             return;
         }
-        console.log("sender", sender);
+        // console.log("sender", sender);
 
         // --------------------------------- File Uploads ---------------------------------
         let fileUrls = [];
@@ -312,7 +312,7 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
             socket.emit("errorNotification", { error: "Recipient not found" });
             return;
         }
-        console.log("recipientId_id:=> ", recipientUser._id);
+        // console.log("recipientId_id:=> ", recipientUser._id);
 
         let chatRoom = await ChatRoom.findOne({
             users: { $all: [senderId, recipientId] },
@@ -362,11 +362,10 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
         const recipient = onlineUsers.find((user) => user.userId == recipientId);
 
         if (recipient && recipient.socketId) {
-            console.log("recipient.socketId:=>", recipient.socketId);
+            // console.log("recipient.socketId:=>", recipient.socketId);
             io.to(recipient.socketId).emit("getMessage", messageToSend);
             io.to(recipient.socketId).emit("getMessageToOther", messageToSend);
         }
-        console.log("re and se", recipient && recipient.socketId, "=");
         // Always emit the message to the sender
         socket.emit("getMessage", messageToSend); // Emit to sender
 
