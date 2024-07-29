@@ -287,7 +287,6 @@ const handleRequestChatRooms = async (socket, { userId }) => {
 
 
 const handleSendMessage = async (socket, { text, recipientId, senderId, files }, userChatRoomMap, onlineUsers, io) => {
-    // Logging inputs for debugging
     console.log("text", text);
     console.log("recipientId", recipientId);
     console.log("senderId", senderId);
@@ -364,24 +363,14 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
 
         const recipient = onlineUsers.find((user) => user.userId == recipientId);
 
+
         if (recipient && recipient.socketId) {
             console.log("recipient.socketId:=>", recipient.socketId);
             io.to(recipient.socketId).emit("getMessage", messageToSend);
-            socket.emit("getMessage", messageToSend); // Emit to sender
-        } else {
-            console.log("Recipient not online or socket not available, retrying...");
-            // Optionally, you can implement a retry mechanism here
-            setTimeout(async () => {
-                const updatedRecipient = onlineUsers.find((user) => user.userId == recipientId);
-                if (updatedRecipient && updatedRecipient.socketId) {
-                    io.to(updatedRecipient.socketId).emit("getMessage", messageToSend);
-                } else {
-                    console.log("Recipient still not available after retry.");
-                    // Handle case where recipient is not available after retry
-                }
-                socket.emit("getMessage", messageToSend); // Emit to sender
-            }, 5000); // Retry after 5 seconds
+            console.log("messageToSend:=>", messageToSend);
+            io.to(recipient.socketId).emit("getMessage", messageToSend); // Emit to recipient
         }
+        socket.emit("getMessage", messageToSend); // Emit to sender
 
         const fullName = senderFromStorage && senderFromStorage.fullName ? senderFromStorage.fullName : "Unknown User";
 
@@ -410,7 +399,6 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, files },
         });
     }
 };
-
 
 
 const handleSingleChatRoom = async (socket, { userId, chatRoomId }, onlineUsers) => {
