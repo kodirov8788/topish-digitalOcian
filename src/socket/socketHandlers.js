@@ -56,7 +56,7 @@ const handleHeartbeat = (socket, userId, onlineUsers, io) => {
             lastActive: new Date(),
         });
     }
-    const timeoutMinutes = 60 * 10;// 10 minutes
+    const timeoutMinutes = 60;
     onlineUsers = onlineUsers.filter(
         (user) => (new Date() - user.lastActive) / 60000 < timeoutMinutes
     );
