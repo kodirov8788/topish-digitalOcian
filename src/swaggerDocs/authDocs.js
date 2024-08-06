@@ -537,6 +537,92 @@ const AuthEndpoints = {
       },
     },
   },
+  "/auth/sendVoiceCall": {
+    post: {
+      summary: "Send login code",
+      tags: ["Auth"],
+      description: "Send a confirmation code to the user's phone number for login.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                phoneNumber: {
+                  type: "string",
+                  description: "User's phone number",
+                  example: "+998956687007",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Confirmation code sent successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "success",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Confirmation code sent. Please check your phone.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "User not found with this phone number",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "User not found with this phone number",
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Something went wrong",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   "/auth/sign-out": {
     post: {
       summary: "Sign out the current user",
@@ -958,6 +1044,72 @@ const AuthEndpoints = {
                 properties: {
                   result: { type: "string", example: "error" },
                   msg: { type: "string", example: "Something went wrong while deleting the refresh token." },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/auth/checkSmsStatus": {
+    post: {
+      summary: "Check SMS status",
+      tags: ["Auth"],
+      description: "Check the status of an SMS message sent to the user's phone.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                dispatchId: {
+                  type: "string",
+                  description: "The ID of the SMS message to check",
+                  example: "sms_message_id_example",
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "SMS status checked successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: { type: "string", example: "SMS status checked successfully" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      status: { type: "string", example: "delivered" },
+                    },
+                  },
+                  totalCount: { type: "number", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error. Something went wrong while checking the SMS status.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Something went wrong while checking the SMS status." },
                   data: {
                     type: "null",
                     example: null,

@@ -70,7 +70,7 @@ router.route("/searchJobSeekers").get(authMiddleware, getJobSeekersBySkills); //
 router.route("/getAllJobSeekers").get(authMiddleware, getAllJobSeekers);
 router
   .route("/getRecommendedJobSeekers")
-  .get(authMiddleware, getRecommendedJobSeekers);
+  .get(getRecommendedJobSeekers);
 router
   .route("/getExperiencedJobseekers")
   .get(authMiddleware, getExperiencedJobseekers);

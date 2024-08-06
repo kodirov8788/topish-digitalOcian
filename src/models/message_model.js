@@ -13,6 +13,7 @@ const messageSchema = new mongoose.Schema({
   chatRoom: { type: mongoose.Schema.Types.ObjectId, ref: "ChatRoom" },
   timestamp: { type: Date, default: Date.now },
   fileUrls: { type: Array, default: [] },
+  replyTo: { type: mongoose.Schema.Types.ObjectId, ref: "Message", default: null },
 });
 
 module.exports = mongoose.model("Message", messageSchema);

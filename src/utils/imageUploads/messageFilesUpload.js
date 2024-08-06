@@ -18,7 +18,21 @@ const getMimeType = (extension) => {
         jpeg: 'image/jpeg',
         png: 'image/png',
         gif: 'image/gif',
-        // Add other MIME types as needed
+        bmp: 'image/bmp',
+        webp: 'image/webp',
+        svg: 'image/svg+xml',
+        pdf: 'application/pdf',
+        doc: 'application/msword',
+        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        xls: 'application/vnd.ms-excel',
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ppt: 'application/vnd.ms-powerpoint',
+        pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        zip: 'application/zip',
+        rar: 'application/vnd.rar',
+        tar: 'application/x-tar',
+        gz: 'application/gzip',
+        wav: 'audio/wav',
     };
     return mimeTypes[extension.toLowerCase()] || 'application/octet-stream';
 };
@@ -28,58 +42,27 @@ const uploadFile = async (file) => {
         if (!file || !file.buffer || !file.originalname) {
             throw new Error("Invalid file object. Make sure it contains 'buffer' and 'originalname'.");
         }
-
         const fileExtension = file.originalname.split(".").pop();
-        const urlImage = `uploadMessages/url_${uuidv4()}.${fileExtension}`;
-        const thumbnailUrlImage = `uploadMessages/thumbnailUrl_${uuidv4()}.${fileExtension}`;
+        const fileName = `uploadMessages/${uuidv4()}.${fileExtension}`;
         const mimeType = getMimeType(fileExtension);
+        const originalName = file.originalname;
 
-        // Upload original image
-        await s3.send(
-            new PutObjectCommand({
-                Bucket: process.env.AWS_BUCKET_NAME,
-                Key: urlImage,
-                Body: file.buffer,
-                ContentType: mimeType,
-                ACL: "public-read",
-                ContentDisposition: 'inline',
-            })
-        );
+        const uploadParams = {
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: fileName,
+            Body: file.buffer,
+            ContentType: mimeType,
+            ACL: "public-read",
+            ContentDisposition: mimeType.includes('image') || mimeType.includes('wav') ? 'inline' : 'attachment',
+        };
 
-        // Convert image to lower quality
-        let lowerQualityBuffer;
-        if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
-            lowerQualityBuffer = await sharp(file.buffer)
-                .resize(400) // Reduce size further
-                .jpeg({ quality: 50 }) // Apply more aggressive compression
-                .toBuffer();
-        } else if (mimeType === 'image/png') {
-            lowerQualityBuffer = await sharp(file.buffer)
-                .resize(400) // Reduce size further
-                .png({ compressionLevel: 9 }) // Apply maximum compression for PNG
-                .toBuffer();
-        } else {
-            lowerQualityBuffer = await sharp(file.buffer)
-                .resize(400) // Reduce size further
-                .toBuffer();
-        }
+        await s3.send(new PutObjectCommand(uploadParams));
 
-        // Upload lower quality image
-        await s3.send(
-            new PutObjectCommand({
-                Bucket: process.env.AWS_BUCKET_NAME,
-                Key: thumbnailUrlImage,
-                Body: lowerQualityBuffer,
-                ContentType: mimeType,
-                ACL: "public-read",
-                ContentDisposition: 'inline',
-            })
-        );
+        const fileSize = file.buffer.length;
+        const url = `https://${process.env.AWS_BUCKET_NAME}.${process.env.AWS_S3_BUCKET_REGION}.digitaloceanspaces.com/${fileName}`;
+        console.log(`File uploaded: ${url}`);
 
-        const url = `https://${process.env.AWS_BUCKET_NAME}.${process.env.AWS_S3_BUCKET_REGION}.digitaloceanspaces.com/${urlImage}`;
-        const thumbnailUrl = `https://${process.env.AWS_BUCKET_NAME}.${process.env.AWS_S3_BUCKET_REGION}.digitaloceanspaces.com/${thumbnailUrlImage}`;
-
-        return { url, thumbnailUrl };
+        return { url, name: fileName, type: mimeType, size: fileSize, originalName };
     } catch (error) {
         console.error("Error uploading file:", error);
         throw error;
@@ -101,12 +84,7 @@ const deleteFiles = async (fileUrls) => {
 
     try {
         const deletePromises = keysToDelete.map((Key) =>
-            s3.send(
-                new DeleteObjectCommand({
-                    Bucket: process.env.AWS_BUCKET_NAME,
-                    Key,
-                })
-            )
+            s3.send(new DeleteObjectCommand({ Bucket: process.env.AWS_BUCKET_NAME, Key }))
         );
 
         await Promise.all(deletePromises);

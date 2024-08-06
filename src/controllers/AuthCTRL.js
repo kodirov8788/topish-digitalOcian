@@ -3,8 +3,8 @@ const { generateTokens, createTokenUser } = require("../utils/jwt");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteUserAvatar } = require("./avatarCTRL");
 const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
-const { RegisterValidation, logOutValidation, RegisterValidationConfirm } = require("../helpers/AuthValidation");
-const { getEskizAuthToken, sendCustomSms } = require("../utils/smsService");
+const { RegisterValidation, logOutValidation } = require("../helpers/AuthValidation");
+const { getEskizAuthToken, sendCustomSms, sendGlobalSms, checkSmsStatus, makeVoiceCall } = require("../utils/smsService");
 const jwt = require('jsonwebtoken');
 const { PromptCode } = require("../models/other_models");
 function createRandomFullname() {
@@ -46,6 +46,8 @@ class AuthCTRL {
         confirmationCode = Math.floor(100000 + Math.random() * 900000);
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
+      // confirmationCode = 112233
+      // confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       if (!existingUser) {
         existingUser = new Users({
           phoneNumber: phoneNumberWithCountryCode,
@@ -59,18 +61,51 @@ class AuthCTRL {
         existingUser.confirmationCode = confirmationCode;
         existingUser.confirmationCodeExpires = confirmationCodeExpires;
       }
-
       await existingUser.save();
-
-
       if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
       } else {
         const token = await getEskizAuthToken();
         const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-        await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        if (phoneNumberWithCountryCode.startsWith("+998")) {
+          await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        } else {
+          const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
+          console.log(`Message SID: ${messageSid}`);
+        }
         return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
       }
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
+  async sendVoiceCall(req, res) {
+    try {
+      const { phoneNumber } = req.body;
+
+      if (!phoneNumber) {
+        return handleResponse(res, 400, "error", "Phone number is required", null, 0);
+      }
+
+      const user = await Users.findOne({ phoneNumber });
+
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found with this phone number", null, 0);
+      }
+
+      const now = Date.now();
+      let confirmationCode = user.confirmationCode;
+      let confirmationCodeExpires;
+
+      confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+
+      user.confirmationCodeExpires = confirmationCodeExpires;
+      await user.save();
+
+      let newConfirmationCode = String(confirmationCode).split('').join(' ');
+      await makeVoiceCall(phoneNumber, `code is ${newConfirmationCode}`);
+
+      return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
@@ -231,18 +266,25 @@ class AuthCTRL {
         confirmationCode = Math.floor(100000 + Math.random() * 900000);
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
-
+      // -----
+      // confirmationCode = 112233
+      // confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      //-----
       user.confirmationCode = confirmationCode;
       user.confirmationCodeExpires = confirmationCodeExpires;
-
       await user.save();
-
       if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
       } else {
         const token = await getEskizAuthToken();
         const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-        await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        if (phoneNumberWithCountryCode.startsWith("+998")) {
+          await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        } else {
+          const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
+          console.log(`Message SID: ${messageSid}`);
+        }
+
         return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
       }
 
@@ -366,7 +408,7 @@ class AuthCTRL {
     }
   }
   async renewAccessToken(req, res) {
-    // console.log("renew refresh token is called")
+    console.log("renew refresh token is called")
 
     try {
       const { refreshToken } = req.body;
@@ -538,6 +580,18 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + err.message, null, 0);
     }
   }
+  async checkSmsStatus(req, res) {
+    try {
+      const token = await getEskizAuthToken();
+      const { dispatchId } = req.body;
+      const response = await checkSmsStatus(token, dispatchId);
+      console.log("SMS status response:", response);
+      return handleResponse(res, 200, "success", "SMS status checked successfully", response);
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
+
   async addUsernamesToAllUsers(req, res) {
     try {
 

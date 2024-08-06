@@ -11,7 +11,9 @@ const {
   deleteRefreshToken,
   sendDeleteAccountCode,
   confirmDeleteAccount,
-  addUsernamesToAllUsers
+  checkSmsStatus,
+  addUsernamesToAllUsers,
+  sendVoiceCall
 } = require("../controllers/AuthCTRL");
 const express = require("express");
 const router = express.Router();
@@ -28,7 +30,11 @@ router.delete("/deleteAccount", authMiddleware, deleteAccount);
 router.post("/renewAccessToken", renewAccessToken);
 router.post("/sendDeleteAccountCode", sendDeleteAccountCode);
 router.post("/confirmDeleteAccount", confirmDeleteAccount);
+router.post("/checkSmsStatus", checkSmsStatus);
 router.post("/addUsernamesToAllUsers", authMiddleware, addUsernamesToAllUsers);
+router.post("/sendVoiceCall", sendVoiceCall);
+
+
 
 
 module.exports = router;

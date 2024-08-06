@@ -19,13 +19,12 @@ const {
   handleGetGPTConfig,
   handlePromptString,
   handleDisconnect,
+  handleFileChunk,
+  handleVoiceChunk
 } = require("./socketHandlers");
 
 let io = null;
-let onlineUsers = [];
-let userChatRoomMap = {};
-let socketUserMap = {};
-const typingDebounceTimers = {};
+
 
 const initSocketServer = (server) => {
   io = new Server(server, {
@@ -34,29 +33,32 @@ const initSocketServer = (server) => {
       methods: ["GET", "POST"],
       credentials: true,
     },
+    maxHttpBufferSize: 1e8
   });
   io.on("connection", (socket) => {
-    console.log('User connected:', socket.id);
-
-    socket.on("joinRoom", (data) => handleJoinRoom(socket, data, userChatRoomMap, socketUserMap));
-    socket.on("adminLogin", (userId) => handleAdminLogin(socket, userId, onlineUsers));
-    socket.on("leaveRoom", (data) => handleLeaveRoom(socket, data, userChatRoomMap, socketUserMap));
-    socket.on("heartbeat", (userId) => handleHeartbeat(socket, userId, onlineUsers, io));
+    socket.on("joinRoom", (data) => handleJoinRoom(socket, data));
+    socket.on("adminLogin", (userId) => handleAdminLogin(socket, userId,));
+    socket.on("leaveRoom", (data) => handleLeaveRoom(socket, data));
+    socket.on("heartbeat", (userId) => handleHeartbeat(socket, userId, io));
     socket.on("requestChatRooms", (data) => handleRequestChatRooms(socket, data));
-    socket.on("sendMessage", (data) => handleSendMessage(socket, data, userChatRoomMap, onlineUsers, io));
-    socket.on("singleChatRoom", (data) => handleSingleChatRoom(socket, data, onlineUsers));
+    //-----------------------------------------------------------------------------------
+    socket.on("sendMessage", (data, callback) => handleSendMessage(socket, data, io, callback));
+    socket.on('fileChunk', (data, callback) => handleFileChunk(socket, data, callback));
+    socket.on('voiceChunk', (data, callback) => handleVoiceChunk(socket, data, callback));
+    //-----------------------------------------------------------------------------------
+    socket.on("singleChatRoom", (data) => handleSingleChatRoom(socket, data,));
     socket.on("createChatRoom", (data) => handleCreateChatRoom(socket, data));
-    socket.on("adminChatRoom", (data) => handleAdminChatRoom(socket, data, onlineUsers));
-    socket.on("deleteChatRoom", (data) => handleDeleteChatRoom(socket, data, onlineUsers, io));
-    socket.on("deleteMessage", (data) => handleDeleteMessage(socket, data, onlineUsers, io));
-    socket.on("updateMessage", (data) => handleUpdateMessage(socket, data, onlineUsers, io));
-    socket.on("typing", (data) => handleTyping(socket, data, typingDebounceTimers, onlineUsers, io));
+    socket.on("adminChatRoom", (data) => handleAdminChatRoom(socket, data,));
+    socket.on("deleteChatRoom", (data) => handleDeleteChatRoom(socket, data, io));
+    socket.on("deleteMessage", (data) => handleDeleteMessage(socket, data, io));
+    socket.on("updateMessage", (data) => handleUpdateMessage(socket, data, io));
+    socket.on("typing", (data) => handleTyping(socket, data, io));
     socket.on("messageToAdmin", (data) => handleMessageToAdmin(socket, data));
-    socket.on("adminMessageToUser", (data) => handleAdminMessageToUser(socket, data, onlineUsers, io));
+    socket.on("adminMessageToUser", (data) => handleAdminMessageToUser(socket, data, io));
     socket.on("saveGPTConfig", (data) => handleSaveGPTConfig(socket, data));
     socket.on("getGPTConfig", (data) => handleGetGPTConfig(socket, data));
-    socket.on("promptString", (data) => handlePromptString(socket, data, onlineUsers, io));
-    socket.on("disconnect", () => handleDisconnect(socket, userChatRoomMap, socketUserMap, onlineUsers, io));
+    socket.on("promptString", (data) => handlePromptString(socket, data, io));
+    socket.on("disconnect", () => handleDisconnect(socket, io));
   });
 };
 
@@ -68,27 +70,16 @@ const getIO = () => {
   return io;
 };
 
-const addUser = (user) => {
-  onlineUsers.push(user);
-};
 
-const removeUser = (socketId) => {
-  onlineUsers = onlineUsers.filter((user) => user.socketId !== socketId);
-};
 
-const getUser = (userId) => {
-  return onlineUsers.find((user) => user.userId === userId);
-};
+
 
 const getOnlineUsers = () => {
-  return onlineUsers;
+  return;
 };
 
 module.exports = {
   initSocketServer,
   getIO,
-  addUser,
-  removeUser,
-  getUser,
   getOnlineUsers,
 };
