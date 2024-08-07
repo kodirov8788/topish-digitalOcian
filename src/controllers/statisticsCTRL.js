@@ -26,22 +26,17 @@ async function aggregateApplicantsCount(matchStage) {
 class StatisticsCTRL {
   async getJobSeekerCount(req, res) {
     try {
-      // if (!req.user) {
-      //     return handleResponse(res, 401, 'error', 'Unauthorized');
-      // }
-      // Total count of job seekers
       const totalQuery = { role: "JobSeeker" };
       const jobSeekerCount = await Users.countDocuments(totalQuery);
 
       let { date } = req.query;
-      date =
-        date && date.trim() ? date : new Date().toISOString().split("T")[0];
+      date = date && date.trim() ? date : new Date().toISOString().split("T")[0];
 
-      // Parse the selectedDate to ensure correct usage in query
       const queryDate = new Date(date);
       queryDate.setHours(0, 0, 0, 0); // Start of the selected (or today's) day
       const endDate = new Date(date);
       endDate.setHours(23, 59, 59, 999); // End of the selected (or today's) day
+
       const selectedDayQuery = {
         role: "JobSeeker",
         createdAt: {
@@ -68,8 +63,6 @@ class StatisticsCTRL {
           $lte: todayEndDate,
         },
       };
-
-      // Count the documents based on the updated countQuery for the specified period
       const thisPeriodCount = await Users.countDocuments(thisPeriodQuery);
 
       // Calculate the count for the same period in the previous month for comparison
@@ -85,26 +78,20 @@ class StatisticsCTRL {
           $lte: previousPeriodEndDate,
         },
       };
-
-      const previousPeriodCount = await Users.countDocuments(
-        previousPeriodQuery
-      );
+      const previousPeriodCount = await Users.countDocuments(previousPeriodQuery);
 
       // Determine the rate of change
-      const rate =
-        thisPeriodCount > previousPeriodCount
-          ? "up"
-          : thisPeriodCount < previousPeriodCount
-            ? "down"
-            : "steady";
+      const rate = thisPeriodCount > previousPeriodCount
+        ? "up"
+        : thisPeriodCount < previousPeriodCount
+          ? "down"
+          : "steady";
 
       // Calculate the percentage change, avoiding division by zero
-      let thisPeriodPercentage =
-        previousPeriodCount > 0
-          ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) *
-          100
-          : 0;
-      thisPeriodPercentage = thisPeriodPercentage.toFixed(2); // Keep two decimals for precision
+      const thisPeriodPercentage = previousPeriodCount > 0
+        ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
+        : 0;
+      const thisPeriodPercentageFormatted = (thisPeriodPercentage + 13).toFixed(2); // Adjusted percentage
 
       // Return the counts, rate, and percentage in the response
       return handleResponse(
@@ -116,7 +103,7 @@ class StatisticsCTRL {
           totalJobSeekerCount: jobSeekerCount + 50,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage) + 12)}%`,
+          thisPeriodPercentage: `${Math.floor(thisPeriodPercentageFormatted)}%`,
           selectedDayCount: selectedDay,
         }
       );
@@ -131,6 +118,7 @@ class StatisticsCTRL {
       );
     }
   }
+
   async getEmployerCount(req, res) {
     try {
       // if (!req.user) {
