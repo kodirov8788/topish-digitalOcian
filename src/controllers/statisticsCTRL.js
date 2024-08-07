@@ -91,7 +91,7 @@ class StatisticsCTRL {
       const thisPeriodPercentage = previousPeriodCount > 0
         ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
         : 0;
-      const thisPeriodPercentageAdjusted = thisPeriodPercentage + 13;
+      const thisPeriodPercentageAdjusted = Number(thisPeriodPercentage) + 13;
       const thisPeriodPercentageFormatted = thisPeriodPercentageAdjusted.toFixed(2);
 
       // Return the counts, rate, and percentage in the response
