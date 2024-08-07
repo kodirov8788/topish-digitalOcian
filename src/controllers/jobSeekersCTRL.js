@@ -57,10 +57,6 @@ class JobSeekerCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
-      if (user.role !== "Employer") {
-        return handleResponse(res, 401, "error", "You are not allowed!", null, 0);
-      }
 
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
@@ -150,10 +146,6 @@ class JobSeekerCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
-      if (user.role !== "Employer") {
-        return handleResponse(res, 401, "error", "You are not allowed!", null, 0);
-      }
 
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
@@ -237,9 +229,6 @@ class JobSeekerCTRL {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
     const user = await Users.findOne({ _id: req.user.id });
-    if (!user.role == "JobSeeker") {
-      return handleResponse(res, 401, "error", "Job Seeker only", null, 0);
-    }
 
     const jobSeekerId = user.id; // Assuming this is the correct path to the job seeker's _id
 
