@@ -7,9 +7,7 @@ class JobSeekerCTRL {
   // it shows all employees
   async getAllJobSeekers(req, res) {
     try {
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
+
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
@@ -54,10 +52,6 @@ class JobSeekerCTRL {
   }
   async getRecommendedJobSeekers(req, res) {
     try {
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
-
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
@@ -140,12 +134,9 @@ class JobSeekerCTRL {
       );
     }
   }
-
   async getExperiencedJobseekers(req, res) {
     try {
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
+
 
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
