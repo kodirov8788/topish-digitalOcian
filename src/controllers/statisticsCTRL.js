@@ -91,7 +91,7 @@ class StatisticsCTRL {
       const thisPeriodPercentage = previousPeriodCount > 0
         ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
         : 0;
-      const thisPeriodPercentageFormatted = thisPeriodPercentage.toFixed(2);
+      const thisPeriodPercentageFormatted = parseFloat(thisPeriodPercentage.toFixed(2));
 
       // Return the counts, rate, and percentage in the response
       return handleResponse(
@@ -103,7 +103,7 @@ class StatisticsCTRL {
           totalJobSeekerCount: jobSeekerCount + 50,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${Math.floor(thisPeriodPercentageFormatted)}%`,
+          thisPeriodPercentage: `${thisPeriodPercentageFormatted}%`,
           selectedDayCount: selectedDay,
         }
       );
@@ -118,6 +118,7 @@ class StatisticsCTRL {
       );
     }
   }
+
 
 
 
