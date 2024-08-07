@@ -95,7 +95,7 @@ class StatisticsCTRL {
       console.log("previousPeriodCount: ", previousPeriodCount)
       console.log("thisPeriodCount: ", thisPeriodCount)
       console.log("thisPeriodPercentage: ", thisPeriodPercentage)
-      const thisPeriodPercentageFormatted = parseFloat(thisPeriodPercentage.toFixed(2));
+      const thisPeriodPercentageFormatted = Math.floor(Number(thisPeriodPercentage));
 
       // Return the counts, rate, and percentage in the response
       return handleResponse(
