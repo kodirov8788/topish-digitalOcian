@@ -89,7 +89,7 @@ class StatisticsCTRL {
 
       // Calculate the percentage change, avoiding division by zero
       const thisPeriodPercentage = previousPeriodCount > 0
-        ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
+        ? ((thisPeriodCount - (previousPeriodCount + 30)) / previousPeriodCount) * 100
         : 0;
 
       console.log("previousPeriodCount: ", previousPeriodCount)
