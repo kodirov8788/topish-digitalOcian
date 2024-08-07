@@ -91,6 +91,10 @@ class StatisticsCTRL {
       const thisPeriodPercentage = previousPeriodCount > 0
         ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
         : 0;
+
+      console.log("previousPeriodCount: ", previousPeriodCount)
+      console.log("thisPeriodCount: ", thisPeriodCount)
+      console.log("thisPeriodPercentage: ", thisPeriodPercentage)
       const thisPeriodPercentageFormatted = parseFloat(thisPeriodPercentage.toFixed(2));
 
       // Return the counts, rate, and percentage in the response
