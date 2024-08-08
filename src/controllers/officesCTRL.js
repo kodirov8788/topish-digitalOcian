@@ -600,7 +600,7 @@ class OfficesCTRL {
       }
 
       const user = await Users.findById(req.user.id)
-      const allowedRoles = ["Service", "Employer"];
+      const allowedRoles = ["Admin", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
@@ -713,12 +713,12 @@ class OfficesCTRL {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      if (user.role !== "Admin" || user.role !== "Employer") {
+      if (user.role !== "Employer" && user.role !== "Admin") {
         return handleResponse(
           res,
-          401,
+          403,
           "error",
-          "You are not allowed to perform this operation",
+          "You are not allowed!",
           null,
           0
         );

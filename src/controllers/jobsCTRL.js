@@ -897,7 +897,7 @@ class JobsCTRL {
   async getAllJobsForAdmin(req, res) {
     try {
       const user = await Users.findOne({ _id: req.user.id });
-      if (user.role !== "Employer" || user.role !== "Admin") {
+      if (user.role !== "Employer" && user.role !== "Admin") {
         return handleResponse(
           res,
           403,
@@ -1075,7 +1075,7 @@ class JobsCTRL {
       }
 
       const user = await Users.findOne({ _id: req.user.id });
-      if (user.role !== "Admin" || user.role !== "Employer") {
+      if (user.role !== "Employer" && user.role !== "Admin") {
         return handleResponse(
           res,
           403,

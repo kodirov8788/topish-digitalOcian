@@ -486,10 +486,16 @@ class QuickJobsCTRL {
 
     const user = await Users.findById(req.user.id);
 
-    if (user.role !== "Admin" || user.role !== "Employer") {
-      return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+    if (user.role !== "Employer" && user.role !== "Admin") {
+      return handleResponse(
+        res,
+        403,
+        "error",
+        "You are not allowed!",
+        null,
+        0
+      );
     }
-
     try {
       const {
         recommended,
@@ -621,8 +627,15 @@ class QuickJobsCTRL {
 
       const user = await Users.findById(req.user.id);
 
-      if (user.role !== "Admin") {
-        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      if (user.role !== "Employer" && user.role !== "Admin") {
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "You are not allowed!",
+          null,
+          0
+        );
       }
 
       const { id: jobID } = req.params;
