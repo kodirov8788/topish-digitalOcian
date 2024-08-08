@@ -124,9 +124,6 @@ class StatisticsCTRL {
   }
 
 
-
-
-
   async getEmployerCount(req, res) {
     try {
       // if (!req.user) {

@@ -26,7 +26,7 @@ router.use("/api/v1/google", deleteAuthPublic);
 router.use("/api/v1/admin", authMiddleware, adminRouter);
 router.use("/api/v1/jobs", jobRouter);
 router.use("/api/v1/quickjobs", quickJobRouter);
-router.use("/api/v1/users", userRouter); // removed authMiddleware for a while
+router.use("/api/v1/users", userRouter);
 router.use("/api/v1/users/avatar", authMiddleware, avatarRouter); // removed authMiddleware for a while
 router.use("/api/v1/privacy", authMiddleware, accessRouter);
 router.use("/api/v1/users/resume", authMiddleware, resumeCtrl);

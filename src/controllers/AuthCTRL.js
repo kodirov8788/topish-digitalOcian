@@ -61,18 +61,24 @@ class AuthCTRL {
         existingUser.confirmationCode = confirmationCode;
         existingUser.confirmationCodeExpires = confirmationCodeExpires;
       }
+
       await existingUser.save();
+
+
       if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
       } else {
         const token = await getEskizAuthToken();
         const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
+
         if (phoneNumberWithCountryCode.startsWith("+998")) {
           await sendCustomSms(token, phoneNumberWithCountryCode, message);
         } else {
           const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
           console.log(`Message SID: ${messageSid}`);
         }
+
+
         return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
       }
     } catch (error) {
@@ -266,10 +272,7 @@ class AuthCTRL {
         confirmationCode = Math.floor(100000 + Math.random() * 900000);
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
-      // -----
-      // confirmationCode = 112233
-      // confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
-      //-----
+
       user.confirmationCode = confirmationCode;
       user.confirmationCodeExpires = confirmationCodeExpires;
       await user.save();
@@ -282,9 +285,8 @@ class AuthCTRL {
           await sendCustomSms(token, phoneNumberWithCountryCode, message);
         } else {
           const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
-          console.log(`Message SID: ${messageSid}`);
+          // console.log(`Message SID: ${messageSid}`);
         }
-
         return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
       }
 
@@ -408,7 +410,7 @@ class AuthCTRL {
     }
   }
   async renewAccessToken(req, res) {
-    console.log("renew refresh token is called")
+    // console.log("renew refresh token is called")
 
     try {
       const { refreshToken } = req.body;
@@ -420,14 +422,14 @@ class AuthCTRL {
       jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
         if (err) {
           console.log("JWT verification error:", err);
-          return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+          return handleResponse(res, 405, "error", "Invalid refresh token", null, 0);
         }
         try {
           const user = await Users.findOne({ 'refreshTokens.token': refreshToken });
           // console.log("user: ", user?.phoneNumber)
           if (!user) {
             console.log("User not found for provided refresh token");
-            return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+            return handleResponse(res, 405, "error", "User not found for provided refresh token", null, 0);
           }
           // console.log("user2: ", user?.phoneNumber)
 
@@ -446,7 +448,7 @@ class AuthCTRL {
           // console.log("newRefreshToken: ", newRefreshToken)
           if (!tokenUpdated) {
             console.log("Failed to find the refresh token in the database");
-            return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+            return handleResponse(res, 405, "error", "Failed to find the refresh token in the database", null, 0);
           }
           await user.save();
           return handleResponse(res, 200, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
@@ -591,7 +593,6 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   async addUsernamesToAllUsers(req, res) {
     try {
 

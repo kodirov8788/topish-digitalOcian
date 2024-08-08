@@ -40,7 +40,12 @@ const JobsSchema = new mongoose.Schema(
     recommended: { type: Boolean, default: false },
     callOnly: { type: Boolean, default: false },
     phoneNumber: { type: String, default: "" },
-    telegramUsername: { type: String, default: "" }
+    telegramUsername: { type: String, default: "" },
+    postingStatus: {
+      type: String,
+      default: "Pending",
+      enum: ["Pending", "Approved", "Rejected"],
+    },
   },
   { timestamps: true }
 );

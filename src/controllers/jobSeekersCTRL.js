@@ -7,6 +7,9 @@ class JobSeekerCTRL {
   // it shows all employees
   async getAllJobSeekers(req, res) {
     try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
@@ -54,53 +57,26 @@ class JobSeekerCTRL {
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
-      // Step 1: Fetch recommended users with matching job title
-      const recommendedTitleQuery = {
-        jobSeeker: { $exists: true },
-        recommending: true,
-        "jobSeeker.jobTitle": { $regex: jobTitle, $options: "i" }
-      };
+      let resultUsers = [];
+      let total = 0;
 
-      const recommendedTitleUsers = await Users.find(recommendedTitleQuery).exec();
-
-      // Step 2: Fetch recommended users without matching job title
-      const recommendedQuery = {
-        jobSeeker: { $exists: true },
-        recommending: true,
-        "jobSeeker.jobTitle": { $not: { $regex: jobTitle, $options: "i" } }
-      };
-
-      const recommendedUsers = await Users.find(recommendedQuery).exec();
-
-      // Step 3: Fetch other users with matching job title
-      const otherTitleQuery = {
-        jobSeeker: { $exists: true },
-        recommending: false,
-        "jobSeeker.jobTitle": { $regex: jobTitle, $options: "i" }
-      };
-
-      const otherTitleUsers = await Users.find(otherTitleQuery).exec();
-
-      // Step 4: Fetch other users without matching job title
-      const otherQuery = {
-        jobSeeker: { $exists: true },
-        recommending: false,
-        "jobSeeker.jobTitle": { $not: { $regex: jobTitle, $options: "i" } }
-      };
-
-      const otherUsers = await Users.find(otherQuery).exec();
-
-      // Combine results in the desired order
-      const resultUsers = [
-        ...recommendedTitleUsers,
-        ...recommendedUsers,
-        ...otherTitleUsers,
-        ...otherUsers
-      ].slice(skip, skip + limit);
-
-      const total = await Users.countDocuments({
-        jobSeeker: { $exists: true }
-      });
+      if (jobTitle.trim() === "") {
+        const query = {
+          jobSeeker: { $exists: true },
+          recommending: true
+        };
+        resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+        total = await Users.countDocuments(query);
+      } else {
+        // Fetch users with matching job title
+        const query = {
+          jobSeeker: { $exists: true },
+          recommending: true,
+          "jobSeeker.jobTitle": { $regex: jobTitle, $options: "i" }
+        };
+        resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+        total = await Users.countDocuments(query);
+      }
 
       if (resultUsers.length === 0) {
         return handleResponse(res, 200, "error", "No job seekers found", [], 0);
@@ -135,6 +111,14 @@ class JobSeekerCTRL {
   }
   async getExperiencedJobseekers(req, res) {
     try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      const user = await Users.findById(req.user.id);
+      if (user.role !== "Employer") {
+        return handleResponse(res, 401, "error", "You are not allowed!", null, 0);
+      }
+
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
@@ -206,7 +190,6 @@ class JobSeekerCTRL {
       );
     }
   }
-
   async getJobSeekersSavedJobs(req, res) {
     let { page = 1, limit = 10 } = req.query;
     page = parseInt(page, 10);
@@ -217,6 +200,9 @@ class JobSeekerCTRL {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
     const user = await Users.findOne({ _id: req.user.id });
+    if (!user.role == "JobSeeker") {
+      return handleResponse(res, 401, "error", "Job Seeker only", null, 0);
+    }
 
     const jobSeekerId = user.id; // Assuming this is the correct path to the job seeker's _id
 
@@ -884,7 +870,5 @@ class JobSeekerCTRL {
       );
     }
   }
-
 }
-
 module.exports = new JobSeekerCTRL();

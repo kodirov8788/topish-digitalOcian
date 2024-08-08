@@ -18,6 +18,11 @@ const OfficeSchema = new mongoose.Schema(
     },
     applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
     likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
+    postingStatus: {
+      type: String,
+      default: "Pending",
+      enum: ["Pending", "Approved", "Rejected"],
+    },
   },
   { timestamps: true }
 );

@@ -592,6 +592,210 @@ class OfficesCTRL {
       );
     }
   }
+
+  async getAllOfficesForAdmin(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized");
+      }
+
+      const user = await Users.findById(req.user.id)
+      const allowedRoles = ["Service", "Employer"];
+      if (!allowedRoles.includes(user.role)) {
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "You are not allowed!",
+          null,
+          0
+        );
+      }
+
+      const {
+        recommended,
+        title,
+        recent,
+        location,
+        page = 1,
+        limit = 10,
+        sort,
+      } = req.query;
+      let queryObject = {};
+
+      if (recommended) {
+        queryObject.recommended = recommended === true;
+      }
+      if (recent) {
+        recent === true
+          ? (queryObject.createdAt = {
+            $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+          })
+          : (queryObject.createdAt = {
+            $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+          });
+      }
+
+      if (title) {
+        if (title.trim() === "") {
+          return handleResponse(
+            res,
+            400,
+            "error",
+            "Title cannot be empty",
+            [],
+            0
+          );
+        } else {
+          queryObject.title = { $regex: title, $options: "i" };
+        }
+      }
+
+      if (location) {
+        queryObject.location = { $regex: location, $options: "i" };
+      }
+
+      let query = Offices.find(queryObject);
+
+      // Pagination
+      const skip = (page - 1) * parseInt(limit); // Ensure limit is an integer
+      query = query.skip(skip).limit(parseInt(limit));
+
+      // Sort
+      if (sort) {
+        const sortList = sort.split(",").join(" ");
+        query = query.sort(sortList);
+      } else {
+      }
+      const searchedOffice = await query;
+      if (searchedOffice.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      // Prepare pagination data
+      const totalOffices = await Offices.countDocuments(queryObject); // Efficiently fetch total count
+      const pagination = {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalOffices / parseInt(limit)),
+        limit: parseInt(limit),
+        totalDocuments: totalOffices,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Offices retrieved successfully",
+        searchedOffice,
+        searchedOffice.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  // make function to approve office or reject office
+  async approveOrRejectOffice(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findById(req.user.id);
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+
+      if (user.role !== "Admin" || user.role !== "Employer") {
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "You are not allowed to perform this operation",
+          null,
+          0
+        );
+      }
+
+      const { id: officeId } = req.params;
+      const { status } = req.body;
+
+      let office = await Offices.findById(officeId);
+      if (!office) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Office not found with ID: ${officeId}`,
+          null,
+          0
+        );
+      }
+
+      if (status === "Approved") {
+        office.postingStatus = "Approved";
+      } else if (status === "Rejected") {
+        office.postingStatus = "Rejected";
+      } else {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid status. Please provide either 'Approved' or 'Rejected'",
+          null,
+          0
+        );
+      }
+
+      await office.save();
+      return handleResponse(
+        res,
+        200,
+        "success",
+        `Office ${status} successfully`,
+        office,
+        1
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async approveAllOffices(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      // const user = await Users.findById(req.user.id)
+
+      // if (user.role !== "Admin") {
+      //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      // }
+
+      const updatedJob = await Offices.updateMany({}, { postingStatus: "Approved" });
+
+      if (!updatedJob) {
+        return handleResponse(res, 404, "error", "No jobs found", null, 0);
+      }
+      return handleResponse(res, 200, "success", "All jobs Approved successfully", updatedJob, 1);
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
 }
 
 module.exports = new OfficesCTRL();

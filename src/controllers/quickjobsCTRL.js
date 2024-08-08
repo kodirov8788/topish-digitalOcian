@@ -6,7 +6,7 @@ const { handleResponse } = require("../utils/handleResponse");
 const { sendTelegramChannels } = require("../utils/sendingTelegram");
 
 class QuickJobsCTRL {
-  async createQuickjobs(req, res) {
+  async createQuickJobs(req, res) {
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
@@ -51,7 +51,7 @@ class QuickJobsCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-  async deleteQuickjobs(req, res, next) {
+  async deleteQuickJobs(req, res, next) {
     try {
       // Check if the user is authenticated
       if (!req.user) {
@@ -109,7 +109,7 @@ class QuickJobsCTRL {
       );
     }
   }
-  async getAllQuickjobs(req, res) {
+  async getAllQuickJobs(req, res) {
     try {
       const {
         recommended,
@@ -154,6 +154,8 @@ class QuickJobsCTRL {
 
       // Pagination
       const skip = (page - 1) * parseInt(limit, 10);
+
+      queryObject.postingStatus = "Approved";
 
       let query = QuickJobs.find(queryObject)
         .skip(skip)
@@ -328,7 +330,7 @@ class QuickJobsCTRL {
       );
     }
   }
-  async getSingleQuickjob(req, res) {
+  async getSingleQuickJob(req, res) {
     try {
       // if (!req.user) {
       //     return handleResponse(res, 401, 'error', 'Unauthorized', null, 0);
@@ -414,7 +416,7 @@ class QuickJobsCTRL {
       );
     }
   }
-  async updateQuickjobs(req, res) {
+  async updateQuickJobs(req, res) {
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
@@ -475,6 +477,202 @@ class QuickJobsCTRL {
         null,
         0
       );
+    }
+  }
+  async getAllQuickJobsForAdmin(req, res) {
+    if (!req.user) {
+      return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+    }
+
+    const user = await Users.findById(req.user.id);
+
+    if (user.role !== "Admin" || user.role !== "Employer") {
+      return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+    }
+
+    try {
+      const {
+        recommended,
+        jobTitle,
+        location,
+        page = 1,
+        limit = 10,
+        sort,
+        recentJob, // Added recentJob parameter as boolean
+      } = req.query;
+
+      let queryObject = {};
+
+      if (recommended) {
+        queryObject.recommended = recommended === "true";
+      }
+
+      if (jobTitle) {
+        if (jobTitle.trim() === "") {
+          return handleResponse(
+            res,
+            400,
+            "error",
+            "Title cannot be empty",
+            [],
+            0
+          );
+        } else {
+          queryObject.title = { $regex: jobTitle, $options: "i" };
+        }
+      }
+
+      if (location) {
+        queryObject.location = { $regex: location, $options: "i" };
+      }
+
+      // Handle recentJob filter as a boolean
+      if (recentJob === "true") {
+        const daysAgo = new Date(new Date().setDate(new Date().getDate() - 7));
+        queryObject.createdAt = { $gte: daysAgo };
+      }
+
+      // Pagination
+      const skip = (page - 1) * parseInt(limit, 10);
+
+      let query = QuickJobs.find(queryObject)
+        .skip(skip)
+        .limit(parseInt(limit, 10))
+        .sort(sort ? sort.split(",").join(" ") : "-createdAt");
+
+      const searchedJob = await query;
+
+      if (searchedJob.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      const userIds = searchedJob.map((job) => job.createdBy);
+      const users = await Users.find({ _id: { $in: userIds } });
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id.toString()] = user;
+        return acc;
+      }, {});
+
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJob = searchedJob.map((job) => {
+        const user = userMap[job.createdBy.toString()];
+        if (!user) {
+          return {
+            ...job._doc,
+            hr_name: "deleted user",
+            hr_avatar: "default_avatar.png",
+            issuedBy: null,
+          };
+        } else {
+          return {
+            ...job._doc,
+            hr_name: user.employer ? user.fullName : "No employer name",
+            hr_avatar: user.avatar || "default_avatar.png",
+            issuedBy: companyMap[job.createdBy.toString()] || null,
+          };
+        }
+      });
+
+      const totalJobs = await QuickJobs.countDocuments(queryObject);
+      const pagination = {
+        currentPage: parseInt(page, 10),
+        totalPages: Math.ceil(totalJobs / parseInt(limit, 10)),
+        limit: parseInt(limit, 10),
+        totalDocuments: totalJobs,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Jobs retrieved successfully",
+        NewSearchedJob,
+        searchedJob.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async approveOrRejectJob(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findById(req.user.id);
+
+      if (user.role !== "Admin") {
+        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      }
+
+      const { id: jobID } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        return handleResponse(res, 400, "error", "Status is required", null, 0);
+      }
+
+      if (status !== "Approved" && status !== "Rejected") {
+        return handleResponse(res, 400, "error", "Invalid status", null, 0);
+      }
+
+      const updatedJob = await QuickJobs.findOneAndUpdate(
+        { _id: jobID },
+        { postingStatus: status },
+        { new: true }
+      );
+
+      if (!updatedJob) {
+        return handleResponse(res, 404, "error", `Job not found with ID: ${jobID}`, null, 0);
+      }
+      return handleResponse(res, 200, "success", `Job ${status} successfully`, updatedJob, 1);
+    }
+    catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
+
+  // make function to add Approved status to all jobs in the database
+  async approveAllJobs(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      // const user = await Users.findById(req.user.id)
+
+      // if (user.role !== "Admin") {
+      //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      // }
+
+      const updatedJob = await QuickJobs.updateMany({}, { postingStatus: "Approved" });
+
+      if (!updatedJob) {
+        return handleResponse(res, 404, "error", "No jobs found", null, 0);
+      }
+      return handleResponse(res, 200, "success", "All jobs Approved successfully", updatedJob, 1);
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
 }

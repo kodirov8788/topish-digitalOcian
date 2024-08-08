@@ -145,7 +145,7 @@ class JobsCTRL {
       ]);
 
       const combinedResults = [...searchedJobs, ...searchedQuickJobs];
-
+      queryObject.postingStatus = "Approved";
       // Total count for pagination metadata
       const totalJobs = await Jobs.countDocuments(queryObject);
       const totalQuickJobs = await QuickJob.countDocuments(queryObject);
@@ -303,6 +303,8 @@ class JobsCTRL {
       if (location) {
         queryObject.location = { $regex: location, $options: "i" };
       }
+
+      queryObject.postingStatus = "Approved";
       let resultJobs = await Jobs.find(queryObject)
         .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
         .limit(parseInt(limit, 10))
@@ -808,7 +810,6 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
-
   async searchByJobType(req, res) {
     try {
       const { jobType, page = 1, limit = 10 } = req.query;
@@ -893,6 +894,261 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
+  async getAllJobsForAdmin(req, res) {
+    try {
+      const user = await Users.findOne({ _id: req.user.id });
+      if (user.role !== "Employer" || user.role !== "Admin") {
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "You are not allowed!",
+          null,
+          0
+        );
+      }
+
+
+      const {
+        education,
+        experience,
+        workingtype,
+        recommended,
+        salary,
+        jobTitle,
+        sort,
+        location,
+        recentjob,
+        numericFilters,
+        jobType,
+        page = 1,
+        limit = 10,
+      } = req.query;
+
+      let queryObject = {};
+
+      if (recommended === "true") {
+        queryObject.recommended = true;
+      }
+
+      if (experience) {
+        queryObject.experienceRequired = experience;
+      }
+
+      if (salary) {
+        queryObject.salaryRange = salary;
+      }
+      // console.log("salary: ", salary);
+
+      if (workingtype) {
+        queryObject.workingType = workingtype; // Fixed field to workingType
+      }
+
+      if (jobTitle) {
+        queryObject.jobTitle =
+          jobTitle.trim() === "" ? {} : { $regex: jobTitle, $options: "i" };
+      }
+
+      if (recentjob === "true") {
+        const daysAgo = new Date(new Date().setDate(new Date().getDate() - 7));
+        queryObject.createdAt = { $gte: daysAgo };
+      }
+
+      if (numericFilters) {
+        const operatorMap = {
+          ">": "$gt",
+          ">=": "$gte",
+          "=": "$eq",
+          "<": "$lt",
+          "<=": "$lte",
+        };
+        let filters = numericFilters.replace(
+          /\b(<|>|>=|=|<|<=)\b/g,
+          (match) => `-${operatorMap[match]}-`
+        );
+        filters.split(",").forEach((item) => {
+          const [field, operator, value] = item.split("-");
+          if (queryObject[field]) {
+            queryObject[field] = {
+              ...queryObject[field],
+              [operator]: Number(value),
+            };
+          } else {
+            queryObject[field] = { [operator]: Number(value) };
+          }
+        });
+      }
+
+      if (education) {
+        queryObject.educationLevel = { $in: education.split(",") };
+      }
+
+      if (jobType) {
+        // queryObject.jobType = { $in: jobType.split(",") };
+
+        queryObject = { jobType: { $regex: jobType, $options: "i" } };
+      }
+
+      if (location) {
+        queryObject.location = { $regex: location, $options: "i" };
+      }
+
+      let resultJobs = await Jobs.find(queryObject)
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
+        .limit(parseInt(limit, 10))
+        .sort(sort ? sort.split(",").join(" ") : "-createdAt");
+
+      const totalJobs = await Jobs.countDocuments(queryObject);
+
+      if (resultJobs.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      // Fetch user details for createdBy in bulk to minimize database queries
+      const userIds = resultJobs.map((job) => job.createdBy);
+      const users = await Users.find({ _id: { $in: userIds } });
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id.toString()] = user;
+        return acc;
+      }, {});
+
+      // Fetch companies with workers matching the user IDs
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJob = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
+        if (!user) {
+          return {
+            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
+            hr_name: "deleted user", // Fallback if user is not found
+            hr_avatar: "default_avatar.png", // Fallback avatar image path
+            issuedBy: null, // Fallback to null if company not found
+          };
+        } else {
+          return {
+            ...job._doc,
+            hr_name: user.employer
+              ? user.fullName
+              : "No employer name", // Check if employer exists
+            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
+            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
+          };
+        }
+      });
+
+      const pagination = {
+        currentPage: parseInt(page, 10),
+        totalPages: Math.ceil(totalJobs / parseInt(limit, 10)),
+        limit: parseInt(limit, 10),
+        totalDocuments: totalJobs,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Jobs retrieved successfully",
+        NewSearchedJob,
+        NewSearchedJob.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+  // make function to approve job post or reject job post
+  async approveOrRejectJob(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: req.user.id });
+      if (user.role !== "Admin" || user.role !== "Employer") {
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "You are not allowed!",
+          null,
+          0
+        );
+      }
+
+      const {
+        params: { id: jobID },
+      } = req;
+
+      const job = await Jobs.findOne({ _id: jobID });
+
+      if (!job) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Job not found with ID: ${jobID}`,
+          null,
+          0
+        );
+      }
+      const status = req.body.postingStatus;
+
+      if (status === "Approved" || status === "Rejected") {
+        return handleResponse(res, 400, "error", "Invalid status", null, 0);
+      }
+
+
+      const updatedJob = await Jobs.findOneAndUpdate(
+        { _id: jobID },
+        { postingStatus: status },
+        { new: true }
+      );
+
+      if (!updatedJob) {
+        return handleResponse(res, 404, "error", `Job not found with ID: ${jobID}`, null, 0);
+      }
+      return handleResponse(res, 200, "success", `Job ${status} successfully`, updatedJob, 1);
+
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+
+  async approveAllJobs(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      // const user = await Users.findById(req.user.id)
+
+      // if (user.role !== "Admin") {
+      //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      // }
+
+      const updatedJob = await Jobs.updateMany({}, { postingStatus: "Approved" });
+
+      if (!updatedJob) {
+        return handleResponse(res, 404, "error", "No jobs found", null, 0);
+      }
+      return handleResponse(res, 200, "success", "All jobs Approved successfully", updatedJob, 1);
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
+
+
 }
 
 module.exports = new JobsCTRL();

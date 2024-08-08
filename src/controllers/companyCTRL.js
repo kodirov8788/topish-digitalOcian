@@ -301,7 +301,6 @@ class CompanyCTRL {
       );
     }
   }
-
   async updateCompany(req, res) {
     // console.log("req.body: ", req.body);
     try {
@@ -416,7 +415,6 @@ class CompanyCTRL {
       );
     }
   }
-
   async updateCompanyMinorChange(req, res) {
     try {
       if (!req.user) {
@@ -524,7 +522,6 @@ class CompanyCTRL {
       );
     }
   }
-
   // Admin adding and removing Employer
   async addAdminCompany(req, res) {
     try {
@@ -828,7 +825,6 @@ class CompanyCTRL {
       );
     }
   }
-
   async rejectEmployerToComp(req, res) {
     try {
       if (!req.user) {
@@ -928,7 +924,6 @@ class CompanyCTRL {
       );
     }
   }
-
   async admitEmployerToComp(req, res) {
     try {
       if (!req.user) {
