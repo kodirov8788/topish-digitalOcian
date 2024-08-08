@@ -25,7 +25,7 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Error in authMiddleware:", error.message);
-    return handleResponse(res, 401, "error", "Authentication invalid: Token verification failed", {}, 0);
+    return handleResponse(res, 405, "error", "Authentication invalid: Token verification failed", {}, 0);
   }
 };
 
