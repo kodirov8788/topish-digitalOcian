@@ -180,6 +180,7 @@ class OfficesCTRL {
       if (location) {
         queryObject.location = { $regex: location, $options: "i" };
       }
+      // queryObject.postingStatus = "Approved";
 
       let query = Offices.find(queryObject);
 

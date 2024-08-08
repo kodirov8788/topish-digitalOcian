@@ -155,7 +155,7 @@ class QuickJobsCTRL {
       // Pagination
       const skip = (page - 1) * parseInt(limit, 10);
 
-      queryObject.postingStatus = "Approved";
+      // queryObject.postingStatus = "Approved";
 
       let query = QuickJobs.find(queryObject)
         .skip(skip)
