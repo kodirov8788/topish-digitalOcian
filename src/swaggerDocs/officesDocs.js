@@ -1034,6 +1034,276 @@ const OfficesEndpoint = {
             }
         }
     },
+
+
+    "/offices/forAdmin": {
+        get: {
+            summary: "Get all quick jobs for admin",
+            tags: ["Offices"],
+            description:
+                "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
+            parameters: [
+                {
+                    in: "query",
+                    name: "recommended",
+                    schema: {
+                        type: "boolean",
+                    },
+                    description: "Filter for recommended jobs.",
+                },
+                {
+                    in: "query",
+                    name: "recentJob",
+                    schema: {
+                        type: "boolean",
+                    },
+                    description: "Filter for recent jobs.",
+                },
+                {
+                    in: "query",
+                    name: "jobTitle",
+                    schema: {
+                        type: "string",
+                    },
+                    description: "Filter jobs by title with regex search.",
+                },
+                {
+                    in: "query",
+                    name: "location",
+                    schema: {
+                        type: "string",
+                    },
+                    description: "Filter jobs by location with regex search.",
+                },
+                {
+                    in: "query",
+                    name: "page",
+                    schema: {
+                        type: "integer",
+                        default: 1,
+                    },
+                    description: "Page number for pagination.",
+                },
+                {
+                    in: "query",
+                    name: "limit",
+                    schema: {
+                        type: "integer",
+                        default: 10,
+                    },
+                    description: "Number of items per page for pagination.",
+                },
+                {
+                    in: "query",
+                    name: "sort",
+                    schema: {
+                        type: "string",
+                    },
+                    description: "Sort jobs by specified field.",
+                },
+            ],
+            responses: {
+                200: {
+                    description:
+                        "A list of jobs with optional filtering, sorting, and field selection.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    result: { type: "string", example: "success" },
+                                    msg: {
+                                        type: "string",
+                                        example: "Jobs retrieved successfully.",
+                                    },
+                                    data: {
+                                        type: "array",
+                                        items: { $ref: "#/components/schemas/Quickjob" },
+                                    },
+                                    totalCount: { type: "integer", example: 0 },
+                                },
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description:
+                        "Unauthorized access, no or invalid authentication token provided.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    result: { type: "string", example: "failure" },
+                                    msg: {
+                                        type: "string",
+                                        example:
+                                            "Unauthorized access, no or invalid authentication token provided.",
+                                    },
+                                    data: { type: "null", example: null },
+                                    totalCount: { type: "integer", example: 0 },
+                                },
+                            },
+                        },
+                    },
+                },
+                500: {
+                    description: "Internal server error or exception thrown.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    result: { type: "string", example: "failure" },
+                                    msg: {
+                                        type: "string",
+                                        example: "Internal server error or exception thrown.",
+                                    },
+                                    data: { type: "null", example: null },
+                                    totalCount: { type: "integer", example: 0 },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            security: [
+                {
+                    bearerAuth: [],
+                },
+            ],
+        },
+    },
+    "/offices/{id}/approveOrReject": {
+        patch: {
+            summary: "Approve or reject a job post",
+            tags: ["Offices"],
+            description:
+                "Endpoint for an admin to approve or reject a job post by its ID. Requires authentication and admin role.",
+            parameters: [
+                {
+                    in: "path",
+                    name: "id",
+                    required: true,
+                    schema: {
+                        type: "string",
+                    },
+                    description: "The unique identifier of the job post to approve or reject.",
+                },
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                status: {
+                                    type: "string",
+                                    enum: ["Approved", "Rejected"],
+                                    example: "Approved",
+                                },
+                            },
+                            required: ["status"],
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: "Job status updated successfully.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    result: { type: "string", example: "success" },
+                                    msg: { type: "string", example: "Job status updated successfully." },
+                                    data: { $ref: "#/components/schemas/Quickjob" },
+                                },
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: "Invalid status or missing required fields.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    result: { type: "string", example: "error" },
+                                    msg: {
+                                        type: "string",
+                                        example: "Invalid status or missing required fields.",
+                                    },
+                                    data: { type: "null", example: null },
+                                },
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description:
+                        "Unauthorized access, no or invalid authentication token provided.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    result: { type: "string", example: "failure" },
+                                    msg: {
+                                        type: "string",
+                                        example:
+                                            "Unauthorized access, no or invalid authentication token provided.",
+                                    },
+                                    data: { type: "null", example: null },
+                                },
+                            },
+                        },
+                    },
+                },
+                404: {
+                    description: "Job post not found.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    result: { type: "string", example: "failure" },
+                                    msg: { type: "string", example: "Job post not found." },
+                                    data: { type: "null", example: null },
+                                },
+                            },
+                        },
+                    },
+                },
+                500: {
+                    description: "Internal server error or exception thrown.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    result: { type: "string", example: "failure" },
+                                    msg: {
+                                        type: "string",
+                                        example: "Internal server error or exception thrown.",
+                                    },
+                                    data: { type: "null", example: null },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            security: [
+                {
+                    bearerAuth: [],
+                },
+            ],
+        },
+    },
 };
 module.exports = {
     OfficesEndpoint
