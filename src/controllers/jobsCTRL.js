@@ -635,7 +635,7 @@ class JobsCTRL {
           queryObject[field] = { [operator]: Number(value) };
         });
       }
-
+      queryObject.postingStatus = "Approved";
       let resultJobs = Jobs.find(queryObject);
 
       // Pagination
@@ -737,7 +737,7 @@ class JobsCTRL {
       }
 
       const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-
+      queryObject.postingStatus = "Approved";
       let resultJobs = await Jobs.find(queryObject)
         .skip(skip)
         .limit(parseInt(limit, 10))
@@ -822,7 +822,7 @@ class JobsCTRL {
         queryObject = { jobType: { $regex: jobType, $options: "i" } };
       }
 
-
+      queryObject.postingStatus = "Approved";
 
       const resultJobs = await Jobs.find(queryObject)
         .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
