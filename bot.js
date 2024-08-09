@@ -6,19 +6,11 @@ const bot = new TelegramBot(token, { polling: true });
 const URL = process.env.SWAGGERT_URL
 
 
-// /start command
-// bot.onText(/\/start/, async (msg) => {
-//     console.log('Received /start command');
-//     bot.sendMessage(msg.chat.id, 'Welcome! Please use /register to register or /login to login.');
-// });
 
 
 bot.onText(/\/start (\w+)/, async (msg, match) => {
-    // console.log('Received /start command with number');
     const telegramId = msg.from.id;
     let params = match[1]; // Extract the number from the start parameter
-    // console.log("params: ", params);
-    // console.log("telegramId: ", telegramId);
 
     params = params.split("_");
     if (params[0] === "addTelegram") {
@@ -79,15 +71,16 @@ bot.getMe().then((me) => {
     console.error('Error fetching bot information:', err);
 });
 bot.on('my_chat_member', async (msg) => {
-    // console.log('my_chat_member', msg);
+    console.log('my_chat_member', msg);
     try {
         const chat = msg.chat;
         const newChatMember = msg.new_chat_member;
 
-        console.log("botId: ", botId);
-        console.log("newChatMember: ", newChatMember.user.id);
+        // console.log("botId: ", botId);
+        // console.log("newChatMember: ", newChatMember.user.id);
 
         if (newChatMember.user.id === botId) {
+            console.log("newChatMember status: ", newChatMember.status);
             if (newChatMember.status === 'administrator') {
                 // Bot added as admin to a channel
                 console.log('Bot added as admin to a channel');

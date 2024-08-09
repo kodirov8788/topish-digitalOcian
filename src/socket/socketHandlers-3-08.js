@@ -63,7 +63,7 @@ const handleHeartbeat = (socket, userId, io) => {
             lastActive: new Date(),
         });
     }
-    const timeoutMinutes = 60 * 2;// 2 minutes
+    const timeoutMinutes = 60 * 2;// 10 minutes
     onlineUsers = onlineUsers.filter(
         (user) => (new Date() - user.lastActive) / 60000 < timeoutMinutes
     );
@@ -289,55 +289,26 @@ const handleRequestChatRooms = async (socket, { userId }) => {
 //         });
 //     }
 // };
+
+
 const fileChunksMap = {};
-const voiceChunkMap = {};
-
-const handleVoiceChunk = async (socket, { data, chunkIndex, totalChunks, senderId }, callback) => {
-    if (!voiceChunkMap[senderId]) {
-        voiceChunkMap[senderId] = { chunks: new Array(totalChunks).fill(null), totalChunks };
-    }
-
-    // console.log("coming here");
-    // console.log("data: ", data);
-    // console.log("chunkIndex: ", chunkIndex);
-    // console.log("totalChunks: ", totalChunks);
-    // console.log("senderId: ", senderId);
-    // console.log("recipientId: ", recipientId);
-    const base64Data = data.split(',')[1];
-    if (!base64Data) {
-        console.error(`Failed to split base64 data for file`);
-        return;
-    }
-
-    const bufferData = Buffer.from(base64Data, 'base64');
-    voiceChunkMap[senderId].chunks[chunkIndex] = bufferData;
-
-    const receivedChunksCount = voiceChunkMap[senderId].chunks.filter(chunk => chunk !== null).length;
-
-    if (receivedChunksCount === totalChunks) {
-        const completeFileData = Buffer.concat(voiceChunkMap[senderId].chunks);
-        const uploadedUrl = await uploadFile({ buffer: completeFileData, originalname: 'voice.wav', mimetype: 'audio/wav' });
-
-        delete voiceChunkMap[senderId];
-        // console.log("uploadedUrl: ", uploadedUrl);
-        callback(uploadedUrl);
-        socket.emit("fileUploadComplete", { name: 'voice.wav', type: 'audio/wav', uploadedUrl, senderId });
-        return uploadedUrl;
-    } else {
-        callback({ success: true });
-    }
-};
 
 const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChunks, senderId, recipientId }, callback) => {
     if (!fileChunksMap[name]) {
         fileChunksMap[name] = { type, chunks: new Array(totalChunks).fill(null), totalChunks };
     }
-    console.log("call back: ");
+    console.log("name: ", name);
+    // console.log("type: ", type);
+    // console.log("data: ", data);
+    console.log("chunkIndex: ", chunkIndex);
+    console.log("totalChunks: ", totalChunks);
+    console.log(`Received chunk ${chunkIndex + 1}/${totalChunks} for file ${name} from sender ${senderId} to recipient ${recipientId}`);
     if (!data) {
         console.error(`Received invalid chunk data for file ${name}, chunk ${chunkIndex + 1}/${totalChunks}`);
         return;
     }
-    // console.log("data: ", data);
+    // Extract the base64 data part
+    console.log("data: ", data);
     const base64Data = data.split(',')[1];
     // console.log("base64Data: ", base64Data);
     if (!base64Data) {
@@ -354,19 +325,20 @@ const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChun
     // Count the received chunks
     const receivedChunksCount = fileChunksMap[name].chunks.filter(chunk => chunk !== null).length;
 
-    // console.log(`Stored chunk ${chunkIndex + 1}/${totalChunks} for file ${name}. Received chunks: ${receivedChunksCount}/${totalChunks}`);
+    console.log(`Stored chunk ${chunkIndex + 1}/${totalChunks} for file ${name}. Received chunks: ${receivedChunksCount}/${totalChunks}`);
 
     if (receivedChunksCount === totalChunks) {
-        // console.log(`All chunks received for file ${name}. Concatenating and uploading...`);
+        console.log(`All chunks received for file ${name}. Concatenating and uploading...`);
         const completeFileData = Buffer.concat(fileChunksMap[name].chunks);
 
         // Upload the concatenated file
         const uploadedUrl = await uploadFile({ buffer: completeFileData, originalname: name, mimetype: type });
-        console.log("uploadedUrl: ", uploadedUrl);
-        // console.log(`File ${name} uploaded successfully. URL: ${uploadedUrl.url}`);
+
+        console.log(`File ${name} uploaded successfully. URL: ${uploadedUrl.url}`);
 
         // Clean up the stored chunks
         delete fileChunksMap[name];
+
         callback(uploadedUrl);
         socket.emit("fileUploadComplete", { name, type, uploadedUrl, senderId, recipientId });
         return uploadedUrl;
@@ -381,7 +353,7 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
             if (typeof callback === 'function') callback(error);
             return;
         }
-        console.log("recipientId: ", recipientId);
+
         const recipientUser = await Users.findById(recipientId);
         if (!recipientUser) {
             const error = { success: false, error: "Recipient not found" };
@@ -405,13 +377,14 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
             fileUrls: files?.length > 0 ? files : [],
         });
 
-        const recipientUserOnline = onlineUsers.find((user) => user.userId == recipientId);
+        const senderChatRoom = userChatRoomMap[senderId];
+        const recipientChatRoom = userChatRoomMap[recipientId];
 
-        if (recipientUserOnline) {
+        if (senderChatRoom && recipientChatRoom && senderChatRoom === recipientChatRoom) {
             message.read = true;
-            io.to(recipientUserOnline.socketId).emit("messageRead", {
+            io.to(senderChatRoom).emit("messageRead", {
                 messageId: message._id,
-                chatRoomId: chatRoom._id,
+                chatRoomId: senderChatRoom,
                 readBy: recipientId,
                 read: true,
             });
@@ -435,18 +408,15 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
             replyTo: message.replyTo,
         };
 
-        // Emit the message to the chat room
         await io.to(chatRoom._id.toString()).emit("getMessage", messageToSend);
 
-        // Emit to outside of the chat room (notification)
-        socket.emit("getMessageOutSide", messageToSend); // Emit to sender
-
-        // Check if the recipient is online and emit to their socket
+        const recipientUserOnline = onlineUsers.find((user) => user.userId == recipientId);
         if (recipientUserOnline && recipientUserOnline.socketId) {
-            socket.to(recipientUserOnline.socketId).emit("getMessageOutSide", messageToSend);
+            io.to(recipientUserOnline.socketId).emit("getMessageOutSide", messageToSend);
             console.log("Message sent to recipient socket:", recipientUserOnline.socketId);
         }
 
+        console.log("Message sent to chat room:", chatRoom._id.toString());
         const fullName = senderFromStorage?.fullName || "Unknown User";
 
         const successResponse = {
@@ -480,9 +450,14 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
     }
 };
 
+
+
+
+
+
 // --------------------------------- File Uploads ---------------------------------
 
-const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, skip = 0 }) => {
+const handleSingleChatRoom = async (socket, { userId, chatRoomId }) => {
     try {
         const chatRoom = await ChatRoom.findOne({
             _id: chatRoomId,
@@ -526,14 +501,9 @@ const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, sk
         );
 
         const messageHistory = await Message.find({ chatRoom: chatRoomId })
-            .sort({ timestamp: -1 }) // Sort by newest first
-            .skip(skip)
-            .limit(limit)
+            .sort({ timestamp: 1 })
             .populate("senderId", "avatar")
             .exec();
-
-        // Reverse the order to have the oldest first
-        messageHistory.reverse();
 
         let otherUserData = {
             fullName: otherUser.fullName,
@@ -562,12 +532,7 @@ const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, sk
         });
     }
 };
-const fetchMoreMessages = async (socket, { chatRoomId, userId, currentMessageCount }) => {
-    const limit = 15;
-    const skip = currentMessageCount;
-    await handleSingleChatRoom(socket, { userId, chatRoomId, limit, skip });
-}
-// --------------------------------- hundle chatRoom ---------------------------------
+
 const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
     try {
         const user = await Users.findById(userId);
@@ -1153,7 +1118,5 @@ module.exports = {
     handleGetGPTConfig,
     handlePromptString,
     handleDisconnect,
-    handleFileChunk,
-    handleVoiceChunk,
-    fetchMoreMessages
+    handleFileChunk
 };

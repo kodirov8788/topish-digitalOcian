@@ -3,7 +3,7 @@ const Jobs = require("../models/job_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const Company = require("../models/company_model");
-
+const { incrementUserCount } = require("../utils/statisticService");
 async function aggregateApplicantsCount(matchStage) {
   // Combine counts from both Jobs and QuickJobs collections based on the provided match stage
   const jobsCount = await Jobs.aggregate([
@@ -23,6 +23,19 @@ async function aggregateApplicantsCount(matchStage) {
     (quickJobsCount[0] ? quickJobsCount[0].count : 0);
   return total;
 }
+
+// async function incrementUserCount() {
+//   let stat = await Statistics.findOne();
+
+//   if (!stat) {
+//     stat = new Statistics();
+//   }
+
+//   stat.count += 1;
+//   await stat.save();
+//   // console.log("User count incremented to: ", stat)
+//   return stat;
+// }
 class StatisticsCTRL {
   async getJobSeekerCount(req, res) {
     try {
@@ -92,9 +105,9 @@ class StatisticsCTRL {
         ? ((thisPeriodCount - (previousPeriodCount)) / (previousPeriodCount + 112)) * 100
         : 0;
 
-      console.log("previousPeriodCount: ", previousPeriodCount)
-      console.log("thisPeriodCount: ", thisPeriodCount)
-      console.log("thisPeriodPercentage: ", thisPeriodPercentage)
+      // console.log("previousPeriodCount: ", previousPeriodCount)
+      // console.log("thisPeriodCount: ", thisPeriodCount)
+      // console.log("thisPeriodPercentage: ", thisPeriodPercentage)
       const thisPeriodPercentageFormatted = Math.floor(Number(thisPeriodPercentage));
 
       // Return the counts, rate, and percentage in the response
@@ -196,7 +209,7 @@ class StatisticsCTRL {
             : "steady";
       let thisPeriodPercentage =
         previousPeriodCount > 0
-          ? ((thisMonthCount - previousPeriodCount) / previousPeriodCount) * 100
+          ? ((thisMonthCount - previousPeriodCount) / previousPeriodCount - 45) * 100
           : 0;
       thisPeriodPercentage = thisPeriodPercentage.toFixed(2); // Two decimal precision
 
@@ -227,10 +240,7 @@ class StatisticsCTRL {
   }
   async getJobsCount(req, res) {
     try {
-      // if (!req.user) {
-      //     // User is not authenticated
-      //     return handleResponse(res, 401, 'error', 'Unauthorized');
-      // }
+
 
       // Parse the provided or default date (today) for selected day counting
       let { date } = req.query;
@@ -250,6 +260,7 @@ class StatisticsCTRL {
       });
       const selectedDayCount = selectedDayJobsCount + selectedDayQuickJobsCount;
 
+      await incrementUserCount()
       // This month's count from the start of the current month to today
       const thisMonthStartDate = new Date();
       thisMonthStartDate.setDate(1); // First day of the current month

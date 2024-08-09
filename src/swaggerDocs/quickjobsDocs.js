@@ -1,14 +1,14 @@
 const QuickjobsEndpoint = {
   tags: [
     {
-      name: "Jobs",
+      name: "QuickJobs",
       description: "The Quickjobs managing API",
     },
   ],
   "/quickjobs": {
     post: {
       summary: "Create a new job",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         "Endpoint to create a new job listing. Requires authentication and appropriate role.",
       requestBody: {
@@ -154,7 +154,7 @@ const QuickjobsEndpoint = {
     },
     get: {
       summary: "Get all quick jobs",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         "Endpoint to retrieve all job listings with optional filtering, sorting, and field selection. Requires authentication.",
       parameters: [
@@ -292,7 +292,7 @@ const QuickjobsEndpoint = {
   "/quickjobs/myJobs": {
     get: {
       summary: "Get all job posts created by the authenticated employer",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         'Endpoint to retrieve all job posts created by the authenticated employer. Supports pagination. Requires authentication and the user must have the "Employer" role.',
       parameters: [
@@ -414,7 +414,7 @@ const QuickjobsEndpoint = {
   "/quickjobs/{id}": {
     get: {
       summary: "Get a single job post",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         "Endpoint to retrieve a single job post by its ID. Requires authentication.",
       parameters: [
@@ -510,7 +510,7 @@ const QuickjobsEndpoint = {
     },
     patch: {
       summary: "Update a job post",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         'Endpoint to update a job post by its ID. Requires authentication and the user must have the "Employer" role.',
       parameters: [
@@ -612,7 +612,7 @@ const QuickjobsEndpoint = {
     },
     delete: {
       summary: "Delete a job post",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         'Endpoint to delete a job post by its ID. Requires authentication and the user must have the "Employer" role.',
       parameters: [
@@ -714,7 +714,7 @@ const QuickjobsEndpoint = {
   "/quickjobs/{id}/apply": {
     post: {
       summary: "Apply for a job",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         "Endpoint for a job seeker to apply for a job by its ID. Requires authentication.",
       parameters: [
@@ -825,7 +825,7 @@ const QuickjobsEndpoint = {
   "/quickjobs/myJobs/{id}/applicants": {
     get: {
       summary: "Get applicants for a specific job",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         'Endpoint to retrieve all applicants for a specific job post by its ID. Requires authentication and the user must have the "Employer" role.',
       parameters: [
@@ -952,7 +952,7 @@ const QuickjobsEndpoint = {
   "/quickjobs/forAdmin": {
     get: {
       summary: "Get all quick jobs for admin",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
       parameters: [
@@ -1090,7 +1090,7 @@ const QuickjobsEndpoint = {
   "/quickjobs/{id}/approveOrReject": {
     patch: {
       summary: "Approve or reject a job post",
-      tags: ["Jobs"],
+      tags: ["QuickJobs"],
       description:
         "Endpoint for an admin to approve or reject a job post by its ID. Requires authentication and admin role.",
       parameters: [
@@ -1217,7 +1217,306 @@ const QuickjobsEndpoint = {
       ],
     },
   },
+
+  "/quickjobs/rejected": {
+    get: {
+      summary: "Get all quick jobs for admin",
+      tags: ["QuickJobs"],
+      description:
+        "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
+      parameters: [
+        {
+          in: "query",
+          name: "page",
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+          description: "Page number for pagination.",
+        },
+        {
+          in: "query",
+          name: "limit",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+          description: "Number of items per page for pagination.",
+        },
+
+      ],
+      responses: {
+        200: {
+          description:
+            "A list of jobs with optional filtering, sorting, and field selection.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Jobs retrieved successfully.",
+                  },
+                  data: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Quickjob" },
+                  },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description:
+            "Unauthorized access, no or invalid authentication token provided.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Unauthorized access, no or invalid authentication token provided.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error or exception thrown.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example: "Internal server error or exception thrown.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+  },
+  "/quickjobs/pending": {
+    get: {
+      summary: "Get all quick jobs for admin",
+      tags: ["QuickJobs"],
+      description:
+        "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
+      parameters: [
+        {
+          in: "query",
+          name: "page",
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+          description: "Page number for pagination.",
+        },
+        {
+          in: "query",
+          name: "limit",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+          description: "Number of items per page for pagination.",
+        },
+
+      ],
+      responses: {
+        200: {
+          description:
+            "A list of jobs with optional filtering, sorting, and field selection.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Jobs retrieved successfully.",
+                  },
+                  data: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Quickjob" },
+                  },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description:
+            "Unauthorized access, no or invalid authentication token provided.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Unauthorized access, no or invalid authentication token provided.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error or exception thrown.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example: "Internal server error or exception thrown.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+  },
+  "/quickjobs/approved": {
+    get: {
+      summary: "Get all quick jobs for admin",
+      tags: ["QuickJobs"],
+      description:
+        "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
+      parameters: [
+        {
+          in: "query",
+          name: "page",
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+          description: "Page number for pagination.",
+        },
+        {
+          in: "query",
+          name: "limit",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+          description: "Number of items per page for pagination.",
+        },
+
+      ],
+      responses: {
+        200: {
+          description:
+            "A list of jobs with optional filtering, sorting, and field selection.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Jobs retrieved successfully.",
+                  },
+                  data: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Quickjob" },
+                  },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description:
+            "Unauthorized access, no or invalid authentication token provided.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Unauthorized access, no or invalid authentication token provided.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error or exception thrown.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example: "Internal server error or exception thrown.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+  },
 };
+
 module.exports = {
   QuickjobsEndpoint,
 };

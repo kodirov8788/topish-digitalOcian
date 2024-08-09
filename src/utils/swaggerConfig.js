@@ -1,7 +1,7 @@
 // swaggerConfig.js
 const swaggerUI = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
-const { MessagesEndpoint } = require('../swaggerDocs/messagesDocs');
+// const { MessagesEndpoint } = require('../swaggerDocs/messagesDocs');
 const { UserAvatarEndpoint } = require('../swaggerDocs/userAvatardocs');
 const { ProfileEndpoint } = require('../swaggerDocs/profileDocs');
 const { JobsEndpoint } = require('../swaggerDocs/jobsDocs');
@@ -89,7 +89,7 @@ const swaggerOptions = {
             ...JobsEndpoint,
             ...ProfileEndpoint,
             ...UserAvatarEndpoint,
-            ...MessagesEndpoint,
+            // ...MessagesEndpoint,
             ...workExperienceEndpoint,
             ...educationEndpoint,
             ...projectEndpoint,

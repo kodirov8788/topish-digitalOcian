@@ -20,7 +20,8 @@ const {
   handlePromptString,
   handleDisconnect,
   handleFileChunk,
-  handleVoiceChunk
+  handleVoiceChunk,
+  fetchMoreMessages
 } = require("./socketHandlers");
 
 let io = null;
@@ -47,6 +48,8 @@ const initSocketServer = (server) => {
     socket.on('voiceChunk', (data, callback) => handleVoiceChunk(socket, data, callback));
     //-----------------------------------------------------------------------------------
     socket.on("singleChatRoom", (data) => handleSingleChatRoom(socket, data,));
+    socket.on('fetchMoreMessages', (data) => fetchMoreMessages(socket, data));
+    //-----------------------------------------------------------------------------------
     socket.on("createChatRoom", (data) => handleCreateChatRoom(socket, data));
     socket.on("adminChatRoom", (data) => handleAdminChatRoom(socket, data,));
     socket.on("deleteChatRoom", (data) => handleDeleteChatRoom(socket, data, io));

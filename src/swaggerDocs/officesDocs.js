@@ -1,4 +1,3 @@
-
 const OfficesEndpoint = {
     tags: [
         {
@@ -274,7 +273,7 @@ const OfficesEndpoint = {
                                     result: { type: 'string', example: 'error' },
                                     msg: { type: 'string', example: 'Unauthorized. You need to log in to perform this action.' },
                                     data: { type: 'null', example: null },
-                                    totalCount: { type: 'integer', example: 0 },
+                                    totalCount: { type: 'integer', example: 0 }
                                 }
                             }
                         }
@@ -548,15 +547,15 @@ const OfficesEndpoint = {
                                 },
                                 images: {
                                     type: 'string',
-                                    description: 'Contact phone number for the office.',
-                                    example: ""
+                                    description: 'Existing image IDs to keep.',
+                                    example: 'image1,image2'
                                 },
                                 officeImages: {
                                     type: 'array',
                                     items: {
                                         type: 'string',
                                         format: 'binary',
-                                        description: 'Office images'
+                                        description: 'New office images'
                                     },
                                     description: 'Array of images for the office. Each image should be uploaded as a separate file.'
                                 }
@@ -681,11 +680,11 @@ const OfficesEndpoint = {
                     name: 'officeId',
                     in: 'path',
                     required: true,
-                    description: 'The ID of the office to delete',
                     schema: {
                         type: 'string',
                     },
-                },
+                    description: 'The ID of the office to delete',
+                }
             ],
             responses: {
                 '200': {
@@ -1034,14 +1033,12 @@ const OfficesEndpoint = {
             }
         }
     },
-
-
     "/offices/forAdmin": {
         get: {
-            summary: "Get all quick jobs for admin",
+            summary: "Get all offices for admin",
             tags: ["Offices"],
             description:
-                "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
+                "Endpoint to retrieve all office listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
             parameters: [
                 {
                     in: "query",
@@ -1049,23 +1046,15 @@ const OfficesEndpoint = {
                     schema: {
                         type: "boolean",
                     },
-                    description: "Filter for recommended jobs.",
+                    description: "Filter for recommended offices.",
                 },
                 {
                     in: "query",
-                    name: "recentJob",
-                    schema: {
-                        type: "boolean",
-                    },
-                    description: "Filter for recent jobs.",
-                },
-                {
-                    in: "query",
-                    name: "jobTitle",
+                    name: "title",
                     schema: {
                         type: "string",
                     },
-                    description: "Filter jobs by title with regex search.",
+                    description: "Filter offices by title with regex search.",
                 },
                 {
                     in: "query",
@@ -1073,7 +1062,7 @@ const OfficesEndpoint = {
                     schema: {
                         type: "string",
                     },
-                    description: "Filter jobs by location with regex search.",
+                    description: "Filter offices by location with regex search.",
                 },
                 {
                     in: "query",
@@ -1099,13 +1088,13 @@ const OfficesEndpoint = {
                     schema: {
                         type: "string",
                     },
-                    description: "Sort jobs by specified field.",
+                    description: "Sort offices by specified field.",
                 },
             ],
             responses: {
                 200: {
                     description:
-                        "A list of jobs with optional filtering, sorting, and field selection.",
+                        "A list of offices with optional filtering, sorting, and field selection.",
                     content: {
                         "application/json": {
                             schema: {
@@ -1114,11 +1103,11 @@ const OfficesEndpoint = {
                                     result: { type: "string", example: "success" },
                                     msg: {
                                         type: "string",
-                                        example: "Jobs retrieved successfully.",
+                                        example: "Offices retrieved successfully.",
                                     },
                                     data: {
                                         type: "array",
-                                        items: { $ref: "#/components/schemas/Quickjob" },
+                                        items: { $ref: "#/components/schemas/Office" },
                                     },
                                     totalCount: { type: "integer", example: 0 },
                                 },
@@ -1176,10 +1165,10 @@ const OfficesEndpoint = {
     },
     "/offices/{id}/approveOrReject": {
         patch: {
-            summary: "Approve or reject a job post",
+            summary: "Approve or reject an office post",
             tags: ["Offices"],
             description:
-                "Endpoint for an admin to approve or reject a job post by its ID. Requires authentication and admin role.",
+                "Endpoint for an admin to approve or reject an office post by its ID. Requires authentication and admin role.",
             parameters: [
                 {
                     in: "path",
@@ -1188,7 +1177,7 @@ const OfficesEndpoint = {
                     schema: {
                         type: "string",
                     },
-                    description: "The unique identifier of the job post to approve or reject.",
+                    description: "The unique identifier of the office post to approve or reject.",
                 },
             ],
             requestBody: {
@@ -1211,15 +1200,15 @@ const OfficesEndpoint = {
             },
             responses: {
                 200: {
-                    description: "Job status updated successfully.",
+                    description: "Office status updated successfully.",
                     content: {
                         "application/json": {
                             schema: {
                                 type: "object",
                                 properties: {
                                     result: { type: "string", example: "success" },
-                                    msg: { type: "string", example: "Job status updated successfully." },
-                                    data: { $ref: "#/components/schemas/Quickjob" },
+                                    msg: { type: "string", example: "Office status updated successfully." },
+                                    data: { $ref: "#/components/schemas/Office" },
                                 },
                             },
                         },
@@ -1264,14 +1253,14 @@ const OfficesEndpoint = {
                     },
                 },
                 404: {
-                    description: "Job post not found.",
+                    description: "Office post not found.",
                     content: {
                         "application/json": {
                             schema: {
                                 type: "object",
                                 properties: {
                                     result: { type: "string", example: "failure" },
-                                    msg: { type: "string", example: "Job post not found." },
+                                    msg: { type: "string", example: "Office post not found." },
                                     data: { type: "null", example: null },
                                 },
                             },
@@ -1304,10 +1293,353 @@ const OfficesEndpoint = {
             ],
         },
     },
+    '/offices/approveAllOffices': {
+        post: {
+            summary: 'Approve all offices',
+            tags: ['Offices'],
+            description: 'Endpoint for an admin to approve all office posts. Requires authentication and admin role.',
+            responses: {
+                '200': {
+                    description: 'All offices approved successfully.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'success' },
+                                    msg: { type: 'string', example: 'All offices approved successfully.' },
+                                    data: { type: 'null', example: null }
+                                }
+                            }
+                        }
+                    }
+                },
+                '401': {
+                    description: 'Unauthorized access, no or invalid authentication token provided.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'failure' },
+                                    msg: {
+                                        type: 'string',
+                                        example: 'Unauthorized access, no or invalid authentication token provided.',
+                                    },
+                                    data: { type: 'null', example: null },
+                                },
+                            },
+                        },
+                    },
+                },
+                '500': {
+                    description: 'Internal server error or exception thrown.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'failure' },
+                                    msg: {
+                                        type: 'string',
+                                        example: 'Internal server error or exception thrown.',
+                                    },
+                                    data: { type: 'null', example: null },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            security: [
+                {
+                    bearerAuth: [],
+                },
+            ],
+        },
+    },
+    '/offices/rejected': {
+        get: {
+            tags: ['Offices'],
+            summary: 'Retrieve all rejected offices',
+            description: 'Fetches a list of all rejected office listings. Requires user authentication.',
+            operationId: 'getRejectedOffices',
+            security: [
+                {
+                    bearerAuth: []
+                }
+            ],
+            parameters: [
+                {
+                    name: 'page',
+                    in: 'query',
+                    description: 'Page number for pagination',
+                    required: false,
+                    schema: {
+                        type: 'integer',
+                        default: 1,
+                    },
+                },
+                {
+                    name: 'limit',
+                    in: 'query',
+                    description: 'Number of items per page',
+                    required: false,
+                    schema: {
+                        type: 'integer',
+                        default: 10,
+                    },
+                },
+            ],
+            responses: {
+                '200': {
+                    description: 'Rejected offices retrieved successfully.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'success' },
+                                    msg: { type: 'string', example: 'Rejected offices retrieved successfully.' },
+                                    data: {
+                                        type: 'array',
+                                        items: {
+                                            $ref: '#/components/schemas/Office'
+                                        },
+                                    },
+                                    totalCount: { type: 'integer', example: 100 },
+                                    currentPage: { type: 'integer', example: 1 },
+                                    totalPages: { type: 'integer', example: 10 },
+                                    limit: { type: 'integer', example: 10 },
+                                }
+                            }
+                        }
+                    }
+                },
+                '401': {
+                    description: 'Unauthorized. User must be authenticated.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'error' },
+                                    msg: { type: 'string', example: 'Unauthorized. You need to log in to perform this action.' },
+                                    data: { type: 'null', example: null },
+                                    totalCount: { type: 'integer', example: 0 }
+                                }
+                            }
+                        }
+                    }
+                },
+                '500': {
+                    description: 'Internal Server Error. An error occurred while fetching the offices.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'error' },
+                                    msg: { type: 'string', example: 'An error occurred while fetching the offices.' },
+                                    data: { type: 'null', example: null },
+                                    totalCount: { type: 'integer', example: 0 },
+                                }
+                            }
+                        }
+                    }
+                },
+            }
+        }
+    },
+    '/offices/pending': {
+        get: {
+            tags: ['Offices'],
+            summary: 'Retrieve all pending offices',
+            description: 'Fetches a list of all pending office listings. Requires user authentication.',
+            operationId: 'getPendingOffices',
+            security: [
+                {
+                    bearerAuth: []
+                }
+            ],
+            parameters: [
+                {
+                    name: 'page',
+                    in: 'query',
+                    description: 'Page number for pagination',
+                    required: false,
+                    schema: {
+                        type: 'integer',
+                        default: 1,
+                    },
+                },
+                {
+                    name: 'limit',
+                    in: 'query',
+                    description: 'Number of items per page',
+                    required: false,
+                    schema: {
+                        type: 'integer',
+                        default: 10,
+                    },
+                },
+
+            ],
+            responses: {
+                '200': {
+                    description: 'Pending offices retrieved successfully.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'success' },
+                                    msg: { type: 'string', example: 'Pending offices retrieved successfully.' },
+                                    data: {
+                                        type: 'array',
+                                        items: {
+                                            $ref: '#/components/schemas/Office'
+                                        },
+                                    },
+                                    totalCount: { type: 'integer', example: 100 },
+                                    currentPage: { type: 'integer', example: 1 },
+                                    totalPages: { type: 'integer', example: 10 },
+                                    limit: { type: 'integer', example: 10 },
+                                }
+                            }
+                        }
+                    }
+                },
+                '401': {
+                    description: 'Unauthorized. User must be authenticated.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'error' },
+                                    msg: { type: 'string', example: 'Unauthorized. You need to log in to perform this action.' },
+                                    data: { type: 'null', example: null },
+                                    totalCount: { type: 'integer', example: 0 }
+                                }
+                            }
+                        }
+                    }
+                },
+                '500': {
+                    description: 'Internal Server Error. An error occurred while fetching the offices.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'error' },
+                                    msg: { type: 'string', example: 'An error occurred while fetching the offices.' },
+                                    data: { type: 'null', example: null },
+                                    totalCount: { type: 'integer', example: 0 },
+                                }
+                            }
+                        }
+                    }
+                },
+            }
+        }
+    },
+    '/offices/approved': {
+        get: {
+            tags: ['Offices'],
+            summary: 'Retrieve all approved offices',
+            description: 'Fetches a list of all approved office listings. Requires user authentication.',
+            operationId: 'getApprovedOffices',
+            security: [
+                {
+                    bearerAuth: []
+                }
+            ],
+            parameters: [
+                {
+                    name: 'page',
+                    in: 'query',
+                    description: 'Page number for pagination',
+                    required: false,
+                    schema: {
+                        type: 'integer',
+                        default: 1,
+                    },
+                },
+                {
+                    name: 'limit',
+                    in: 'query',
+                    description: 'Number of items per page',
+                    required: false,
+                    schema: {
+                        type: 'integer',
+                        default: 10,
+                    },
+                }
+            ],
+            responses: {
+                '200': {
+                    description: 'Approved offices retrieved successfully.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'success' },
+                                    msg: { type: 'string', example: 'Approved offices retrieved successfully.' },
+                                    data: {
+                                        type: 'array',
+                                        items: {
+                                            $ref: '#/components/schemas/Office'
+                                        },
+                                    },
+                                    totalCount: { type: 'integer', example: 100 },
+                                    currentPage: { type: 'integer', example: 1 },
+                                    totalPages: { type: 'integer', example: 10 },
+                                    limit: { type: 'integer', example: 10 },
+                                }
+                            }
+                        }
+                    }
+                },
+                '401': {
+                    description: 'Unauthorized. User must be authenticated.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'error' },
+                                    msg: { type: 'string', example: 'Unauthorized. You need to log in to perform this action.' },
+                                    data: { type: 'null', example: null },
+                                    totalCount: { type: 'integer', example: 0 }
+                                }
+                            }
+                        }
+                    }
+                },
+                '500': {
+                    description: 'Internal Server Error. An error occurred while fetching the offices.',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    result: { type: 'string', example: 'error' },
+                                    msg: { type: 'string', example: 'An error occurred while fetching the offices.' },
+                                    data: { type: 'null', example: null },
+                                    totalCount: { type: 'integer', example: 0 },
+                                }
+                            }
+                        }
+                    }
+                },
+            }
+        }
+    }
 };
+
 module.exports = {
     OfficesEndpoint
 };
-
-
-

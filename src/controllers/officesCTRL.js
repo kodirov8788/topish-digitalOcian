@@ -593,7 +593,6 @@ class OfficesCTRL {
       );
     }
   }
-
   async getAllOfficesForAdmin(req, res) {
     try {
       if (!req.user) {
@@ -797,6 +796,179 @@ class OfficesCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+  async getRejectedOffices(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized");
+      }
+      if (req.user.role !== "Admin" && req.user.role !== "Employer") {
+        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      }
+
+      const {
+        page = 1,
+        limit = 10,
+      } = req.query;
+      let queryObject = {};
+
+      queryObject.postingStatus = "Rejected";
+
+      let query = Offices.find(queryObject);
+
+      // Pagination
+      const skip = (page - 1) * parseInt(limit); // Ensure limit is an integer
+      query = query.skip(skip).limit(parseInt(limit));
+
+      const searchedOffice = await query;
+      if (searchedOffice.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      // Prepare pagination data
+      const totalOffices = await Offices.countDocuments(queryObject); // Efficiently fetch total count
+      const pagination = {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalOffices / parseInt(limit)),
+        limit: parseInt(limit),
+        totalDocuments: totalOffices,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Offices retrieved successfully",
+        searchedOffice,
+        searchedOffice.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async getPendingOffices(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized");
+      }
+      if (req.user.role !== "Admin" && req.user.role !== "Employer") {
+        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      }
+
+      const {
+        page = 1,
+        limit = 10,
+      } = req.query;
+      let queryObject = {};
+
+      queryObject.postingStatus = "Pending";
+
+      let query = Offices.find(queryObject);
+
+      // Pagination
+      const skip = (page - 1) * parseInt(limit); // Ensure limit is an integer
+      query = query.skip(skip).limit(parseInt(limit));
+
+      const searchedOffice = await query;
+      if (searchedOffice.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      // Prepare pagination data
+      const totalOffices = await Offices.countDocuments(queryObject); // Efficiently fetch total count
+      const pagination = {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalOffices / parseInt(limit)),
+        limit: parseInt(limit),
+        totalDocuments: totalOffices,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Offices retrieved successfully",
+        searchedOffice,
+        searchedOffice.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async getApprovedOffices(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized");
+      }
+      if (req.user.role !== "Admin" && req.user.role !== "Employer") {
+        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      }
+      const {
+        page = 1,
+        limit = 10,
+      } = req.query;
+      let queryObject = {};
+
+      queryObject.postingStatus = "Approved";
+
+      let query = Offices.find(queryObject);
+
+      // Pagination
+      const skip = (page - 1) * parseInt(limit); // Ensure limit is an integer
+      query = query.skip(skip).limit(parseInt(limit));
+
+      const searchedOffice = await query;
+      if (searchedOffice.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      // Prepare pagination data
+      const totalOffices = await Offices.countDocuments(queryObject); // Efficiently fetch total count
+      const pagination = {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalOffices / parseInt(limit)),
+        limit: parseInt(limit),
+        totalDocuments: totalOffices,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Offices retrieved successfully",
+        searchedOffice,
+        searchedOffice.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+
+
+
 }
 
 module.exports = new OfficesCTRL();

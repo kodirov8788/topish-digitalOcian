@@ -1,3 +1,4 @@
+
 const JobsEndpoint = {
   tags: [
     {
@@ -5,17 +6,11 @@ const JobsEndpoint = {
       description: "The Jobs managing API",
     },
   ],
-  // jobType: {
-  //   type: String,
-  //   default: "Full-time",
-  //   enum: ["Full Time", "Part Time", "Contract", "Freelance","Contractual","Temporary", "Internship"],
-  // },
   "/jobs": {
     post: {
       summary: "Create a new job",
       tags: ["Jobs"],
-      description:
-        "Endpoint to create a new job listing. Requires authentication and appropriate role.",
+      description: "Endpoint to create a new job listing. Requires authentication and appropriate role.",
       requestBody: {
         required: true,
         content: {
@@ -30,8 +25,7 @@ const JobsEndpoint = {
                 },
                 description: {
                   type: "string",
-                  example:
-                    "We are looking for a Senior Software Developer to join our team.",
+                  example: "We are looking for a Senior Software Developer to join our team.",
                 },
                 jobStatus: {
                   type: "string",
@@ -58,8 +52,6 @@ const JobsEndpoint = {
                   },
                   example: [
                     "Health insurance, Paid time off, Remote work options",
-                    "Health insurance, Paid time off, Remote work options 2",
-                    "Health insurance, Paid time off, Remote work options 3",
                   ],
                 },
                 location: {
@@ -89,8 +81,7 @@ const JobsEndpoint = {
                 },
                 qualifications: {
                   type: "string",
-                  example:
-                    "Must have a Bachelor's degree in Computer Science or equivalent",
+                  example: "Must have a Bachelor's degree in Computer Science or equivalent",
                 },
                 experience: {
                   type: "string",
@@ -117,20 +108,10 @@ const JobsEndpoint = {
                 },
                 requirements: {
                   type: "string",
-                  example:
-                    "Proficient in modern JavaScript frameworks, RESTful APIs, and database management",
+                  example: "Proficient in modern JavaScript frameworks, RESTful APIs, and database management",
                 },
               },
-              required: [
-                "hr_name",
-                "company",
-                "jobStatus",
-                "jobType",
-                "location",
-                "jobTitle",
-                "industry",
-                "role",
-              ],
+              required: ["hr_name", "company", "jobStatus", "jobType", "location", "jobTitle", "industry", "role"],
             },
           },
         },
@@ -145,9 +126,7 @@ const JobsEndpoint = {
                 properties: {
                   result: { type: "string", example: "success" },
                   msg: { type: "string", example: "Job created successfully." },
-                  data: {
-                    $ref: "#/components/schemas/Jobs",
-                  },
+                  data: { $ref: "#/components/schemas/Jobs" },
                   totalCount: { type: "integer", example: 1 },
                 },
               },
@@ -162,10 +141,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example: "Not enough coins or missing required fields.",
-                  },
+                  msg: { type: "string", example: "Not enough coins or missing required fields." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -174,18 +150,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided, or user not allowed to perform this action.",
+          description: "Unauthorized access, no or invalid authentication token provided, or user not allowed to perform this action.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Unauthorized or not allowed!",
-                  },
+                  msg: { type: "string", example: "Unauthorized or not allowed!" },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -214,138 +186,98 @@ const JobsEndpoint = {
     get: {
       summary: "Get all jobs",
       tags: ["Jobs"],
-      description:
-        "Endpoint to retrieve all job listings with optional filtering, sorting, and field selection. Requires authentication.",
+      description: "Endpoint to retrieve all job listings with optional filtering, sorting, and field selection. Requires authentication.",
       parameters: [
         {
           in: "query",
           name: "education",
-          schema: {
-            type: "string",
-          },
-          description:
-            "Filter by education level. Multiple values can be separated by commas.",
+          schema: { type: "string" },
+          description: "Filter by education level. Multiple values can be separated by commas.",
         },
         {
           in: "query",
           name: "experience",
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "Filter by required experience.",
         },
         {
           in: "query",
           name: "location",
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "Filter by required location.",
         },
         {
           in: "query",
           name: "workingtype",
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "Filter by working type.",
         },
         {
           in: "query",
           name: "recommended",
-          schema: {
-            type: "boolean",
-          },
+          schema: { type: "boolean" },
           description: "Filter for recommended jobs only.",
         },
         {
           in: "query",
           name: "salary",
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "Filter by salary.",
         },
         {
           in: "query",
           name: "jobTitle",
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "Search by job title.",
         },
         {
           in: "query",
           name: "sort",
-          schema: {
-            type: "string",
-          },
-          description:
-            'Sort results. Use field names to specify sorting order, prefixed by "-" for descending order.',
+          schema: { type: "string" },
+          description: 'Sort results. Use field names to specify sorting order, prefixed by "-" for descending order.',
         },
         {
           in: "query",
           name: "recentjob",
-          schema: {
-            type: "boolean",
-          },
+          schema: { type: "boolean" },
           description: "Filter for recently posted jobs only.",
         },
         {
           in: "query",
           name: "page",
-          schema: {
-            type: "integer",
-            default: 1,
-          },
+          schema: { type: "integer", default: 1 },
           description: "Specify the page number for pagination.",
         },
         {
           in: "query",
           name: "limit",
-          schema: {
-            type: "integer",
-            default: 10,
-          },
+          schema: { type: "integer", default: 10 },
           description: "Limit the number of results per page.",
         },
         {
           in: "query",
           name: "numericFilters",
-          schema: {
-            type: "string",
-          },
-          description:
-            "Filter by numeric values (e.g., salary ranges). Use the format field<operator>value, with operators like <, >, =, <=, >=.",
+          schema: { type: "string" },
+          description: "Filter by numeric values (e.g., salary ranges). Use the format field<operator>value, with operators like <, >, =, <=, >=.",
         },
         {
           in: "query",
           name: "jobType",
-          schema: {
-            type: "string",
-          },
-          description:
-            "Filter by job type (e.g., Full-time, Part-time). Multiple values can be separated by commas.",
+          schema: { type: "string" },
+          description: "Filter by job type (e.g., Full-time, Part-time). Multiple values can be separated by commas.",
         },
       ],
       responses: {
         200: {
-          description:
-            "A list of jobs with optional filtering, sorting, and field selection.",
+          description: "A list of jobs with optional filtering, sorting, and field selection.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Jobs retrieved successfully.",
-                  },
-                  data: {
-                    type: "array",
-                    items: { $ref: "#/components/schemas/Jobs" },
-                  },
+                  msg: { type: "string", example: "Jobs retrieved successfully." },
+                  data: { type: "array", items: { $ref: "#/components/schemas/Jobs" } },
                   totalCount: { type: "integer", example: 0 },
                 },
               },
@@ -353,19 +285,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "Unauthorized access, no or invalid authentication token provided.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -381,10 +308,9 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg
+
+                    : { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -402,56 +328,40 @@ const JobsEndpoint = {
   },
   "/jobs/search": {
     get: {
-      summary: "Get all jobs",
+      summary: "Search jobs by title",
       tags: ["Jobs"],
-      description:
-        "Endpoint to retrieve all job listings with optional filtering, sorting, and field selection. Requires authentication.",
+      description: "Endpoint to search for job listings by title. Requires authentication.",
       parameters: [
         {
           in: "query",
           name: "jobTitle",
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "Filter jobs by title with regex search.",
         },
         {
           in: "query",
           name: "page",
-          schema: {
-            type: "integer",
-            default: 1,
-          },
+          schema: { type: "integer", default: 1 },
           description: "Page number for pagination.",
         },
         {
           in: "query",
           name: "limit",
-          schema: {
-            type: "integer",
-            default: 10,
-          },
+          schema: { type: "integer", default: 10 },
           description: "Number of items per page for pagination.",
         },
       ],
       responses: {
         200: {
-          description:
-            "A list of jobs with optional filtering, sorting, and field selection.",
+          description: "A list of jobs matching the search criteria.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Jobs retrieved successfully.",
-                  },
-                  data: {
-                    type: "array",
-                    items: { $ref: "#/components/schemas/Jobs" },
-                  },
+                  msg: { type: "string", example: "Jobs retrieved successfully." },
+                  data: { type: "array", items: { $ref: "#/components/schemas/Jobs" } },
                   totalCount: { type: "integer", example: 0 },
                 },
               },
@@ -459,19 +369,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "Unauthorized access, no or invalid authentication token provided.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -487,10 +392,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg: { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -508,56 +410,40 @@ const JobsEndpoint = {
   },
   "/jobs/searchViaJobType": {
     get: {
-      summary: "Get all jobs",
+      summary: "Search jobs by job type",
       tags: ["Jobs"],
-      description:
-        "Endpoint to retrieve all job listings with optional filtering, sorting, and field selection. Requires authentication.",
+      description: "Endpoint to search for job listings by job type. Requires authentication.",
       parameters: [
         {
           in: "query",
           name: "jobType",
-          schema: {
-            type: "string",
-          },
-          description: "Filter jobs by jobType with regex search.",
+          schema: { type: "string" },
+          description: "Filter jobs by job type with regex search.",
         },
         {
           in: "query",
           name: "page",
-          schema: {
-            type: "integer",
-            default: 1,
-          },
+          schema: { type: "integer", default: 1 },
           description: "Page number for pagination.",
         },
         {
           in: "query",
           name: "limit",
-          schema: {
-            type: "integer",
-            default: 10,
-          },
+          schema: { type: "integer", default: 10 },
           description: "Number of items per page for pagination.",
         },
       ],
       responses: {
         200: {
-          description:
-            "A list of jobs with optional filtering, sorting, and field selection.",
+          description: "A list of jobs matching the search criteria.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Jobs retrieved successfully.",
-                  },
-                  data: {
-                    type: "array",
-                    items: { $ref: "#/components/schemas/Jobs" },
-                  },
+                  msg: { type: "string", example: "Jobs retrieved successfully." },
+                  data: { type: "array", items: { $ref: "#/components/schemas/Jobs" } },
                   totalCount: { type: "integer", example: 0 },
                 },
               },
@@ -565,19 +451,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "Unauthorized access, no or invalid authentication token provided.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -593,10 +474,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg: { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -616,48 +494,34 @@ const JobsEndpoint = {
     get: {
       summary: "Get all job posts created by the authenticated employer",
       tags: ["Jobs"],
-      description:
-        'Endpoint to retrieve all job posts created by the authenticated employer. Supports pagination. Requires authentication and the user must have the "Employer" role.',
+      description: 'Endpoint to retrieve all job posts created by the authenticated employer. Supports pagination. Requires authentication and the user must have the "Employer" role.',
       parameters: [
         {
           in: "query",
           name: "page",
           required: false,
-          schema: {
-            type: "integer",
-            default: 1,
-          },
+          schema: { type: "integer", default: 1 },
           description: "Page number for pagination",
         },
         {
           in: "query",
           name: "limit",
           required: false,
-          schema: {
-            type: "integer",
-            default: 10,
-          },
+          schema: { type: "integer", default: 10 },
           description: "Number of items per page for pagination",
         },
       ],
       responses: {
         200: {
-          description:
-            "A list of all job posts created by the authenticated employer, including pagination information.",
+          description: "A list of all job posts created by the authenticated employer, including pagination information.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Employer posts retrieved successfully.",
-                  },
-                  data: {
-                    type: "array",
-                    items: { $ref: "#/components/schemas/Jobs" },
-                  },
+                  msg: { type: "string", example: "Employer posts retrieved successfully." },
+                  data: { type: "array", items: { $ref: "#/components/schemas/Jobs" } },
                   totalCount: { type: "integer", example: 10 },
                   currentPage: { type: "integer", example: 1 },
                   totalPages: { type: "integer", example: 5 },
@@ -667,19 +531,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "Unauthorized access, no or invalid authentication token provided.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -688,19 +547,14 @@ const JobsEndpoint = {
           },
         },
         404: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "No employer posts found.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided.",
-                  },
+                  msg: { type: "string", example: "No employer posts found." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -716,10 +570,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg: { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -739,16 +590,13 @@ const JobsEndpoint = {
     get: {
       summary: "Get a single job post",
       tags: ["Jobs"],
-      description:
-        "Endpoint to retrieve a single job post by its ID. Requires authentication.",
+      description: "Endpoint to retrieve a single job post by its ID. Requires authentication.",
       parameters: [
         {
           in: "path",
           name: "id",
           required: true,
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "The unique identifier of the job post.",
         },
       ],
@@ -761,13 +609,8 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Job post retrieved successfully.",
-                  },
-                  data: {
-                    $ref: "#/components/schemas/Jobs",
-                  },
+                  msg: { type: "string", example: "Job post retrieved successfully." },
+                  data: { $ref: "#/components/schemas/Jobs" },
                   totalCount: { type: "integer", example: 1 },
                 },
               },
@@ -775,19 +618,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "Unauthorized access, no or invalid authentication token provided.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -819,10 +657,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg: { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -835,16 +670,13 @@ const JobsEndpoint = {
     patch: {
       summary: "Update a job post",
       tags: ["Jobs"],
-      description:
-        'Endpoint to update a job post by its ID. Requires authentication and the user must have the "Employer" role.',
+      description: 'Endpoint to update a job post by its ID. Requires authentication and the user must have the "Employer" role.',
       parameters: [
         {
           in: "path",
           name: "id",
           required: true,
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "The unique identifier of the job post to update.",
         },
       ],
@@ -855,71 +687,24 @@ const JobsEndpoint = {
             schema: {
               type: "object",
               properties: {
-                company: {
-                  type: "string",
-                  example: "Google",
-                },
-                description: {
-                  type: "string",
-                  example:
-                    "We are looking for a Senior Software Developer to join our team.",
-                },
-                jobStatus: {
-                  type: "string",
-                  enum: ["Open", "Closed", "Expired"],
-                  example: "Open",
-                },
-                jobType: {
-                  type: "string",
-                  enum: ["Full-time", "Freelance", "Part-time", "negotiable"],
-                  example: "Full-time",
-                },
-                location: {
-                  type: "string",
-                  example: "New York, NY",
-                },
-                jobTitle: {
-                  type: "string",
-                  example: "Senior Software Developer",
-                },
-                industry: {
-                  type: "string",
-                  example: "Software Development",
-                },
-                salaryRange: {
-                  type: "string",
-                  example: "90000-120000",
-                },
-                qualifications: {
-                  type: "string",
-                  example:
-                    "Must have a Bachelor's degree in Computer Science or equivalent",
-                },
-                experience: {
-                  type: "string",
-                  example: "2 years",
-                },
+                company: { type: "string", example: "Google" },
+                description: { type: "string", example: "We are looking for a Senior Software Developer to join our team." },
+                jobStatus: { type: "string", enum: ["Open", "Closed", "Expired"], example: "Open" },
+                jobType: { type: "string", enum: ["Full-time", "Freelance", "Part-time", "negotiable"], example: "Full-time" },
+                location: { type: "string", example: "New York, NY" },
+                jobTitle: { type: "string", example: "Senior Software Developer" },
+                industry: { type: "string", example: "Software Development" },
+                salaryRange: { type: "string", example: "90000-120000" },
+                qualifications: { type: "string", example: "Must have a Bachelor's degree in Computer Science or equivalent" },
+                experience: { type: "string", example: "2 years" },
                 languagesRequired: {
                   type: "array",
-                  items: {
-                    type: "string",
-                  },
+                  items: { type: "string" },
                   example: ["English"],
                 },
-                requirements: {
-                  type: "string",
-                  example:
-                    "Proficient in modern JavaScript frameworks, RESTful APIs, and database management",
-                },
+                requirements: { type: "string", example: "Proficient in modern JavaScript frameworks, RESTful APIs, and database management" },
               },
-              required: [
-                "company",
-                "jobStatus",
-                "jobType",
-                "location",
-                "jobTitle",
-                "industry",
-              ],
+              required: ["company", "jobStatus", "jobType", "location", "jobTitle", "industry"],
             },
           },
         },
@@ -934,9 +719,7 @@ const JobsEndpoint = {
                 properties: {
                   result: { type: "string", example: "success" },
                   msg: { type: "string", example: "Job updated successfully." },
-                  data: {
-                    $ref: "#/components/schemas/Jobs", // Incorporate data structure from Jobs schema
-                  },
+                  data: { $ref: "#/components/schemas/Jobs" },
                 },
               },
             },
@@ -950,10 +733,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example: "Invalid job ID or job does not exist.",
-                  },
+                  msg: { type: "string", example: "Invalid job ID or job does not exist." },
                   data: { type: "null", example: null },
                 },
               },
@@ -961,19 +741,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided, or user not allowed to perform this action.",
+          description: "Unauthorized access, no or invalid authentication token provided, or user not allowed to perform this action.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided, or not allowed.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided, or not allowed." },
                   data: { type: "null", example: null },
                 },
               },
@@ -988,10 +763,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg: { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                 },
               },
@@ -1003,22 +775,19 @@ const JobsEndpoint = {
     delete: {
       summary: "Delete a job post",
       tags: ["Jobs"],
-      description:
-        'Endpoint to delete a job post by its ID. Requires authentication and the user must have the "Employer" role.',
+      description: 'Endpoint to delete a job post by its ID. Requires authentication and the user must have the "Employer" role.',
       parameters: [
         {
           in: "path",
           name: "id",
           required: true,
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "The unique identifier of the job post to delete.",
         },
       ],
       security: [
         {
-          bearerAuth: [], // assumes you have defined bearerAuth under securitySchemes
+          bearerAuth: [],
         },
       ],
       responses: {
@@ -1039,19 +808,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided, or user not allowed to perform this action.",
+          description: "Unauthorized access, no or invalid authentication token provided, or user not allowed to perform this action.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided, or not allowed.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided, or not allowed." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -1060,18 +824,14 @@ const JobsEndpoint = {
           },
         },
         404: {
-          description:
-            "Job post not found or not authorized to delete this job.",
+          description: "Job post not found or not authorized to delete this job.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Job post not found or not authorized to delete.",
-                  },
+                  msg: { type: "string", example: "Job post not found or not authorized to delete." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -1087,10 +847,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg: { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -1105,16 +862,13 @@ const JobsEndpoint = {
     post: {
       summary: "Apply for a job",
       tags: ["Jobs"],
-      description:
-        "Endpoint for a job seeker to apply for a job by its ID. Requires authentication.",
+      description: "Endpoint for a job seeker to apply for a job by its ID. Requires authentication.",
       parameters: [
         {
           in: "path",
           name: "id",
           required: true,
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "The unique identifier of the job to apply for.",
         },
       ],
@@ -1127,10 +881,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Job application submitted successfully.",
-                  },
+                  msg: { type: "string", example: "Job application submitted successfully." },
                   data: { type: "null", example: null },
                 },
               },
@@ -1138,18 +889,14 @@ const JobsEndpoint = {
           },
         },
         400: {
-          description:
-            "User cannot apply for their own job or other client error.",
+          description: "User cannot apply for their own job or other client error.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example: "You cannot apply for your own job.",
-                  },
+                  msg: { type: "string", example: "You cannot apply for your own job." },
                   data: { type: "null", example: null },
                 },
               },
@@ -1157,19 +904,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "Unauthorized access, no or invalid authentication token provided.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided." },
                   data: { type: "null", example: null },
                 },
               },
@@ -1199,10 +941,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg: { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                 },
               },
@@ -1216,34 +955,25 @@ const JobsEndpoint = {
     get: {
       summary: "Get applicants for a specific job",
       tags: ["Jobs"],
-      description:
-        'Endpoint to retrieve all applicants for a specific job post by its ID. Requires authentication and the user must have the "Employer" role.',
+      description: 'Endpoint to retrieve all applicants for a specific job post by its ID. Requires authentication and the user must have the "Employer" role.',
       parameters: [
         {
           in: "path",
           name: "id",
           required: true,
-          schema: {
-            type: "string",
-          },
+          schema: { type: "string" },
           description: "The unique identifier of the job post.",
         },
         {
           in: "query",
           name: "page",
-          schema: {
-            type: "integer",
-            default: 1,
-          },
+          schema: { type: "integer", default: 1 },
           description: "Page number for pagination.",
         },
         {
           in: "query",
           name: "limit",
-          schema: {
-            type: "integer",
-            default: 10,
-          },
+          schema: { type: "integer", default: 10 },
           description: "Number of items per page for pagination.",
         },
       ],
@@ -1256,14 +986,8 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "List of applicants retrieved successfully.",
-                  },
-                  data: {
-                    type: "array",
-                    items: { $ref: "#/components/schemas/JobSeeker" },
-                  },
+                  msg: { type: "string", example: "List of applicants retrieved successfully." },
+                  data: { type: "array", items: { $ref: "#/components/schemas/JobSeeker" } },
                   totalCount: { type: "integer", example: 0 },
                 },
               },
@@ -1271,19 +995,14 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided, or user not allowed to perform this action.",
+          description: "Unauthorized access, no or invalid authentication token provided, or user not allowed to perform this action.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized access, no or invalid authentication token provided, or not allowed.",
-                  },
+                  msg: { type: "string", example: "Unauthorized access, no or invalid authentication token provided, or not allowed." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -1292,19 +1011,14 @@ const JobsEndpoint = {
           },
         },
         404: {
-          description:
-            "Job post not found or no applicants found for this job.",
+          description: "Job post not found or no applicants found for this job.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Job post not found or no applicants found for this job.",
-                  },
+                  msg: { type: "string", example: "Job post not found or no applicants found for this job." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -1320,10 +1034,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "failure" },
-                  msg: {
-                    type: "string",
-                    example: "Internal server error or exception thrown.",
-                  },
+                  msg: { type: "string", example: "Internal server error or exception thrown." },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
                 },
@@ -1339,23 +1050,18 @@ const JobsEndpoint = {
       ],
     },
   },
-
   "/users/favoriteJob/{id}": {
     post: {
       summary: "Mark a job as favorite",
       tags: ["liked_jobs"],
-      description:
-        "Allows a job seeker to mark a job as their favorite. Requires job seeker authentication.",
+      description: "Allows a job seeker to mark a job as their favorite. Requires job seeker authentication.",
       parameters: [
         {
           in: "path",
           name: "id",
           required: true,
-          schema: {
-            type: "string",
-          },
-          description:
-            "The unique identifier of the job to be marked as favorite.",
+          schema: { type: "string" },
+          description: "The unique identifier of the job to be marked as favorite.",
         },
       ],
       responses: {
@@ -1375,19 +1081,14 @@ const JobsEndpoint = {
           },
         },
         400: {
-          description:
-            "Validation error, such as attempting to like a job already liked.",
+          description: "Validation error, such as attempting to like a job already liked.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "You have already liked this job or only job seekers can favorite jobs.",
-                  },
+                  msg: { type: "string", example: "You have already liked this job or only job seekers can favorite jobs." },
                   data: { type: "null" },
                 },
               },
@@ -1395,8 +1096,7 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "Unauthorized access, no or invalid authentication token provided.",
           content: {
             "application/json": {
               schema: {
@@ -1426,8 +1126,7 @@ const JobsEndpoint = {
           },
         },
         500: {
-          description:
-            "Internal server error occurred while processing the request.",
+          description: "Internal server error occurred while processing the request.",
           content: {
             "application/json": {
               schema: {
@@ -1451,18 +1150,14 @@ const JobsEndpoint = {
     delete: {
       summary: "Remove a Job from Favorites",
       tags: ["liked_jobs"],
-      description:
-        "Allows a job seeker to remove a job from their list of favorite jobs. Requires job seeker authentication.",
+      description: "Allows a job seeker to remove a job from their list of favorite jobs. Requires job seeker authentication.",
       parameters: [
         {
           in: "path",
           name: "id",
           required: true,
-          schema: {
-            type: "string",
-          },
-          description:
-            "The unique identifier of the job to be removed from favorites.",
+          schema: { type: "string" },
+          description: "The unique identifier of the job to be removed from favorites.",
         },
       ],
       responses: {
@@ -1474,10 +1169,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Job removed from favorites successfully.",
-                  },
+                  msg: { type: "string", example: "Job removed from favorites successfully." },
                   data: { type: "null" },
                 },
               },
@@ -1492,10 +1184,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example: "Only job seekers can manage favorite jobs",
-                  },
+                  msg: { type: "string", example: "Only job seekers can manage favorite jobs" },
                   data: { type: "null" },
                 },
               },
@@ -1509,7 +1198,11 @@ const JobsEndpoint = {
               schema: {
                 type: "object",
                 properties: {
-                  result: { type: "string", example: "error" },
+                  result: {
+                    type
+
+                      : "string", example: "error"
+                  },
                   msg: { type: "string", example: "Unauthorized" },
                   data: { type: "null" },
                 },
@@ -1525,10 +1218,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example: "Job not found in favorites",
-                  },
+                  msg: { type: "string", example: "Job not found in favorites" },
                   data: { type: "null" },
                 },
               },
@@ -1536,8 +1226,7 @@ const JobsEndpoint = {
           },
         },
         500: {
-          description:
-            "Internal server error occurred while processing the request.",
+          description: "Internal server error occurred while processing the request.",
           content: {
             "application/json": {
               schema: {
@@ -1563,18 +1252,14 @@ const JobsEndpoint = {
     post: {
       summary: "Mark a quick job as favorite",
       tags: ["liked_jobs"],
-      description:
-        "Allows a job seeker to mark a quick job as their favorite. Requires job seeker authentication.",
+      description: "Allows a job seeker to mark a quick job as their favorite. Requires job seeker authentication.",
       parameters: [
         {
           in: "path",
           name: "id",
           required: true,
-          schema: {
-            type: "string",
-          },
-          description:
-            "The unique identifier of the quick job to be marked as favorite.",
+          schema: { type: "string" },
+          description: "The unique identifier of the quick job to be marked as favorite.",
         },
       ],
       responses: {
@@ -1594,19 +1279,14 @@ const JobsEndpoint = {
           },
         },
         400: {
-          description:
-            "Validation error, such as attempting to like a job already liked or unauthorized action.",
+          description: "Validation error, such as attempting to like a job already liked or unauthorized action.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "You have already liked this job or only job seekers can favorite jobs.",
-                  },
+                  msg: { type: "string", example: "You have already liked this job or only job seekers can favorite jobs." },
                   data: { type: "null" },
                 },
               },
@@ -1614,8 +1294,7 @@ const JobsEndpoint = {
           },
         },
         401: {
-          description:
-            "Unauthorized access, no or invalid authentication token provided.",
+          description: "Unauthorized access, no or invalid authentication token provided.",
           content: {
             "application/json": {
               schema: {
@@ -1645,8 +1324,7 @@ const JobsEndpoint = {
           },
         },
         500: {
-          description:
-            "Internal server error occurred while processing the request.",
+          description: "Internal server error occurred while processing the request.",
           content: {
             "application/json": {
               schema: {
@@ -1672,8 +1350,7 @@ const JobsEndpoint = {
     get: {
       summary: "Get Favorite Jobs and Quick Jobs",
       tags: ["liked_jobs"],
-      description:
-        "Retrieves both favorite Jobs and Quick Jobs for a job seeker. Requires job seeker authentication.",
+      description: "Retrieves both favorite Jobs and Quick Jobs for a job seeker. Requires job seeker authentication.",
       responses: {
         200: {
           description: "Favorite jobs retrieved successfully.",
@@ -1683,21 +1360,12 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Favorite jobs retrieved successfully",
-                  },
+                  msg: { type: "string", example: "Favorite jobs retrieved successfully" },
                   data: {
                     type: "object",
                     properties: {
-                      jobs: {
-                        type: "array",
-                        items: { $ref: "#/components/schemas/Job" },
-                      },
-                      quickJobs: {
-                        type: "array",
-                        items: { $ref: "#/components/schemas/QuickJob" },
-                      },
+                      jobs: { type: "array", items: { $ref: "#/components/schemas/Jobs" } },
+                      quickJobs: { type: "array", items: { $ref: "#/components/schemas/QuickJobs" } },
                     },
                   },
                   count: { type: "integer", example: 1 },
@@ -1714,10 +1382,7 @@ const JobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example: "Only job seekers can favorite jobs",
-                  },
+                  msg: { type: "string", example: "Only job seekers can favorite jobs" },
                   data: { type: "null" },
                 },
               },
@@ -1740,8 +1405,7 @@ const JobsEndpoint = {
           },
         },
         500: {
-          description:
-            "Internal server error occurred while processing the request.",
+          description: "Internal server error occurred while processing the request.",
           content: {
             "application/json": {
               schema: {
@@ -1763,46 +1427,13 @@ const JobsEndpoint = {
       ],
     },
   },
-
-  "/jobs/forAdmin": {
+  "/jobs/rejected": {
     get: {
       summary: "Get all quick jobs for admin",
       tags: ["Jobs"],
       description:
         "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
       parameters: [
-        {
-          in: "query",
-          name: "recommended",
-          schema: {
-            type: "boolean",
-          },
-          description: "Filter for recommended jobs.",
-        },
-        {
-          in: "query",
-          name: "recentJob",
-          schema: {
-            type: "boolean",
-          },
-          description: "Filter for recent jobs.",
-        },
-        {
-          in: "query",
-          name: "jobTitle",
-          schema: {
-            type: "string",
-          },
-          description: "Filter jobs by title with regex search.",
-        },
-        {
-          in: "query",
-          name: "location",
-          schema: {
-            type: "string",
-          },
-          description: "Filter jobs by location with regex search.",
-        },
         {
           in: "query",
           name: "page",
@@ -1821,14 +1452,7 @@ const JobsEndpoint = {
           },
           description: "Number of items per page for pagination.",
         },
-        {
-          in: "query",
-          name: "sort",
-          schema: {
-            type: "string",
-          },
-          description: "Sort jobs by specified field.",
-        },
+
       ],
       responses: {
         200: {
@@ -1902,70 +1526,52 @@ const JobsEndpoint = {
       ],
     },
   },
-  "/jobs/{id}/approveOrReject": {
-    patch: {
-      summary: "Approve or reject a job post",
+  "/jobs/pending": {
+    get: {
+      summary: "Get all quick jobs for admin",
       tags: ["Jobs"],
       description:
-        "Endpoint for an admin to approve or reject a job post by its ID. Requires authentication and admin role.",
+        "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
       parameters: [
         {
-          in: "path",
-          name: "id",
-          required: true,
+          in: "query",
+          name: "page",
           schema: {
-            type: "string",
+            type: "integer",
+            default: 1,
           },
-          description: "The unique identifier of the job post to approve or reject.",
+          description: "Page number for pagination.",
         },
+        {
+          in: "query",
+          name: "limit",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+          description: "Number of items per page for pagination.",
+        },
+
       ],
-      requestBody: {
-        required: true,
-        content: {
-          "application/json": {
-            schema: {
-              type: "object",
-              properties: {
-                postingStatus: {
-                  type: "string",
-                  enum: ["Approved", "Rejected"],
-                  example: "Approved",
-                },
-              },
-              required: ["postingStatus"],
-            },
-          },
-        },
-      },
       responses: {
         200: {
-          description: "Job status updated successfully.",
+          description:
+            "A list of jobs with optional filtering, sorting, and field selection.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Job status updated successfully." },
-                  data: { $ref: "#/components/schemas/Quickjob" },
-                },
-              },
-            },
-          },
-        },
-        400: {
-          description: "Invalid status or missing required fields.",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: { type: "string", example: "error" },
                   msg: {
                     type: "string",
-                    example: "Invalid status or missing required fields.",
+                    example: "Jobs retrieved successfully.",
                   },
-                  data: { type: "null", example: null },
+                  data: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Quickjob" },
+                  },
+                  totalCount: { type: "integer", example: 0 },
                 },
               },
             },
@@ -1986,21 +1592,7 @@ const JobsEndpoint = {
                       "Unauthorized access, no or invalid authentication token provided.",
                   },
                   data: { type: "null", example: null },
-                },
-              },
-            },
-          },
-        },
-        404: {
-          description: "Job post not found.",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: { type: "string", example: "failure" },
-                  msg: { type: "string", example: "Job post not found." },
-                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
                 },
               },
             },
@@ -2019,6 +1611,106 @@ const JobsEndpoint = {
                     example: "Internal server error or exception thrown.",
                   },
                   data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+  },
+  "/jobs/approved": {
+    get: {
+      summary: "Get all quick jobs for admin",
+      tags: ["Jobs"],
+      description:
+        "Endpoint to retrieve all job listings for admin with optional filtering, sorting, and field selection. Requires authentication.",
+      parameters: [
+        {
+          in: "query",
+          name: "page",
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+          description: "Page number for pagination.",
+        },
+        {
+          in: "query",
+          name: "limit",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+          description: "Number of items per page for pagination.",
+        },
+
+      ],
+      responses: {
+        200: {
+          description:
+            "A list of jobs with optional filtering, sorting, and field selection.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Jobs retrieved successfully.",
+                  },
+                  data: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Quickjob" },
+                  },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description:
+            "Unauthorized access, no or invalid authentication token provided.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Unauthorized access, no or invalid authentication token provided.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal server error or exception thrown.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "failure" },
+                  msg: {
+                    type: "string",
+                    example: "Internal server error or exception thrown.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "integer", example: 0 },
                 },
               },
             },
@@ -2033,6 +1725,5 @@ const JobsEndpoint = {
     },
   },
 };
-module.exports = {
-  JobsEndpoint,
-};
+
+module.exports = { JobsEndpoint };

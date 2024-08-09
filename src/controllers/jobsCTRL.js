@@ -1148,6 +1148,311 @@ class JobsCTRL {
     }
   }
 
+  async getRejectedJobs(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: req.user.id });
+      if (user.role !== "Employer" && user.role !== "Admin") {
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "You are not allowed!",
+          null,
+          0
+        );
+      }
+
+
+      const {
+        page = 1,
+        limit = 10,
+      } = req.query;
+
+      let queryObject = {};
+
+      queryObject.postingStatus = "Rejected";
+
+      let resultJobs = await Jobs.find(queryObject)
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
+        .limit(parseInt(limit, 10))
+
+      const totalJobs = await Jobs.countDocuments(queryObject);
+
+      if (resultJobs.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      // Fetch user details for createdBy in bulk to minimize database queries
+      const userIds = resultJobs.map((job) => job.createdBy);
+      const users = await Users.find({ _id: { $in: userIds } });
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id.toString()] = user;
+        return acc;
+      }, {});
+
+      // Fetch companies with workers matching the user IDs
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJob = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
+        if (!user) {
+          return {
+            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
+            hr_name: "deleted user", // Fallback if user is not found
+            hr_avatar: "default_avatar.png", // Fallback avatar image path
+            issuedBy: null, // Fallback to null if company not found
+          };
+        } else {
+          return {
+            ...job._doc,
+            hr_name: user.employer
+              ? user.fullName
+              : "No employer name", // Check if employer exists
+            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
+            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
+          };
+        }
+      });
+
+      const pagination = {
+        currentPage: parseInt(page, 10),
+        totalPages: Math.ceil(totalJobs / parseInt(limit, 10)),
+        limit: parseInt(limit, 10),
+        totalDocuments: totalJobs,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Jobs retrieved successfully",
+        NewSearchedJob,
+        NewSearchedJob.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+
+  async getPendingJobs(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: req.user.id });
+      if (user.role !== "Employer" && user.role !== "Admin") {
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "You are not allowed!",
+          null,
+          0
+        );
+      }
+
+
+      const {
+        page = 1,
+        limit = 10,
+      } = req.query;
+
+      let queryObject = {};
+
+      queryObject.postingStatus = "Pending";
+
+      let resultJobs = await Jobs.find(queryObject)
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
+        .limit(parseInt(limit, 10))
+
+      const totalJobs = await Jobs.countDocuments(queryObject);
+
+      if (resultJobs.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      // Fetch user details for createdBy in bulk to minimize database queries
+      const userIds = resultJobs.map((job) => job.createdBy);
+      const users = await Users.find({ _id: { $in: userIds } });
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id.toString()] = user;
+        return acc;
+      }, {});
+
+      // Fetch companies with workers matching the user IDs
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJob = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
+        if (!user) {
+          return {
+            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
+            hr_name: "deleted user", // Fallback if user is not found
+            hr_avatar: "default_avatar.png", // Fallback avatar image path
+            issuedBy: null, // Fallback to null if company not found
+          };
+        } else {
+          return {
+            ...job._doc,
+            hr_name: user.employer
+              ? user.fullName
+              : "No employer name", // Check if employer exists
+            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
+            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
+          };
+        }
+      });
+
+      const pagination = {
+        currentPage: parseInt(page, 10),
+        totalPages: Math.ceil(totalJobs / parseInt(limit, 10)),
+        limit: parseInt(limit, 10),
+        totalDocuments: totalJobs,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Jobs retrieved successfully",
+        NewSearchedJob,
+        NewSearchedJob.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+
+  async getApprovedJobs(req, res) {
+    try {
+
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      const user = await Users.findOne({ _id: req.user.id });
+      if (user.role !== "Employer" && user.role !== "Admin") {
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "You are not allowed!",
+          null,
+          0
+        );
+      }
+
+
+      const {
+        page = 1,
+        limit = 10,
+      } = req.query;
+
+      let queryObject = {};
+
+      queryObject.postingStatus = "Approved";
+
+      let resultJobs = await Jobs.find(queryObject)
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
+        .limit(parseInt(limit, 10))
+
+      const totalJobs = await Jobs.countDocuments(queryObject);
+
+      if (resultJobs.length === 0) {
+        return handleResponse(res, 200, "success", "No jobs found", [], 0);
+      }
+
+      // Fetch user details for createdBy in bulk to minimize database queries
+      const userIds = resultJobs.map((job) => job.createdBy);
+      const users = await Users.find({ _id: { $in: userIds } });
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id.toString()] = user;
+        return acc;
+      }, {});
+
+      // Fetch companies with workers matching the user IDs
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      let NewSearchedJob = resultJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()]; // Get the user based on job's createdBy field
+        if (!user) {
+          return {
+            ...job._doc, // Assuming you're using Mongoose and want to spread the job document
+            hr_name: "deleted user", // Fallback if user is not found
+            hr_avatar: "default_avatar.png", // Fallback avatar image path
+            issuedBy: null, // Fallback to null if company not found
+          };
+        } else {
+          return {
+            ...job._doc,
+            hr_name: user.employer
+              ? user.fullName
+              : "No employer name", // Check if employer exists
+            hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
+            issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
+          };
+        }
+      });
+
+      const pagination = {
+        currentPage: parseInt(page, 10),
+        totalPages: Math.ceil(totalJobs / parseInt(limit, 10)),
+        limit: parseInt(limit, 10),
+        totalDocuments: totalJobs,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Jobs retrieved successfully",
+        NewSearchedJob,
+        NewSearchedJob.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
 
 }
 

@@ -19,6 +19,7 @@ async function sendTelegramChannels(telegram, telegramChannel, message) {
 
     // console.log("Form_1(message): ", Form_1(message));
     for (const channel of telegramChannel) {
+        console.log("channel: ", channel);
         try {
 
             if (channel.available) {
