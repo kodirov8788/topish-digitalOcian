@@ -121,7 +121,7 @@ class StatisticsCTRL {
 
       // Calculate the percentage change, ensuring it is between 0% and 100%
       let thisPeriodPercentage = previousPeriodCount > 0
-        ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
+        ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount)
         : 0;
 
       console.log("thisPeriodPercentage: ", thisPeriodPercentage)
@@ -129,7 +129,6 @@ class StatisticsCTRL {
       console.log("thisPeriodCount: ", thisPeriodCount)
       // Ensure the percentage is between 0% and 100%
       thisPeriodPercentage = Math.max(0, Math.min(thisPeriodPercentage, 100));
-
       const thisPeriodPercentageFormatted = Math.floor(thisPeriodPercentage);
 
       // Return the counts, rate, and percentage in the response
