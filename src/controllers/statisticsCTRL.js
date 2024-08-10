@@ -125,7 +125,7 @@ class StatisticsCTRL {
         : 0;
 
       // Ensure the percentage is between 0% and 100%
-      thisPeriodPercentage = Math.max(0, Math.min(thisPeriodPercentage, 100));
+      thisPeriodPercentage = Math.max(0, Math.min(thisPeriodPercentage / 2, 100));
 
       const thisPeriodPercentageFormatted = Math.floor(thisPeriodPercentage);
 
