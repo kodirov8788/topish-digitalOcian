@@ -102,7 +102,7 @@ class StatisticsCTRL {
 
       // Calculate the percentage change, avoiding division by zero
       const thisPeriodPercentage = previousPeriodCount > 0
-        ? ((thisPeriodCount - (previousPeriodCount)) / (previousPeriodCount + 112)) * 100
+        ? ((thisPeriodCount - (previousPeriodCount)) / (previousPeriodCount)) * 100
         : 0;
 
       // console.log("previousPeriodCount: ", previousPeriodCount)
@@ -117,7 +117,7 @@ class StatisticsCTRL {
         "success",
         "Job seekers count information retrieved successfully",
         {
-          totalJobSeekerCount: jobSeekerCount + 50,
+          totalJobSeekerCount: jobSeekerCount,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
           thisPeriodPercentage: `${thisPeriodPercentageFormatted}%`,
@@ -220,10 +220,10 @@ class StatisticsCTRL {
         "success",
         "Employer count information retrieved successfully",
         {
-          totalEmployerCount: totalEmployerCount + 50,
+          totalEmployerCount: totalEmployerCount,
           thisMonthCount: thisMonthCount,
           rateStatus: rateStatus,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage)) + 12}%`,
+          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
           selectedDayCount: selectedDayCount,
         }
       );
@@ -294,10 +294,10 @@ class StatisticsCTRL {
         "success",
         "Job counts information retrieved successfully",
         {
-          totalJobsCount: totalJobsCount + 70,
+          totalJobsCount: totalJobsCount,
           thisMonthCount,
           rateStatus,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage) + 54)}%`,
+          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
           selectedDayCount,
         }
       );
@@ -361,10 +361,10 @@ class StatisticsCTRL {
         "success",
         "Applicants count information retrieved successfully",
         {
-          totalJobsCount: totalJobsCount + 37,
+          totalJobsCount: totalJobsCount,
           thisMonthCount,
           rateStatus,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage)) + 14}%`,
+          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
           selectedDayCount,
         }
       );
@@ -437,7 +437,7 @@ class StatisticsCTRL {
           $lte: previousPeriodEndDate,
         },
       };
-
+      console.log("previousPeriodQuery: ", previousPeriodQuery)
       const previousPeriodCount = await Company.countDocuments(previousPeriodQuery);
 
       // Determine the rate of change
@@ -453,6 +453,7 @@ class StatisticsCTRL {
         : 0;
       thisPeriodPercentage = thisPeriodPercentage.toFixed(2); // Keep two decimals for precision
 
+      console.log("previousPeriodCount: ", previousPeriodCount)
       // Return the counts, rate, and percentage in the response
       return handleResponse(
         res,
@@ -460,10 +461,10 @@ class StatisticsCTRL {
         "success",
         "Companies count information retrieved successfully",
         {
-          totalCompaniesCount: totalCompaniesCount + 68,
+          totalCompaniesCount: totalCompaniesCount,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage) + 34)}%`,
+          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
           selectedDayCount,
         }
       );
