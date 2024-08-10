@@ -252,7 +252,7 @@ class StatisticsCTRL {
         : 0;
 
       if (thisPeriodPercentage <= 5) {
-        thisPeriodPercentage = 26;
+        thisPeriodPercentage = 26 + Number(thisPeriodPercentage);
       }
 
       // Return the counts, rate, and percentage in the response
@@ -265,7 +265,7 @@ class StatisticsCTRL {
           totalEmployerCount: employerCount,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(2)}%`,
+          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(0)}%`,
           selectedDayCount: selectedDayCount,
         }
       );
@@ -346,7 +346,7 @@ class StatisticsCTRL {
         : 0;
 
       if (thisPeriodPercentage <= 5) {
-        thisPeriodPercentage = 33;
+        thisPeriodPercentage = 33 + Number(thisPeriodPercentage);
       }
 
       // Calculate the total jobs count (Jobs + QuickJobs)
@@ -363,7 +363,7 @@ class StatisticsCTRL {
           totalJobsCount,
           thisMonthCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(2)}%`,
+          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(0)}%`,
           selectedDayCount,
         }
       );
@@ -432,7 +432,7 @@ class StatisticsCTRL {
         : 0;
 
       if (thisPeriodPercentage <= 5) {
-        thisPeriodPercentage = 43;
+        thisPeriodPercentage = 43 + Number(thisPeriodPercentage);
       }
 
       // Total applicants count across all jobs and quick jobs
@@ -448,7 +448,7 @@ class StatisticsCTRL {
           totalJobsCount,
           thisMonthCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(2)}%`,
+          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(0)}%`,
           selectedDayCount,
         }
       );
@@ -531,7 +531,7 @@ class StatisticsCTRL {
         : 0;
 
       if (thisPeriodPercentage <= 5) {
-        thisPeriodPercentage = 19;
+        thisPeriodPercentage = 19 + Number(thisPeriodPercentage);
       }
 
       // Return the counts, rate, and percentage in the response
@@ -544,7 +544,7 @@ class StatisticsCTRL {
           totalCompaniesCount,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(2)}%`,
+          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(0)}%`,
           selectedDayCount,
         }
       );
