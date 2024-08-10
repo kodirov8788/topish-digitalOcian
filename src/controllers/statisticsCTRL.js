@@ -24,18 +24,6 @@ async function aggregateApplicantsCount(matchStage) {
   return total;
 }
 
-// async function incrementUserCount() {
-//   let stat = await Statistics.findOne();
-
-//   if (!stat) {
-//     stat = new Statistics();
-//   }
-
-//   stat.count += 1;
-//   await stat.save();
-//   // console.log("User count incremented to: ", stat)
-//   return stat;
-// }
 class StatisticsCTRL {
   async getJobSeekerCount(req, res) {
     try {
@@ -86,7 +74,7 @@ class StatisticsCTRL {
       // Use today's date as the end date
       const todayEndDate = new Date();
       todayEndDate.setHours(23, 59, 59, 999); // End of today
-
+      incrementUserCount()
       // Adjust the countQuery to count from the start of the last month to today
       const thisPeriodQuery = {
         role: "JobSeeker",
@@ -165,8 +153,6 @@ class StatisticsCTRL {
       );
     }
   }
-
-
 
   async getEmployerCount(req, res) {
     try {
@@ -289,7 +275,6 @@ class StatisticsCTRL {
       );
     }
   }
-
   async getJobsCount(req, res) {
     try {
       // Parse the provided or default date (today) for selected day counting
@@ -342,6 +327,8 @@ class StatisticsCTRL {
       });
       const previousPeriodCount = previousPeriodJobsCount + previousPeriodQuickJobsCount;
 
+
+      incrementUserCount()
       // Determine the rate of change
       const rate = thisMonthCount > previousPeriodCount
         ? "up"
@@ -580,8 +567,6 @@ class StatisticsCTRL {
       );
     }
   }
-
-
 }
 
 module.exports = new StatisticsCTRL();
