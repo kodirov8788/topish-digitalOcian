@@ -119,10 +119,13 @@ class StatisticsCTRL {
           ? "down"
           : "steady";
 
-      // Calculate the percentage change, avoiding division by zero
-      const thisPeriodPercentage = previousPeriodCount > 0
+      // Calculate the percentage change, ensuring it is between 0% and 100%
+      let thisPeriodPercentage = previousPeriodCount > 0
         ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
         : 0;
+
+      // Ensure the percentage is between 0% and 100%
+      thisPeriodPercentage = Math.max(0, Math.min(thisPeriodPercentage, 100));
 
       const thisPeriodPercentageFormatted = Math.floor(thisPeriodPercentage);
 
@@ -151,6 +154,7 @@ class StatisticsCTRL {
       );
     }
   }
+
 
   async getEmployerCount(req, res) {
     try {
