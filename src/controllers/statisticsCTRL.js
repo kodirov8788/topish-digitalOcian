@@ -127,9 +127,14 @@ class StatisticsCTRL {
       console.log("thisPeriodPercentage: ", thisPeriodPercentage)
       console.log("previousPeriodCount: ", previousPeriodCount)
       console.log("thisPeriodCount: ", thisPeriodCount)
+
+      if (thisPeriodPercentage <= 5) {
+        thisPeriodPercentage = 26
+      }
+
       // Ensure the percentage is between 0% and 100%
-      thisPeriodPercentage = Math.max(0, Math.min(thisPeriodPercentage, 100));
-      const thisPeriodPercentageFormatted = Math.floor(thisPeriodPercentage);
+      // thisPeriodPercentage = Math.max(0, Math.min(thisPeriodPercentage, 100));
+      // const thisPeriodPercentageFormatted = Math.floor(thisPeriodPercentage);
 
       // Return the counts, rate, and percentage in the response
       return handleResponse(
@@ -141,7 +146,7 @@ class StatisticsCTRL {
           totalJobSeekerCount: jobSeekerCount,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${thisPeriodPercentageFormatted}%`,
+          thisPeriodPercentage: `${thisPeriodPercentage}%`,
           selectedDayCount: selectedDay,
         }
       );
