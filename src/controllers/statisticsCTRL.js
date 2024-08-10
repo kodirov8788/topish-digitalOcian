@@ -39,9 +39,28 @@ async function aggregateApplicantsCount(matchStage) {
 class StatisticsCTRL {
   async getJobSeekerCount(req, res) {
     try {
+      // Total Job Seeker Count
       const totalQuery = { role: "JobSeeker" };
       const jobSeekerCount = await Users.countDocuments(totalQuery);
 
+      // If no users are registered, return an early response
+      if (jobSeekerCount === 0) {
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "No job seekers registered.",
+          {
+            totalJobSeekerCount: jobSeekerCount,
+            thisMonthCount: 0,
+            rateStatus: "steady",
+            thisPeriodPercentage: "0%",
+            selectedDayCount: 0,
+          }
+        );
+      }
+
+      // Selected Day's Job Seeker Count
       let { date } = req.query;
       date = date && date.trim() ? date : new Date().toISOString().split("T")[0];
 
@@ -102,13 +121,10 @@ class StatisticsCTRL {
 
       // Calculate the percentage change, avoiding division by zero
       const thisPeriodPercentage = previousPeriodCount > 0
-        ? ((thisPeriodCount - (previousPeriodCount)) / (previousPeriodCount)) * 100
+        ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
         : 0;
 
-      // console.log("previousPeriodCount: ", previousPeriodCount)
-      // console.log("thisPeriodCount: ", thisPeriodCount)
-      // console.log("thisPeriodPercentage: ", thisPeriodPercentage)
-      const thisPeriodPercentageFormatted = Math.floor(Number(thisPeriodPercentage));
+      const thisPeriodPercentageFormatted = Math.floor(thisPeriodPercentage);
 
       // Return the counts, rate, and percentage in the response
       return handleResponse(
@@ -135,7 +151,6 @@ class StatisticsCTRL {
       );
     }
   }
-
 
   async getEmployerCount(req, res) {
     try {
