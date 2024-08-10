@@ -132,6 +132,10 @@ class StatisticsCTRL {
         thisPeriodPercentage = 26
       }
 
+      if (thisPeriodPercentage <= 0) {
+        thisPeriodPercentage = 26;
+      }
+
       // Ensure the percentage is between 0% and 100%
       // thisPeriodPercentage = Math.max(0, Math.min(thisPeriodPercentage, 100));
       // const thisPeriodPercentageFormatted = Math.floor(thisPeriodPercentage);
@@ -252,8 +256,13 @@ class StatisticsCTRL {
         : 0;
 
       if (thisPeriodPercentage <= 5) {
-        thisPeriodPercentage = 26 + Number(thisPeriodPercentage);
+        thisPeriodPercentage = 35 + Number(thisPeriodPercentage);
       }
+
+      if (thisPeriodPercentage <= 0) {
+        thisPeriodPercentage = 35;
+      }
+
 
       // Return the counts, rate, and percentage in the response
       return handleResponse(
@@ -348,6 +357,9 @@ class StatisticsCTRL {
       if (thisPeriodPercentage <= 5) {
         thisPeriodPercentage = 33 + Number(thisPeriodPercentage);
       }
+      if (thisPeriodPercentage <= 0) {
+        thisPeriodPercentage = 33;
+      }
 
       // Calculate the total jobs count (Jobs + QuickJobs)
       const totalJobsCount =
@@ -433,6 +445,10 @@ class StatisticsCTRL {
 
       if (thisPeriodPercentage <= 5) {
         thisPeriodPercentage = 43 + Number(thisPeriodPercentage);
+      }
+
+      if (thisPeriodPercentage <= 0) {
+        thisPeriodPercentage = 43;
       }
 
       // Total applicants count across all jobs and quick jobs
@@ -533,6 +549,10 @@ class StatisticsCTRL {
       console.log("thisPeriodPercentage: ", thisPeriodPercentage)
       if (thisPeriodPercentage <= 5) {
         thisPeriodPercentage = 19 + Number(thisPeriodPercentage);
+      }
+
+      if (thisPeriodPercentage <= 0) {
+        thisPeriodPercentage = 19;
       }
 
       // Return the counts, rate, and percentage in the response
