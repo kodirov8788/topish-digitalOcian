@@ -530,6 +530,7 @@ class StatisticsCTRL {
         ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
         : 0;
 
+      console.log("thisPeriodPercentage: ", thisPeriodPercentage)
       if (thisPeriodPercentage <= 5) {
         thisPeriodPercentage = 19 + Number(thisPeriodPercentage);
       }
