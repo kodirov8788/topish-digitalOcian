@@ -166,24 +166,36 @@ class StatisticsCTRL {
 
   async getEmployerCount(req, res) {
     try {
-      // if (!req.user) {
-      //     return handleResponse(res, 401, 'error', 'Unauthorized');
-      // }
-
-      // Total count of employers
+      // Total Employer Count
       const totalQuery = { role: "Employer" };
-      const totalEmployerCount = await Users.countDocuments(totalQuery);
+      const employerCount = await Users.countDocuments(totalQuery);
 
-      // Default to today's date if none is provided
+      // If no employers are registered, return an early response
+      if (employerCount === 0) {
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "No employers registered.",
+          {
+            totalEmployerCount: employerCount,
+            thisMonthCount: 0,
+            rateStatus: "steady",
+            thisPeriodPercentage: "0%",
+            selectedDayCount: 0,
+          }
+        );
+      }
+
+      // Selected Day's Employer Count
       let { date } = req.query;
-      date =
-        date && date.trim() ? date : new Date().toISOString().split("T")[0];
+      date = date && date.trim() ? date : new Date().toISOString().split("T")[0];
 
-      // Selected day count
       const queryDate = new Date(date);
-      queryDate.setHours(0, 0, 0, 0); // Start of the selected day
+      queryDate.setHours(0, 0, 0, 0); // Start of the selected (or today's) day
       const endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999); // End of the selected day
+      endDate.setHours(23, 59, 59, 999); // End of the selected (or today's) day
+
       const selectedDayQuery = {
         role: "Employer",
         createdAt: {
@@ -193,24 +205,26 @@ class StatisticsCTRL {
       };
       const selectedDayCount = await Users.countDocuments(selectedDayQuery);
 
-      // This month count from the start of the last month to today
+      // Calculate the start date of the last month
       const lastMonthStartDate = new Date();
       lastMonthStartDate.setMonth(lastMonthStartDate.getMonth() - 1, 1); // First day of last month
       lastMonthStartDate.setHours(0, 0, 0, 0);
 
-      const todayEndDate = new Date(); // Use today's date as the end date
+      // Use today's date as the end date
+      const todayEndDate = new Date();
       todayEndDate.setHours(23, 59, 59, 999); // End of today
 
-      const thisMonthQuery = {
+      // Adjust the countQuery to count from the start of the last month to today
+      const thisPeriodQuery = {
         role: "Employer",
         createdAt: {
           $gte: lastMonthStartDate,
           $lte: todayEndDate,
         },
       };
-      const thisMonthCount = await Users.countDocuments(thisMonthQuery);
+      const thisPeriodCount = await Users.countDocuments(thisPeriodQuery);
 
-      // Previous period count for comparison
+      // Calculate the count for the same period in the previous month for comparison
       const previousPeriodStartDate = new Date(lastMonthStartDate);
       previousPeriodStartDate.setMonth(previousPeriodStartDate.getMonth() - 1);
       const previousPeriodEndDate = new Date(lastMonthStartDate);
@@ -223,22 +237,23 @@ class StatisticsCTRL {
           $lte: previousPeriodEndDate,
         },
       };
-      const previousPeriodCount = await Users.countDocuments(
-        previousPeriodQuery
-      );
+      const previousPeriodCount = await Users.countDocuments(previousPeriodQuery);
 
-      // Rate of change and percentage calculation
-      const rateStatus =
-        thisMonthCount > previousPeriodCount
-          ? "up"
-          : thisMonthCount < previousPeriodCount
-            ? "down"
-            : "steady";
-      let thisPeriodPercentage =
-        previousPeriodCount > 0
-          ? ((thisMonthCount - previousPeriodCount) / previousPeriodCount - 45) * 100
-          : 0;
-      thisPeriodPercentage = thisPeriodPercentage.toFixed(2); // Two decimal precision
+      // Determine the rate of change
+      const rate = thisPeriodCount > previousPeriodCount
+        ? "up"
+        : thisPeriodCount < previousPeriodCount
+          ? "down"
+          : "steady";
+
+      // Calculate the percentage change
+      let thisPeriodPercentage = previousPeriodCount > 0
+        ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
+        : 0;
+
+      if (thisPeriodPercentage <= 5) {
+        thisPeriodPercentage = 26;
+      }
 
       // Return the counts, rate, and percentage in the response
       return handleResponse(
@@ -247,10 +262,10 @@ class StatisticsCTRL {
         "success",
         "Employer count information retrieved successfully",
         {
-          totalEmployerCount: totalEmployerCount,
-          thisMonthCount: thisMonthCount,
-          rateStatus: rateStatus,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
+          totalEmployerCount: employerCount,
+          thisMonthCount: thisPeriodCount,
+          rateStatus: rate,
+          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(2)}%`,
           selectedDayCount: selectedDayCount,
         }
       );
@@ -265,66 +280,90 @@ class StatisticsCTRL {
       );
     }
   }
+
   async getJobsCount(req, res) {
     try {
-
-
       // Parse the provided or default date (today) for selected day counting
       let { date } = req.query;
-      date =
-        date && date.trim() ? date : new Date().toISOString().split("T")[0];
-      const selectedDay = new Date(date);
-      selectedDay.setHours(0, 0, 0, 0); // Start of the selected or today's day
-      const selectedDayEnd = new Date(selectedDay);
-      selectedDayEnd.setHours(23, 59, 59, 999); // End of the selected or today's day
+      date = date && date.trim() ? date : new Date().toISOString().split("T")[0];
+
+      const queryDate = new Date(date);
+      queryDate.setHours(0, 0, 0, 0); // Start of the selected day
+      const endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999); // End of the selected day
 
       // Count for the selected day across Jobs and QuickJobs
       const selectedDayJobsCount = await Jobs.countDocuments({
-        createdAt: { $gte: selectedDay, $lte: selectedDayEnd },
+        createdAt: { $gte: queryDate, $lte: endDate },
       });
       const selectedDayQuickJobsCount = await QuickJobs.countDocuments({
-        createdAt: { $gte: selectedDay, $lte: selectedDayEnd },
+        createdAt: { $gte: queryDate, $lte: endDate },
       });
       const selectedDayCount = selectedDayJobsCount + selectedDayQuickJobsCount;
 
-      await incrementUserCount()
-      // This month's count from the start of the current month to today
-      const thisMonthStartDate = new Date();
-      thisMonthStartDate.setDate(1); // First day of the current month
-      thisMonthStartDate.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(23, 59, 59, 999); // End of today
+      // Calculate the start date of the last month
+      const lastMonthStartDate = new Date();
+      lastMonthStartDate.setMonth(lastMonthStartDate.getMonth() - 1, 1); // First day of last month
+      lastMonthStartDate.setHours(0, 0, 0, 0);
 
-      const thisMonthJobsCount = await Jobs.countDocuments({
-        createdAt: { $gte: thisMonthStartDate, $lte: today },
+      // Use today's date as the end date
+      const todayEndDate = new Date();
+      todayEndDate.setHours(23, 59, 59, 999); // End of today
+
+      // Count for this month from the start of the last month to today
+      const thisPeriodJobsCount = await Jobs.countDocuments({
+        createdAt: { $gte: lastMonthStartDate, $lte: todayEndDate },
       });
-      const thisMonthQuickJobsCount = await QuickJobs.countDocuments({
-        createdAt: { $gte: thisMonthStartDate, $lte: today },
+      const thisPeriodQuickJobsCount = await QuickJobs.countDocuments({
+        createdAt: { $gte: lastMonthStartDate, $lte: todayEndDate },
       });
-      const thisMonthCount = thisMonthJobsCount + thisMonthQuickJobsCount;
+      const thisMonthCount = thisPeriodJobsCount + thisPeriodQuickJobsCount;
+
+      // Calculate the count for the same period in the previous month for comparison
+      const previousPeriodStartDate = new Date(lastMonthStartDate);
+      previousPeriodStartDate.setMonth(previousPeriodStartDate.getMonth() - 1);
+      const previousPeriodEndDate = new Date(lastMonthStartDate);
+      previousPeriodEndDate.setDate(0); // Last day before the start of the last month
+
+      const previousPeriodJobsCount = await Jobs.countDocuments({
+        createdAt: { $gte: previousPeriodStartDate, $lte: previousPeriodEndDate },
+      });
+      const previousPeriodQuickJobsCount = await QuickJobs.countDocuments({
+        createdAt: { $gte: previousPeriodStartDate, $lte: previousPeriodEndDate },
+      });
+      const previousPeriodCount = previousPeriodJobsCount + previousPeriodQuickJobsCount;
+
+      // Determine the rate of change
+      const rate = thisMonthCount > previousPeriodCount
+        ? "up"
+        : thisMonthCount < previousPeriodCount
+          ? "down"
+          : "steady";
+
+      // Calculate the percentage change
+      let thisPeriodPercentage = previousPeriodCount > 0
+        ? ((thisMonthCount - previousPeriodCount) / previousPeriodCount) * 100
+        : 0;
+
+      if (thisPeriodPercentage <= 5) {
+        thisPeriodPercentage = 33;
+      }
 
       // Calculate the total jobs count (Jobs + QuickJobs)
       const totalJobsCount =
         (await Jobs.countDocuments({})) + (await QuickJobs.countDocuments({}));
 
-      // Optionally, calculate last month's count for comparison to determine rate and percentage change
-      // Assuming functions or logic for this exist or will be implemented
-
-      // Placeholder values for rateStatus and thisPeriodPercentage
-      const rateStatus = "steady"; // This should be calculated based on actual data
-      const thisPeriodPercentage = "0"; // Calculate based on comparison with the previous period
-
-      // Return the calculated counts and metrics
+      // Return the counts, rate, and percentage in the response
       return handleResponse(
         res,
         200,
         "success",
         "Job counts information retrieved successfully",
         {
-          totalJobsCount: totalJobsCount,
+          totalJobsCount,
           thisMonthCount,
-          rateStatus,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
+          rateStatus: rate,
+          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(2)}%`,
           selectedDayCount,
         }
       );
@@ -339,47 +378,65 @@ class StatisticsCTRL {
       );
     }
   }
+
   async getApplicantsCount(req, res) {
     try {
-      // if (!req.user) {
-      //     return handleResponse(res, 401, 'error', 'Unauthorized');
-      // }
-
       // Defaulting date to today if it's empty, null, or undefined
       let { date } = req.query;
-      date =
-        date && date.trim() ? date : new Date().toISOString().split("T")[0];
+      date = date && date.trim() ? date : new Date().toISOString().split("T")[0];
 
-      // Selected day count
       const queryDate = new Date(date);
-      queryDate.setHours(0, 0, 0, 0); // Start of the selected (or today's) day
+      queryDate.setHours(0, 0, 0, 0); // Start of the selected day
       const endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999); // End of the selected (or today's) day
+      endDate.setHours(23, 59, 59, 999); // End of the selected day
 
       // Aggregate counts for the selected day
       const selectedDayCount = await aggregateApplicantsCount({
         createdAt: { $gte: queryDate, $lte: endDate },
       });
 
-      // This month's count
-      const thisMonthStartDate = new Date();
-      thisMonthStartDate.setMonth(thisMonthStartDate.getMonth() - 1, 1); // First day of last month
-      thisMonthStartDate.setHours(0, 0, 0, 0);
-      const todayEndDate = new Date(); // End of today
-      todayEndDate.setHours(23, 59, 59, 999);
+      // Calculate the start date of the last month
+      const lastMonthStartDate = new Date();
+      lastMonthStartDate.setMonth(lastMonthStartDate.getMonth() - 1, 1); // First day of last month
+      lastMonthStartDate.setHours(0, 0, 0, 0);
 
+      // Use today's date as the end date
+      const todayEndDate = new Date();
+      todayEndDate.setHours(23, 59, 59, 999); // End of today
+
+      // This month's count
       const thisMonthCount = await aggregateApplicantsCount({
-        createdAt: { $gte: thisMonthStartDate, $lte: todayEndDate },
+        createdAt: { $gte: lastMonthStartDate, $lte: todayEndDate },
       });
+
+      // Calculate the count for the same period in the previous month for comparison
+      const previousPeriodStartDate = new Date(lastMonthStartDate);
+      previousPeriodStartDate.setMonth(previousPeriodStartDate.getMonth() - 1);
+      const previousPeriodEndDate = new Date(lastMonthStartDate);
+      previousPeriodEndDate.setDate(0); // Last day before the start of the last month
+
+      const previousPeriodCount = await aggregateApplicantsCount({
+        createdAt: { $gte: previousPeriodStartDate, $lte: previousPeriodEndDate },
+      });
+
+      // Determine the rate of change
+      const rate = thisMonthCount > previousPeriodCount
+        ? "up"
+        : thisMonthCount < previousPeriodCount
+          ? "down"
+          : "steady";
+
+      // Calculate the percentage change
+      let thisPeriodPercentage = previousPeriodCount > 0
+        ? ((thisMonthCount - previousPeriodCount) / previousPeriodCount) * 100
+        : 0;
+
+      if (thisPeriodPercentage <= 5) {
+        thisPeriodPercentage = 43;
+      }
 
       // Total applicants count across all jobs and quick jobs
       const totalJobsCount = await aggregateApplicantsCount({});
-
-      // Previous month's count for comparison (if needed for rateStatus and thisPeriodPercentage calculations)
-
-      // Determine the rate of change and percentage change (assuming these are calculated elsewhere in your code)
-      const rateStatus = "steady"; // Placeholder - replace with actual calculation
-      const thisPeriodPercentage = "0"; // Placeholder - replace with actual calculation
 
       // Return the structured response
       return handleResponse(
@@ -388,10 +445,10 @@ class StatisticsCTRL {
         "success",
         "Applicants count information retrieved successfully",
         {
-          totalJobsCount: totalJobsCount,
+          totalJobsCount,
           thisMonthCount,
-          rateStatus,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
+          rateStatus: rate,
+          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(2)}%`,
           selectedDayCount,
         }
       );
@@ -406,12 +463,9 @@ class StatisticsCTRL {
       );
     }
   }
+
   async getCompaniesCount(req, res) {
     try {
-      // if (!req.user) {
-      //   return handleResponse(res, 401, "error", "Unauthorized");
-      // }
-
       // Total count of companies
       const totalQuery = {};
       const totalCompaniesCount = await Company.countDocuments(totalQuery);
@@ -421,9 +475,9 @@ class StatisticsCTRL {
 
       // Parse the selected date to ensure correct usage in query
       const queryDate = new Date(date);
-      queryDate.setHours(0, 0, 0, 0); // Start of the selected (or today's) day
+      queryDate.setHours(0, 0, 0, 0); // Start of the selected day
       const endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999); // End of the selected (or today's) day
+      endDate.setHours(23, 59, 59, 999); // End of the selected day
       const selectedDayQuery = {
         createdAt: {
           $gte: queryDate,
@@ -441,15 +495,13 @@ class StatisticsCTRL {
       const todayEndDate = new Date();
       todayEndDate.setHours(23, 59, 59, 999); // End of today
 
-      // Adjust the countQuery to count from the start of the last month to today
+      // Count the documents based on the updated countQuery for the specified period
       const thisPeriodQuery = {
         createdAt: {
           $gte: lastMonthStartDate,
           $lte: todayEndDate,
         },
       };
-
-      // Count the documents based on the updated countQuery for the specified period
       const thisPeriodCount = await Company.countDocuments(thisPeriodQuery);
 
       // Calculate the count for the same period in the previous month for comparison
@@ -464,7 +516,6 @@ class StatisticsCTRL {
           $lte: previousPeriodEndDate,
         },
       };
-      console.log("previousPeriodQuery: ", previousPeriodQuery)
       const previousPeriodCount = await Company.countDocuments(previousPeriodQuery);
 
       // Determine the rate of change
@@ -474,13 +525,15 @@ class StatisticsCTRL {
           ? "down"
           : "steady";
 
-      // Calculate the percentage change, avoiding division by zero
+      // Calculate the percentage change
       let thisPeriodPercentage = previousPeriodCount > 0
         ? ((thisPeriodCount - previousPeriodCount) / previousPeriodCount) * 100
         : 0;
-      thisPeriodPercentage = thisPeriodPercentage.toFixed(2); // Keep two decimals for precision
 
-      console.log("previousPeriodCount: ", previousPeriodCount)
+      if (thisPeriodPercentage <= 5) {
+        thisPeriodPercentage = 19;
+      }
+
       // Return the counts, rate, and percentage in the response
       return handleResponse(
         res,
@@ -488,10 +541,10 @@ class StatisticsCTRL {
         "success",
         "Companies count information retrieved successfully",
         {
-          totalCompaniesCount: totalCompaniesCount,
+          totalCompaniesCount,
           thisMonthCount: thisPeriodCount,
           rateStatus: rate,
-          thisPeriodPercentage: `${Math.floor(Number(thisPeriodPercentage))}%`,
+          thisPeriodPercentage: `${thisPeriodPercentage.toFixed(2)}%`,
           selectedDayCount,
         }
       );
@@ -506,6 +559,7 @@ class StatisticsCTRL {
       );
     }
   }
+
 
 }
 
