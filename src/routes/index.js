@@ -42,7 +42,7 @@ router.use("/api/v1/telegram", telegramRouter);
 
 //routes
 router.get("/", (req, res) => {
-    res.send("<h1>Jobs API 11</h1>");
+    res.send("<h1>Topish.xyz ishlamoqda..... </h1>");
 });
 router.get("/api/v1/privatePolicy", async (req, res) => {
     await googlePlayRoute.PrivatePolicy(req, res);
