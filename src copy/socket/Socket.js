@@ -37,9 +37,9 @@ const initSocketServer = (server) => {
     maxHttpBufferSize: 1e8
   });
   io.on("connection", (socket) => {
-    socket.on("joinRoom", (data) => handleJoinRoom(socket, data, io));
+    socket.on("joinRoom", (data) => handleJoinRoom(socket, data));
     socket.on("adminLogin", (userId) => handleAdminLogin(socket, userId,));
-    socket.on("leaveRoom", (data) => handleLeaveRoom(socket, data, io));
+    socket.on("leaveRoom", (data) => handleLeaveRoom(socket, data));
     socket.on("heartbeat", (userId) => handleHeartbeat(socket, userId, io));
     socket.on("requestChatRooms", (data) => handleRequestChatRooms(socket, data));
     //-----------------------------------------------------------------------------------

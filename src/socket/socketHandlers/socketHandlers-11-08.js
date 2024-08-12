@@ -1,83 +1,22 @@
-const ChatRoom = require("../models/chatRoom_model");
-const Users = require("../models/user_model");
-const Message = require("../models/message_model");
-const Notification = require("../utils/Notification");
-const { PromptCode } = require("../models/other_models");
-const { uploadFile } = require('../utils/imageUploads/messageFilesUpload');
+const ChatRoom = require("../../models/chatRoom_model");
+const Users = require("../../models/user_model");
+const Message = require("../../models/message_model");
+const Notification = require("../../utils/Notification");
+const { PromptCode } = require("../../models/other_models");
+const { uploadFile } = require('../../utils/imageUploads/messageFilesUpload');
+
+
 let onlineUsers = [];
 let userChatRoomMap = {};
 let socketUserMap = {};
 const typingDebounceTimers = {};
-const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
-    try {
-        // Check if the user is in the specified chat room
-        console.log("handleMarkMessagesAsSeen is called");
-        console.log("userId: ", userId);
-        console.log("chatRoomId: ", chatRoomId);
-
-        const chatRoom = await ChatRoom.findOne({
-            _id: chatRoomId,
-            users: userId,
-        });
-
-        if (!chatRoom) {
-            socket.emit("errorNotification", { error: "Chat room not found or access denied." });
-            return;
-        }
-
-        // Update all unseen messages for this user in the chat room
-        const updatedMessages = await Message.updateMany(
-            {
-                chatRoom: chatRoomId,
-                recipientId: userId,
-                seen: false,
-            },
-            {
-                $set: { seen: true },
-            }
-        );
-
-        if (updatedMessages.nModified > 0) {
-            // Notify the user and other participants in the chat room about the update
-            socket.to(chatRoomId).emit("seenUpdate", { chatRoomId, userId });
-            socket.emit("messagesMarkedAsSeen", {
-                success: true,
-                chatRoomId,
-                userId,
-                seen: true,
-            });
-        } else {
-            socket.emit("messagesMarkedAsSeen", {
-                success: false,
-                chatRoomId,
-                userId,
-                message: "No unseen messages found.",
-                seen: true,
-            });
-        }
-    } catch (error) {
-        console.error("Error in handleMarkMessagesAsSeen:", error);
-        socket.emit("errorNotification", {
-            error: "An error occurred while marking messages as seen.",
-        });
-    }
-};
-const handleJoinRoom = (socket, { userId, chatRoomId }, io) => {
-    // Map the user to the chat room and the socket ID
+const handleJoinRoom = (socket, { userId, chatRoomId },) => {
     userChatRoomMap[userId] = chatRoomId;
     socketUserMap[socket.id] = userId;
-
-    console.log("joinRoom: ", userId, chatRoomId);
-    // Join the chat room
     socket.join(chatRoomId);
-
-    // Notify other users in the room about the new user
-    socket.to(chatRoomId).emit("joinedRoom", { userId, chatRoomId });
-
-    // Fetch messages for the user and mark them as seen
-    handleSingleChatRoom(socket, { userId, chatRoomId }, io);
-    handleMarkMessagesAsSeen(socket, { userId, chatRoomId }, io);
+    socket.to(chatRoomId).emit("joinedRoom", { userId: userId, chatRoomId: chatRoomId });
 };
+
 const handleAdminLogin = async (socket, userId) => {
     const admin = await Users.findOne({ _id: userId, role: "Admin" });
     if (admin) {
@@ -99,32 +38,18 @@ const handleAdminLogin = async (socket, userId) => {
         }
     }, 60000 * 10);
 };
-const handleLeaveRoom = (socket, { userId, chatRoomId }, io) => {
-    // Check if the user is in the specified chat room
-    // console.log("leave Room  userId: ", userId);
-    // console.log("leave Room chatRoomId: ", chatRoomId);
-    // console.log("userChatRoomMap[userId]: ", userChatRoomMap[userId]);
-    if (userChatRoomMap[userId] === chatRoomId) {
-        // Remove the user from the mappings
 
-        // console.log("userChatRoomMap[userId]  deleted: ", userChatRoomMap[userId]);
+const handleLeaveRoom = (socket, { userId, chatRoomId }) => {
+    if (userChatRoomMap[userId] === chatRoomId) {
         delete userChatRoomMap[userId];
         delete socketUserMap[socket.id];
-
-        // Leave the chat room
         socket.leave(chatRoomId);
-
-        // Notify other users in the room about the user leaving
-        socket.to(chatRoomId).emit("leftRoom", { userId, chatRoomId });
+        socket.to(chatRoomId).emit("leftRoom", { userId: userId, chatRoomId: chatRoomId });
     } else {
-        // console.log("You are not in the specified room.");
         socket.emit("error", { message: "You are not in the specified room." });
     }
-
-    // Clean up online users and update the list
-    onlineUsers = onlineUsers.filter((user) => user.userId !== userId);
-    io.emit("getOnlineUsers", onlineUsers);
 };
+
 const handleHeartbeat = (socket, userId, io) => {
     const existingUser = onlineUsers.find((user) => user.userId === userId);
     console.log("userId: ", userId);
@@ -138,7 +63,7 @@ const handleHeartbeat = (socket, userId, io) => {
             lastActive: new Date(),
         });
     }
-    const timeoutMinutes = 30;
+    const timeoutMinutes = 60 * 2;// 2 minutes
     onlineUsers = onlineUsers.filter(
         (user) => (new Date() - user.lastActive) / 60000 < timeoutMinutes
     );
@@ -146,6 +71,7 @@ const handleHeartbeat = (socket, userId, io) => {
     console.log("Online users:", onlineUsers);
     io.emit("getOnlineUsers", onlineUsers);
 };
+
 const handleRequestChatRooms = async (socket, { userId }) => {
     try {
         if (!userId) {
@@ -401,6 +327,7 @@ const handleVoiceChunk = async (socket, { data, chunkIndex, totalChunks, senderI
         callback({ success: true });
     }
 };
+
 const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChunks, senderId, recipientId }, callback) => {
     if (!fileChunksMap[name]) {
         fileChunksMap[name] = { type, chunks: new Array(totalChunks).fill(null), totalChunks };
@@ -445,7 +372,6 @@ const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChun
         return uploadedUrl;
     }
 };
-
 const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoomId, timestamp, files, replyTo }, io, callback) => {
     try {
         const sender = onlineUsers.find((user) => user.userId == senderId);
@@ -455,7 +381,7 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
             if (typeof callback === 'function') callback(error);
             return;
         }
-
+        console.log("recipientId: ", recipientId);
         const recipientUser = await Users.findById(recipientId);
         if (!recipientUser) {
             const error = { success: false, error: "Recipient not found" };
@@ -470,38 +396,29 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
             await chatRoom.save();
         }
 
-        const senderFromStorage = await Users.findById(senderId);
-        const repliedMessage = replyTo ? await Message.findById(replyTo) : null;
-        let customRepliedMessage = null;
-
-        if (repliedMessage) {
-            customRepliedMessage = {
-                _id: repliedMessage._id,
-                text: repliedMessage.text,
-                timestamp: repliedMessage.timestamp,
-                chatRoomId: repliedMessage.chatRoom,
-                senderId: {
-                    _id: repliedMessage.senderId,
-                    avatar: senderFromStorage?.avatar,
-                    fullName: senderFromStorage?.fullName,
-                },
-                deleted: repliedMessage.deleted,
-                recipientId: repliedMessage.recipientId,
-                fileUrls: repliedMessage.fileUrls,
-                replyTo: repliedMessage.replyTo,
-            };
-        }
-
         const message = new Message({
             text,
             senderId,
             recipientId,
             chatRoom: chatRoom._id,
-            replyTo: customRepliedMessage,
+            replyTo,
             fileUrls: files?.length > 0 ? files : [],
         });
 
-        const recipient = onlineUsers.find((user) => user.userId == recipientId);
+        const recipientUserOnline = onlineUsers.find((user) => user.userId == recipientId);
+
+        if (recipientUserOnline) {
+            message.read = true;
+            io.to(recipientUserOnline.socketId).emit("messageRead", {
+                messageId: message._id,
+                chatRoomId: chatRoom._id,
+                readBy: recipientId,
+                read: true,
+            });
+        }
+        await message.save();
+
+        const senderFromStorage = await Users.findById(senderId);
         const messageToSend = {
             _id: message._id,
             text: message.text,
@@ -511,55 +428,47 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
             senderId: {
                 _id: sender?.userId,
                 avatar: senderFromStorage?.avatar,
-                fullName: senderFromStorage?.fullName,
             },
             deleted: message.deleted,
             recipientId: message.recipientId,
-            fileUrls: message.fileUrls,
-            replyTo: customRepliedMessage,
+            fileUrls: files.length > 0 ? files : [],
+            replyTo: message.replyTo,
         };
 
-        console.log("recipient: ", recipient);
-        if (recipient) {
-            const senderChatRoom = userChatRoomMap[senderId];
-            const recipientChatRoom = userChatRoomMap[recipientId];
-            console.log("senderChatRoom: ", senderChatRoom);
-            console.log("recipientChatRoom: ", recipientChatRoom);
-            if (senderChatRoom && recipientChatRoom && senderChatRoom === recipientChatRoom) {
-                message.seen = true;
-                io.to(senderChatRoom).emit("messageRead", {
-                    messageId: message._id,
-                    chatRoomId: senderChatRoom,
-                    readBy: recipientId,
-                    read: true,
-                });
-            } else {
-                io.to(recipient.socketId).emit("getMessageOutSide", messageToSend)
-            }
+        // Emit the message to the chat room
+        await io.to(chatRoom._id.toString()).emit("getMessage", messageToSend);
+
+        // Emit to outside of the chat room (notification)
+        socket.emit("getMessageOutSide", messageToSend); // Emit to sender
+
+        // Check if the recipient is online and emit to their socket
+        if (recipientUserOnline && recipientUserOnline.socketId) {
+            socket.to(recipientUserOnline.socketId).emit("getMessageOutSide", messageToSend);
+            console.log("Message sent to recipient socket:", recipientUserOnline.socketId);
         }
-        await message.save();
 
-        console.log("chatRoom:", chatRoom._id.toString());
-        io.to(chatRoom._id.toString()).emit("getMessage", messageToSend);
-
+        const fullName = senderFromStorage?.fullName || "Unknown User";
 
         const successResponse = {
             success: true,
             messageId: message._id,
         };
         socket.emit("messageSentConfirmation", successResponse);
+        if (typeof callback === 'function') callback(successResponse);
 
-        const customData = {
+        let customData = {
             chatRoomId: chatRoom._id.toString(),
             messageId: message._id.toString(),
             timestamp: new Date().toISOString(),
             senderId: sender.userId,
-            senderAvatar: senderFromStorage?.avatar,
+            senderAvatar: senderFromStorage.avatar,
             recipientId: message.recipientId.toString(),
         };
-
-        Notification(recipientUser.mobileToken, { title: senderFromStorage?.fullName || "Unknown User", body: text }, customData);
-
+        Notification(
+            recipientUser.mobileToken,
+            { title: fullName, body: text },
+            customData
+        );
     } catch (error) {
         console.error("Error in sendMessage socket event:", error);
         const errorResponse = {
@@ -572,6 +481,7 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
 };
 
 // --------------------------------- File Uploads ---------------------------------
+
 const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, skip = 0 }) => {
     try {
         const chatRoom = await ChatRoom.findOne({
@@ -698,6 +608,7 @@ const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
         });
     }
 };
+
 const handleAdminChatRoom = async (socket, { userId }) => {
     try {
         const Rooms = await ChatRoom.find().populate("users", "avatar");
@@ -745,6 +656,7 @@ const handleAdminChatRoom = async (socket, { userId }) => {
         });
     }
 };
+
 const handleDeleteChatRoom = async (socket, { userId, chatRoomId }, io) => {
     if (!userId) {
         socket.emit("deleteChatRoomResponse", {
@@ -786,6 +698,7 @@ const handleDeleteChatRoom = async (socket, { userId, chatRoomId }, io) => {
         message: "Chat room deleted successfully.",
     });
 };
+
 const handleDeleteMessage = async (socket, { userId, messageId }, io) => {
     try {
         if (!userId) {
@@ -848,6 +761,7 @@ const handleDeleteMessage = async (socket, { userId, messageId }, io) => {
         });
     }
 };
+
 const handleUpdateMessage = async (socket, { userId, messageId, text }, io) => {
     const newText = text.trim();
     // console.log("userId: ", userId);
@@ -926,6 +840,7 @@ const handleUpdateMessage = async (socket, { userId, messageId, text }, io) => {
         });
     }
 };
+
 const handleTyping = async (socket, { chatRoomId, userId, isTyping }, io) => {
     try {
         const chatRoom = await ChatRoom.findOne({
@@ -985,6 +900,7 @@ const handleTyping = async (socket, { chatRoomId, userId, isTyping }, io) => {
         console.error("Error handling typing event:", error);
     }
 };
+
 const handleMessageToAdmin = async (socket, { senderId, text }) => {
     try {
         const user = await Users.findById(senderId);
@@ -1025,6 +941,7 @@ const handleMessageToAdmin = async (socket, { senderId, text }) => {
         });
     }
 };
+
 const handleAdminMessageToUser = async (socket, { senderId, userId, text }, io) => {
     try {
         const user = await Users.findById(userId);
@@ -1108,6 +1025,7 @@ const handleAdminMessageToUser = async (socket, { senderId, userId, text }, io) 
         });
     }
 };
+
 const handleSaveGPTConfig = async (socket, { gptToken, userId }) => {
     try {
         const user = await Users.findById(userId);
@@ -1122,6 +1040,7 @@ const handleSaveGPTConfig = async (socket, { gptToken, userId }) => {
         socket.emit("errorNotification", { error: "Failed to save GPT config" });
     }
 };
+
 const handleGetGPTConfig = async (socket, { userId }) => {
     try {
         const user = await Users.findById(userId);
@@ -1136,6 +1055,7 @@ const handleGetGPTConfig = async (socket, { userId }) => {
         socket.emit("errorNotification", { error: "Failed to retrieve GPT config" });
     }
 };
+
 const handlePromptString = async (socket, { userId, text }, io) => {
     try {
         const user = await Users.findById(userId);
@@ -1195,6 +1115,7 @@ const handlePromptString = async (socket, { userId, text }, io) => {
         });
     }
 };
+
 const handleDisconnect = (socket, io) => {
     const userId = socketUserMap[socket.id];
     const chatRoomId = userChatRoomMap[userId];
@@ -1207,6 +1128,7 @@ const handleDisconnect = (socket, io) => {
     onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id);
     io.emit("updateOnlineUsers", onlineUsers);
 };
+
 const findAdminSocketId = () => {
     return onlineUsers.find((user) => user.isAdmin).socketId;
 };

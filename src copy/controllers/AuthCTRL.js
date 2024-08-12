@@ -46,8 +46,6 @@ class AuthCTRL {
         confirmationCode = Math.floor(100000 + Math.random() * 900000);
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
-      // confirmationCode = 112233
-      // confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       if (!existingUser) {
         existingUser = new Users({
           phoneNumber: phoneNumberWithCountryCode,
@@ -269,17 +267,14 @@ class AuthCTRL {
       const now = Date.now();
       let confirmationCode = null
       let confirmationCodeExpires = null
-      // if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
-      //   confirmationCode = 112233
-      //   confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
-      // } else {
-      //   confirmationCode = Math.floor(100000 + Math.random() * 900000);
-      //   confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
-      // }
-      // -----
-      confirmationCode = 112233
-      confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
-      //-----
+      if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
+        confirmationCode = 112233
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      } else {
+        confirmationCode = Math.floor(100000 + Math.random() * 900000);
+        confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
+      }
+
       user.confirmationCode = confirmationCode;
       user.confirmationCodeExpires = confirmationCodeExpires;
       await user.save();
@@ -288,12 +283,12 @@ class AuthCTRL {
       } else {
         const token = await getEskizAuthToken();
         const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-        // if (phoneNumberWithCountryCode.startsWith("+998")) {
-        //   await sendCustomSms(token, phoneNumberWithCountryCode, message);
-        // } else {
-        //   const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
-        //   console.log(`Message SID: ${messageSid}`);
-        // }
+        if (phoneNumberWithCountryCode.startsWith("+998")) {
+          await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        } else {
+          const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
+          console.log(`Message SID: ${messageSid}`);
+        }
 
         return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
       }
@@ -432,7 +427,7 @@ class AuthCTRL {
       jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
         if (err) {
           console.error("JWT verification error:", err);
-          return handleResponse(res, 451, "error", "Invalid refresh token", null, 0);
+          return handleResponse(res, 470, "error", "Invalid refresh token", null, 0);
         }
 
         try {
