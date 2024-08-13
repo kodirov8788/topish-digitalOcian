@@ -8,60 +8,6 @@ let onlineUsers = [];
 let userChatRoomMap = {};
 let socketUserMap = {};
 const typingDebounceTimers = {};
-// const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
-//     try {
-//         // Check if the user is in the specified chat room
-//         console.log("handleMarkMessagesAsSeen is called");
-//         console.log("userId: ", userId);
-//         console.log("chatRoomId: ", chatRoomId);
-
-//         const chatRoom = await ChatRoom.findOne({
-//             _id: chatRoomId,
-//             users: userId,
-//         });
-
-//         if (!chatRoom) {
-//             socket.emit("errorNotification", { error: "Chat room not found or access denied." });
-//             return;
-//         }
-
-//         // Update all unseen messages for this user in the chat room
-//         const updatedMessages = await Message.updateMany(
-//             {
-//                 chatRoom: chatRoomId,
-//                 recipientId: userId,
-//                 seen: false,
-//             },
-//             {
-//                 $set: { seen: true },
-//             }
-//         );
-
-//         if (updatedMessages.nModified > 0) {
-//             // Notify the user and other participants in the chat room about the update
-//             socket.to(chatRoomId).emit("seenUpdate", { chatRoomId, userId });
-//             socket.emit("messagesMarkedAsSeen", {
-//                 success: true,
-//                 chatRoomId,
-//                 userId,
-//                 seen: true,
-//             });
-//         } else {
-//             socket.emit("messagesMarkedAsSeen", {
-//                 success: false,
-//                 chatRoomId,
-//                 userId,
-//                 message: "No unseen messages found.",
-//                 seen: true,
-//             });
-//         }
-//     } catch (error) {
-//         console.error("Error in handleMarkMessagesAsSeen:", error);
-//         socket.emit("errorNotification", {
-//             error: "An error occurred while marking messages as seen.",
-//         });
-//     }
-// };
 
 
 const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
@@ -509,12 +455,10 @@ const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChun
 
 const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoomId, timestamp, files, replyTo }, io, callback) => {
     try {
-        const sender = onlineUsers.find((user) => user.userId == senderId);
+        let sender = onlineUsers.find((user) => user.userId == senderId);
         if (!sender) {
-            const error = { success: false, error: "Sender not found" };
-            socket.emit("errorNotification", error);
-            if (typeof callback === 'function') callback(error);
-            return;
+            handleHeartbeat(socket, senderId, io);
+            sender = onlineUsers.find((user) => user.userId == senderId);
         }
 
         const recipientUser = await Users.findById(recipientId);
