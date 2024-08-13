@@ -8,9 +8,64 @@ let onlineUsers = [];
 let userChatRoomMap = {};
 let socketUserMap = {};
 const typingDebounceTimers = {};
+// const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
+//     try {
+//         // Check if the user is in the specified chat room
+//         console.log("handleMarkMessagesAsSeen is called");
+//         console.log("userId: ", userId);
+//         console.log("chatRoomId: ", chatRoomId);
+
+//         const chatRoom = await ChatRoom.findOne({
+//             _id: chatRoomId,
+//             users: userId,
+//         });
+
+//         if (!chatRoom) {
+//             socket.emit("errorNotification", { error: "Chat room not found or access denied." });
+//             return;
+//         }
+
+//         // Update all unseen messages for this user in the chat room
+//         const updatedMessages = await Message.updateMany(
+//             {
+//                 chatRoom: chatRoomId,
+//                 recipientId: userId,
+//                 seen: false,
+//             },
+//             {
+//                 $set: { seen: true },
+//             }
+//         );
+
+//         if (updatedMessages.nModified > 0) {
+//             // Notify the user and other participants in the chat room about the update
+//             socket.to(chatRoomId).emit("seenUpdate", { chatRoomId, userId });
+//             socket.emit("messagesMarkedAsSeen", {
+//                 success: true,
+//                 chatRoomId,
+//                 userId,
+//                 seen: true,
+//             });
+//         } else {
+//             socket.emit("messagesMarkedAsSeen", {
+//                 success: false,
+//                 chatRoomId,
+//                 userId,
+//                 message: "No unseen messages found.",
+//                 seen: true,
+//             });
+//         }
+//     } catch (error) {
+//         console.error("Error in handleMarkMessagesAsSeen:", error);
+//         socket.emit("errorNotification", {
+//             error: "An error occurred while marking messages as seen.",
+//         });
+//     }
+// };
+
+
 const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
     try {
-        // Check if the user is in the specified chat room
         console.log("handleMarkMessagesAsSeen is called");
         console.log("userId: ", userId);
         console.log("chatRoomId: ", chatRoomId);
@@ -25,7 +80,6 @@ const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
             return;
         }
 
-        // Update all unseen messages for this user in the chat room
         const updatedMessages = await Message.updateMany(
             {
                 chatRoom: chatRoomId,
@@ -38,8 +92,13 @@ const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
         );
 
         if (updatedMessages.nModified > 0) {
-            // Notify the user and other participants in the chat room about the update
-            socket.to(chatRoomId).emit("seenUpdate", { chatRoomId, userId });
+            const seenMessages = await Message.find({
+                chatRoom: chatRoomId,
+                recipientId: userId,
+                seen: true,
+            });
+
+            socket.to(chatRoomId).emit("seenUpdate", { chatRoomId, userId, messages: seenMessages });
             socket.emit("messagesMarkedAsSeen", {
                 success: true,
                 chatRoomId,
@@ -52,7 +111,6 @@ const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
                 chatRoomId,
                 userId,
                 message: "No unseen messages found.",
-                seen: true,
             });
         }
     } catch (error) {
@@ -62,6 +120,7 @@ const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
         });
     }
 };
+
 const handleJoinRoom = (socket, { userId, chatRoomId }, io) => {
     // Map the user to the chat room and the socket ID
     userChatRoomMap[userId] = chatRoomId;
@@ -213,7 +272,9 @@ const handleRequestChatRooms = async (socket, { userId }) => {
                         },
                         lastMessage: lastMessage
                             ? {
+                                _id: lastMessage._id,
                                 text: lastMessage.text,
+                                seen: lastMessage.seen,
                                 timestamp: lastMessage.timestamp,
                                 senderId: lastMessage.senderId._id,
                                 recipientId:
@@ -527,21 +588,33 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
             console.log("recipientChatRoom: ", recipientChatRoom);
             if (senderChatRoom && recipientChatRoom && senderChatRoom === recipientChatRoom) {
                 message.seen = true;
-                io.to(senderChatRoom).emit("messageRead", {
-                    messageId: message._id,
-                    chatRoomId: senderChatRoom,
-                    readBy: recipientId,
-                    read: true,
-                });
+                setTimeout(() => {
+                    io.to(senderChatRoom).emit("messageRead", {
+                        messageId: message._id,
+                        chatRoomId: senderChatRoom,
+                        readBy: recipientId,
+                        read: true,
+                    });
+                }, 300);
             } else {
                 io.to(recipient.socketId).emit("getMessageOutSide", messageToSend)
             }
         }
         await message.save();
 
-        console.log("chatRoom:", chatRoom._id.toString());
+        // console.log("chat:", chatRoom._id.toString());
         io.to(chatRoom._id.toString()).emit("getMessage", messageToSend);
-
+        // console.log("recipient :=>", recipient);
+        // console.log("recipient && message.seen: ", recipient && message.seen);
+        // if (recipient && message.seen) {
+        //     console.log("notification sent");
+        //     io.to(sender.socketId).emit("messageRead", {
+        //         messageId: message._id,
+        //         chatRoomId: chatRoom._id.toString(),
+        //         readBy: recipientId,
+        //         read: true,
+        //     });
+        // }
 
         const successResponse = {
             success: true,
