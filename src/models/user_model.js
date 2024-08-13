@@ -20,6 +20,7 @@ const UsersSchema = new Schema(
         type: [{ type: Schema.Types.ObjectId, ref: "Office" }],
         default: [],
       },
+      profileVisibility: { type: Boolean, default: false },
     },
     loginCodeAttempts: {
       type: Array,
@@ -58,6 +59,7 @@ const UsersSchema = new Schema(
       workingExperience: { type: String, required: false, default: "" },
       employmentType: { type: String, required: false, default: "full-time" },
       educationalBackground: { type: String, required: false, default: "" },
+      profileVisibility: { type: Boolean, default: false },
     },
     employer: {
       companyName: { type: String, default: "" },
@@ -66,6 +68,7 @@ const UsersSchema = new Schema(
       contactNumber: { type: String, default: "" },
       contactEmail: { type: String, default: "" },
       jobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
+      profileVisibility: { type: Boolean, default: false },
     },
     fullName: { type: String, default: "" },
     username: { type: String, unique: false, required: false },
@@ -163,7 +166,6 @@ const UsersSchema = new Schema(
     // telegramId: { type: String, default: "" },
     gptToken: { type: String, default: "" },
     gptPrompt: { type: String, default: "" },
-    visible: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

@@ -809,17 +809,24 @@ class UserCTRL {
 
       const { visible } = req.body;
       // Validate the 'visible' field
-      // console.log("visible: ", visible)
       if (typeof visible !== 'boolean') {
         return handleResponse(res, 400, "error", "Invalid value for visible", null, 0);
       }
-
 
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      user.visible = visible;
+      if (user.role === "Employer") {
+        user.employer.profileVisibility = visible;
+      } else if (user.role === "JobSeeker") {
+        user.jobSeeker.profileVisibility = visible;
+      } else if (user.role === "Service") {
+        user.service.profileVisibility = visible;
+      } else {
+        return handleResponse(res, 400, "error", "Role not recognized", null, 0);
+      }
+
       await user.save();
 
       return handleResponse(res, 200, "success", "Visibility updated successfully.", user, 1);
@@ -827,9 +834,45 @@ class UserCTRL {
       console.error("Error updating visibility for user:", error);
       return handleResponse(res, 500, "error", "Failed to update visibility for user.", null, 0);
     }
-
-
   }
+
+
+  async addToAllUsersVisibility(req, res) {
+    try {
+      // Check if the user is authenticated
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: req.user.id });
+
+      const { visible } = req.body;
+      // Validate the 'visible' field
+      if (typeof visible !== 'boolean') {
+        return handleResponse(res, 400, "error", "Invalid value for visible", null, 0);
+      }
+
+      // if (user.role !== "Admin") {
+      //   return handleResponse(res, 403, "error", "You are not authorized to perform this action", null, 0);
+      // }
+
+      const result = await Users.updateMany(
+        {},
+        {
+          "jobSeeker.profileVisibility": visible,
+          "employer.profileVisibility": visible,
+          "service.profileVisibility": visible
+        }
+      );
+
+      return handleResponse(res, 200, "success", `Visibility updated for users.`, result, null, 1);
+
+    } catch (error) {
+      console.error("Error updating visibility for users:", error);
+      return handleResponse(res, 500, "error", "Failed to update visibility for all users.", null, 0);
+    }
+  }
+
 
 }
 

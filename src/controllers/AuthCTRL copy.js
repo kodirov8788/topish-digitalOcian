@@ -3,8 +3,8 @@ const { generateTokens, createTokenUser } = require("../utils/jwt");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteUserAvatar } = require("./avatarCTRL");
 const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
-const { RegisterValidation, logOutValidation } = require("../helpers/AuthValidation");
-const { getEskizAuthToken, sendCustomSms, sendGlobalSms, checkSmsStatus, makeVoiceCall } = require("../utils/smsService");
+const { RegisterValidation, logOutValidation, RegisterValidationConfirm } = require("../helpers/AuthValidation");
+const { getEskizAuthToken, sendCustomSms, createService, sendVerificationToken, checkVerificationToken, checkSmsStatus } = require("../utils/smsService");
 const jwt = require('jsonwebtoken');
 const { PromptCode } = require("../models/other_models");
 function createRandomFullname() {
@@ -70,48 +70,17 @@ class AuthCTRL {
       } else {
         const token = await getEskizAuthToken();
         const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-
+        // await sendCustomSms(token, phoneNumberWithCountryCode, message);
         if (phoneNumberWithCountryCode.startsWith("+998")) {
           await sendCustomSms(token, phoneNumberWithCountryCode, message);
         } else {
-          const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
+          const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, message);
           console.log(`Message SID: ${messageSid}`);
         }
 
 
         return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
       }
-    } catch (error) {
-      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
-    }
-  }
-  async sendVoiceCall(req, res) {
-    try {
-      const { phoneNumber } = req.body;
-
-      if (!phoneNumber) {
-        return handleResponse(res, 400, "error", "Phone number is required", null, 0);
-      }
-
-      const user = await Users.findOne({ phoneNumber });
-
-      if (!user) {
-        return handleResponse(res, 404, "error", "User not found with this phone number", null, 0);
-      }
-
-      const now = Date.now();
-      let confirmationCode = user.confirmationCode;
-      let confirmationCodeExpires;
-
-      confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
-
-      user.confirmationCodeExpires = confirmationCodeExpires;
-      await user.save();
-
-      let newConfirmationCode = String(confirmationCode).split('').join(' ');
-      await makeVoiceCall(phoneNumber, `code is ${newConfirmationCode}`);
-
-      return handleResponse(res, 200, "success", "Confirmation code sent. Please check your phone.", null, 1);
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
@@ -168,22 +137,6 @@ class AuthCTRL {
       };
       user.fullName = createRandomFullname();
       user.gptPrompt = prompt[0]?.code || "";
-      console.log("user.role: ", user.role)
-      if (user.role === "Employer") {
-        user.employer.profileVisibility = true;
-        user.jobSeeker.profileVisibility = false;
-        user.service.profileVisibility = false;
-      }
-      if (user.role === "JobSeeker") {
-        user.jobSeeker.profileVisibility = true;
-        user.employer.profileVisibility = false;
-        user.service.profileVisibility = false;
-      }
-      if (user.role === "Service") {
-        user.service.profileVisibility = true;
-        user.jobSeeker.profileVisibility = false;
-        user.employer.profileVisibility = false;
-      }
 
       await user.save();
 
@@ -278,10 +231,6 @@ class AuthCTRL {
         return handleResponse(res, 400, "error", "User not found", null, 0);
       }
 
-      if (user.blocked) {
-        return handleResponse(res, 400, "error", "User is blocked", null, 0);
-      }
-
       const now = Date.now();
       let confirmationCode = null
       let confirmationCodeExpires = null
@@ -292,25 +241,30 @@ class AuthCTRL {
         confirmationCode = Math.floor(100000 + Math.random() * 900000);
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
-      // -----
       // confirmationCode = 112233
       // confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
-      //-----
+
       user.confirmationCode = confirmationCode;
       user.confirmationCodeExpires = confirmationCodeExpires;
+
       await user.save();
+
       if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501") {
         return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
       } else {
         const token = await getEskizAuthToken();
         const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
+
+        // await sendCustomSms(token, phoneNumberWithCountryCode, message);
         if (phoneNumberWithCountryCode.startsWith("+998")) {
           await sendCustomSms(token, phoneNumberWithCountryCode, message);
         } else {
-          const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
-          console.log(`Message SID: ${messageSid}`);
+          const serviceSid = await createService();
+          await sendVerificationToken(serviceSid, phoneNumberWithCountryCode);
+          const userEnteredCode = confirmationCode;
+          const status = await checkVerificationToken(serviceSid, phoneNumberWithCountryCode, userEnteredCode);
+          console.log(`Verification completed with status: ${status}`);
         }
-
         return handleResponse(res, 200, "success", "Confirmation code sent", null, 1);
       }
 
@@ -434,54 +388,51 @@ class AuthCTRL {
     }
   }
   async renewAccessToken(req, res) {
-    console.log("renewAccessToken called");
+    // console.log("renew refresh token is called")
 
     try {
       const { refreshToken } = req.body;
-      console.log("Received refreshToken: ", refreshToken);
 
+      // console.log("refreshToken: ", refreshToken)
       if (!refreshToken) {
-        console.warn("No refresh token provided");
         return handleResponse(res, 400, "error", "Refresh token is required", null, 0);
       }
-
       jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
         if (err) {
-          console.error("JWT verification error:", err);
-          return handleResponse(res, 451, "error", "Invalid refresh token", null, 0);
+          console.log("JWT verification error:", err);
+          return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
         }
-
         try {
           const user = await Users.findOne({ 'refreshTokens.token': refreshToken });
-
+          // console.log("user: ", user?.phoneNumber)
           if (!user) {
-            console.warn("User not found for provided refresh token");
-            return handleResponse(res, 471, "error", "User not found for provided refresh token", null, 0);
+            console.log("User not found for provided refresh token");
+            return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
           }
+          // console.log("user2: ", user?.phoneNumber)
 
           const tokenUser = createTokenUser(user);
           const { accessToken, refreshToken: newRefreshToken } = generateTokens(tokenUser);
           let tokenUpdated = false;
-
-          user.refreshTokens = user.refreshTokens.map(tokenObj => {
+          for (let tokenObj of user.refreshTokens) {
             if (tokenObj.token === refreshToken) {
               tokenObj.token = newRefreshToken;
               tokenUpdated = true;
+              break;
             }
-            return tokenObj;
-          });
-
-          if (!tokenUpdated) {
-            console.error("Failed to find the refresh token in the database");
-            return handleResponse(res, 472, "error", "Failed to find the refresh token in the database", null, 0);
           }
 
+          // console.log("tokenUpdated: ", tokenUpdated)
+          // console.log("newRefreshToken: ", newRefreshToken)
+          if (!tokenUpdated) {
+            console.log("Failed to find the refresh token in the database");
+            return handleResponse(res, 403, "error", "Invalid refresh token", null, 0);
+          }
           await user.save();
-          console.info("Access token renewed successfully for user:", user.phoneNumber);
-          return handleResponse(res, 208, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
+          return handleResponse(res, 200, "success", "Access token renewed successfully", { accessToken, refreshToken: newRefreshToken });
         } catch (dbError) {
           console.error("Database error:", dbError);
-          return handleResponse(res, 473, "error", "Database error occurred", null, 0);
+          return handleResponse(res, 500, "error", "Database error occurred", null, 0);
         }
       });
     } catch (error) {
@@ -620,6 +571,7 @@ class AuthCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
+
   async addUsernamesToAllUsers(req, res) {
     try {
 
