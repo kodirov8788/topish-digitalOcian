@@ -1,12 +1,12 @@
-const Users = require("./src/models/user_model");
-const { generateTokens, createTokenUser } = require("./src/utils/jwt");
-const { handleResponse } = require("./src/utils/handleResponse");
-const { deleteUserAvatar } = require("./src/controllers/avatarCTRL");
-const { deleteUserCv } = require("./src/controllers/resumeCTRL/CvCTRL");
-const { RegisterValidation, logOutValidation } = require("./src/helpers/AuthValidation");
-const { getEskizAuthToken, sendCustomSms, sendGlobalSms, checkSmsStatus, makeVoiceCall } = require("./src/utils/smsService");
+const Users = require("../models/user_model");
+const { generateTokens, createTokenUser } = require("../utils/jwt");
+const { handleResponse } = require("../utils/handleResponse");
+const { deleteUserAvatar } = require("./avatarCTRL");
+const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
+const { RegisterValidation, logOutValidation } = require("../helpers/AuthValidation");
+const { getEskizAuthToken, sendCustomSms, sendGlobalSms, checkSmsStatus, makeVoiceCall } = require("../utils/smsService");
 const jwt = require('jsonwebtoken');
-const { PromptCode } = require("./src/models/other_models");
+const { PromptCode } = require("../models/other_models");
 function createRandomFullname() {
   const firstName = "User";
   const randomNumber = Math.floor(Math.random() * 1000000);
@@ -602,6 +602,35 @@ class AuthCTRL {
       return handleResponse(res, 200, "success", "SMS status checked successfully", response);
     } catch (error) {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
+
+  async addUsernamesToAllUsers(req, res) {
+    try {
+
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized!", null, 0);
+      }
+
+
+      // Find all users
+      const users = await Users.find();
+
+      // Iterate over each user
+      for (let user of users) {
+
+        // Ensure fullName is set if username is empty
+        if (!user.fullName || user.fullName.trim() === '') {
+          user.fullName = createRandomFullname();
+        }
+
+        // Save the updated user
+        await user.save();
+      }
+
+      return handleResponse(res, 200, "success", "Usernames and fullNames updated successfully", null, 0);
+    } catch (error) {
+      console.error('Error updating usernames and fullNames:', error);
     }
   }
 }

@@ -1,4 +1,4 @@
-const Users = require("./src/models/user_model");
+const Users = require("./src/models/user_models/User");
 const { generateTokens, createTokenUser } = require("./src/utils/jwt");
 const { handleResponse } = require("./src/utils/handleResponse");
 const { deleteUserAvatar } = require("./src/controllers/avatarCTRL");
