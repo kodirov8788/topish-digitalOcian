@@ -592,6 +592,8 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
 // --------------------------------- File Uploads ---------------------------------
 const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, skip = 0 }) => {
     try {
+        console.log("chatRoomId: ", chatRoomId);
+        console.log("userId: ", userId);
 
         if (!mongoose.Types.ObjectId.isValid(chatRoomId)) {
             socket.emit("chatRoomResponse", {
@@ -601,6 +603,7 @@ const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, sk
             });
             return;
         }
+
         const chatRoom = await ChatRoom.findOne({
             _id: chatRoomId,
             users: userId,
