@@ -4,11 +4,64 @@ const Message = require("../models/message_model");
 const Notification = require("../utils/Notification");
 const { PromptCode } = require("../models/other_models");
 const { uploadFile } = require('../utils/imageUploads/messageFilesUpload');
-const { default: mongoose } = require("mongoose");
 let onlineUsers = [];
 let userChatRoomMap = {};
 let socketUserMap = {};
 const typingDebounceTimers = {};
+// const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
+//     try {
+//         // Check if the user is in the specified chat room
+//         console.log("handleMarkMessagesAsSeen is called");
+//         console.log("userId: ", userId);
+//         console.log("chatRoomId: ", chatRoomId);
+
+//         const chatRoom = await ChatRoom.findOne({
+//             _id: chatRoomId,
+//             users: userId,
+//         });
+
+//         if (!chatRoom) {
+//             socket.emit("errorNotification", { error: "Chat room not found or access denied." });
+//             return;
+//         }
+
+//         // Update all unseen messages for this user in the chat room
+//         const updatedMessages = await Message.updateMany(
+//             {
+//                 chatRoom: chatRoomId,
+//                 recipientId: userId,
+//                 seen: false,
+//             },
+//             {
+//                 $set: { seen: true },
+//             }
+//         );
+
+//         if (updatedMessages.nModified > 0) {
+//             // Notify the user and other participants in the chat room about the update
+//             socket.to(chatRoomId).emit("seenUpdate", { chatRoomId, userId });
+//             socket.emit("messagesMarkedAsSeen", {
+//                 success: true,
+//                 chatRoomId,
+//                 userId,
+//                 seen: true,
+//             });
+//         } else {
+//             socket.emit("messagesMarkedAsSeen", {
+//                 success: false,
+//                 chatRoomId,
+//                 userId,
+//                 message: "No unseen messages found.",
+//                 seen: true,
+//             });
+//         }
+//     } catch (error) {
+//         console.error("Error in handleMarkMessagesAsSeen:", error);
+//         socket.emit("errorNotification", {
+//             error: "An error occurred while marking messages as seen.",
+//         });
+//     }
+// };
 
 
 const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
@@ -590,39 +643,24 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
 };
 
 // --------------------------------- File Uploads ---------------------------------
-const handleSingleChatRoom = async (socket, { userId, otherUserId, chatRoomId, limit = 15, skip = 0, randomNumber }) => {
+const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, skip = 0 }) => {
     try {
-        console.log("chatRoomId: ", chatRoomId);
-        console.log("userId: ", userId);
-        console.log("otherUserId: ", otherUserId);
-        console.log("randomNumber: ", randomNumber);
-
-
-        // Try to find the chat room with the provided chatRoomId
-        let chatRoom
-        if (!chatRoom) {
-            chatRoom = new ChatRoom({
-                _id: randomNumber, // Use the randomNumber as the new chatRoomId
-                users: [userId, otherUserId], // Initialize with both users
-            });
-            await chatRoom.save();
-
-            // console.log("New chat room created with ID:", randomNumber);
-        }
-        chatRoom = await ChatRoom.findOne({
+        const chatRoom = await ChatRoom.findOne({
             _id: chatRoomId,
             users: userId,
         }).populate("users", "avatar");
-
-        // If no chat room is found, create a new one using the randomNumber
-
-
-        // Find the other user in the chat room
-        const otherUserInRoomId = chatRoom.users.find(
+        if (!chatRoom) {
+            socket.emit("chatRoomResponse", {
+                status: 404,
+                message: "Chat room not found or access denied",
+                data: null,
+            });
+            return;
+        }
+        const otherUserId = chatRoom.users.find(
             (user) => user._id.toString() !== userId
-        )?._id;
-
-        if (!otherUserInRoomId) {
+        )?.id;
+        if (!otherUserId) {
             socket.emit("chatRoomResponse", {
                 status: 404,
                 message: "Other user not found in chat room",
@@ -630,9 +668,7 @@ const handleSingleChatRoom = async (socket, { userId, otherUserId, chatRoomId, l
             });
             return;
         }
-
-        // Fetch the other user's details
-        let otherUser = await Users.findById(otherUserInRoomId)
+        let otherUser = await Users.findById(otherUserId)
             .select("avatar fullName")
             .exec();
 
@@ -645,14 +681,12 @@ const handleSingleChatRoom = async (socket, { userId, otherUserId, chatRoomId, l
             return;
         }
 
-        // Mark messages as seen
         await Message.updateMany(
-            { chatRoom: chatRoom._id, recipientId: userId, seen: false },
+            { chatRoom: chatRoomId, recipientId: userId, seen: false },
             { $set: { seen: true } }
         );
 
-        // Fetch message history
-        const messageHistory = await Message.find({ chatRoom: chatRoom._id })
+        const messageHistory = await Message.find({ chatRoom: chatRoomId })
             .sort({ timestamp: -1 }) // Sort by newest first
             .skip(skip)
             .limit(limit)
@@ -662,22 +696,19 @@ const handleSingleChatRoom = async (socket, { userId, otherUserId, chatRoomId, l
         // Reverse the order to have the oldest first
         messageHistory.reverse();
 
-        // Prepare the other user's data for response
         let otherUserData = {
             fullName: otherUser.fullName,
             avatar: otherUser.avatar,
             _id: otherUser._id,
         };
 
-        // Notify the recipient about seen messages
         const recipient = onlineUsers.find(
-            (user) => user.userId === otherUserInRoomId.toString()
+            (user) => user.userId === otherUserId.toString()
         );
         if (recipient && recipient.socketId) {
             socket.to(recipient.socketId).emit("seenUpdate", messageHistory);
         }
 
-        // Emit the chat room response with data
         socket.emit("chatRoomResponse", {
             status: 200,
             message: "Chat room and message history retrieved successfully",
@@ -692,7 +723,6 @@ const handleSingleChatRoom = async (socket, { userId, otherUserId, chatRoomId, l
         });
     }
 };
-
 const fetchMoreMessages = async (socket, { chatRoomId, userId, currentMessageCount }) => {
     const limit = 15;
     const skip = currentMessageCount;
@@ -701,8 +731,6 @@ const fetchMoreMessages = async (socket, { chatRoomId, userId, currentMessageCou
 // --------------------------------- hundle chatRoom ---------------------------------
 const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
     try {
-        console.log("making room userId: ", userId);
-        console.log("making room otherUserId: ", otherUserId);
         const user = await Users.findById(userId);
         if (!user) {
             socket.emit("errorNotification", { status: 404, error: "User not found" });
@@ -723,7 +751,7 @@ const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
             chatRoom = new ChatRoom({ users: [userId, otherUserId] });
             await chatRoom.save();
         }
-        console.log("making chatRoom: ", chatRoom);
+
         socket.emit("chatRoomCreated", {
             status: 200,
             chatRoomId: chatRoom._id,
