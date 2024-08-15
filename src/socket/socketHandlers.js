@@ -692,6 +692,8 @@ const fetchMoreMessages = async (socket, { chatRoomId, userId, currentMessageCou
 // --------------------------------- hundle chatRoom ---------------------------------
 const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
     try {
+        console.log("making room userId: ", userId);
+        console.log("making room otherUserId: ", otherUserId);
         const user = await Users.findById(userId);
         if (!user) {
             socket.emit("errorNotification", { status: 404, error: "User not found" });
@@ -712,7 +714,7 @@ const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
             chatRoom = new ChatRoom({ users: [userId, otherUserId] });
             await chatRoom.save();
         }
-
+        console.log("making chatRoom: ", chatRoom);
         socket.emit("chatRoomCreated", {
             status: 200,
             chatRoomId: chatRoom._id,
