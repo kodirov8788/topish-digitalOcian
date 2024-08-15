@@ -4,6 +4,7 @@ const Message = require("../models/message_model");
 const Notification = require("../utils/Notification");
 const { PromptCode } = require("../models/other_models");
 const { uploadFile } = require('../utils/imageUploads/messageFilesUpload');
+const { default: mongoose } = require("mongoose");
 let onlineUsers = [];
 let userChatRoomMap = {};
 let socketUserMap = {};
@@ -591,10 +592,21 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
 // --------------------------------- File Uploads ---------------------------------
 const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, skip = 0 }) => {
     try {
+
+        if (!mongoose.Types.ObjectId.isValid(chatRoomId)) {
+            socket.emit("chatRoomResponse", {
+                status: 400,
+                message: "Invalid chat room ID.",
+                data: null,
+            });
+            return;
+        }
         const chatRoom = await ChatRoom.findOne({
             _id: chatRoomId,
             users: userId,
         }).populate("users", "avatar");
+
+
         if (!chatRoom) {
             socket.emit("chatRoomResponse", {
                 status: 404,
