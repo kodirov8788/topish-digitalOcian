@@ -508,6 +508,8 @@ const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChun
 };
 
 const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoomId, timestamp, files, replyTo }, io, callback) => {
+    console.log("send message recipientId: ", recipientId);
+    console.log("send message senderId: ", senderId);
     try {
         let sender = onlineUsers.find((user) => user.userId == senderId);
         if (!sender) {
@@ -645,6 +647,9 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
 // --------------------------------- File Uploads ---------------------------------
 const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, skip = 0 }) => {
     try {
+        console.log("handleSingleChatRoom userId: ", userId);
+        console.log("handleSingleChatRoom chatRoomId: ", chatRoomId);
+
         const chatRoom = await ChatRoom.findOne({
             _id: chatRoomId,
             users: userId,
@@ -730,6 +735,8 @@ const fetchMoreMessages = async (socket, { chatRoomId, userId, currentMessageCou
 }
 // --------------------------------- hundle chatRoom ---------------------------------
 const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
+    console.log("CreateChatRoom userId: ", userId);
+    console.log("CreateChatRoom otherUserId: ", otherUserId);
     try {
         const user = await Users.findById(userId);
         if (!user) {
