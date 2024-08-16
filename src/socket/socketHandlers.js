@@ -4,6 +4,7 @@ const Message = require("../models/message_model");
 const Notification = require("../utils/Notification");
 const { PromptCode } = require("../models/other_models");
 const { uploadFile } = require('../utils/imageUploads/messageFilesUpload');
+const { isValidObjectId } = require("mongoose");
 let onlineUsers = [];
 let userChatRoomMap = {};
 let socketUserMap = {};
@@ -649,7 +650,10 @@ const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, sk
     try {
         console.log("handleSingleChatRoom userId: ", userId);
         console.log("handleSingleChatRoom chatRoomId: ", chatRoomId);
-
+        if (!isValidObjectId(chatRoomId) || !isValidObjectId(userId)) {
+            socket.emit("errorNotification", { status: 400, message: "Invalid chat room or user ID." });
+            return;
+        }
         const chatRoom = await ChatRoom.findOne({
             _id: chatRoomId,
             users: userId,
