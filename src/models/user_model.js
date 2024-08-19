@@ -166,6 +166,7 @@ const UsersSchema = new Schema(
     // telegramId: { type: String, default: "" },
     gptToken: { type: String, default: "" },
     gptPrompt: { type: String, default: "" },
+    lastActivity: { type: Date, default: null }
   },
   { timestamps: true }
 );

@@ -2,7 +2,13 @@ const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const Jobs = require("../models/job_model");
 const Quickjobs = require("../models/quickjob_model");
-
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
 class JobSeekerCTRL {
   // it shows all employees
   async getAllJobSeekers(req, res) {
@@ -89,12 +95,14 @@ class JobSeekerCTRL {
         totalDocuments: total,
       };
 
+
+
       return handleResponse(
         res,
         200,
         "success",
         "Job seekers retrieved successfully",
-        resultUsers,
+        shuffleArray(resultUsers),
         resultUsers.length,
         pagination
       );
@@ -170,12 +178,13 @@ class JobSeekerCTRL {
         totalDocuments: total,
       };
 
+      // return random users to resultUsers
       return handleResponse(
         res,
         200,
         "success",
         "Job seekers retrieved successfully",
-        resultUsers,
+        shuffleArray(resultUsers),
         resultUsers.length,
         pagination
       );

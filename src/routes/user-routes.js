@@ -48,6 +48,7 @@ const {
   updateUserVisibility,
   addToAllUsersVisibility
 } = require("../controllers/userCTRL");
+const updateLastActivity = require("../middleware/last-active");
 // const { showCurrentUser } = require("../controllers/all-Users/current-user");
 // const {
 //   updateUser,
@@ -58,7 +59,7 @@ const router = require("express").Router();
 
 router.route("/allUsers").get(authMiddleware, getAllUsers); // ALL USERS
 router.route("/allUsers/:id").get(authMiddleware, getUser); // GET A SINGLE USER BY ID
-router.route("/currentUser").get(authMiddleware, showCurrentUser); // showCurrentUser
+router.route("/currentUser").get(authMiddleware, updateLastActivity, showCurrentUser); // showCurrentUser
 router.route("/updateUsername").patch(authMiddleware, updateUsername); // updateUser
 router.route("/updateRole").patch(authMiddleware, updateRole); // updateUser
 
