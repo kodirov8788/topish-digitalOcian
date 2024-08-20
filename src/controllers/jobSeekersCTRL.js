@@ -43,7 +43,7 @@ class JobSeekerCTRL {
         200,
         "success",
         "Job seekers retrieved successfully",
-        resultUsers,
+        shuffleArray(resultUsers),
         resultUsers.length,
         pagination
       );
