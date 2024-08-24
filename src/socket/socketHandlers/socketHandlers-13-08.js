@@ -1,10 +1,9 @@
-const ChatRoom = require("../models/chatRoom_model");
-const Users = require("../models/user_model");
-const Message = require("../models/message_model");
-const Notification = require("../utils/Notification");
-const { PromptCode } = require("../models/other_models");
-const { uploadFile } = require('../utils/imageUploads/messageFilesUpload');
-const { isValidObjectId } = require("mongoose");
+const ChatRoom = require("../../models/chatRoom_model");
+const Users = require("../../models/user_model");
+const Message = require("../../models/message_model");
+const Notification = require("../../utils/Notification");
+const { PromptCode } = require("../../models/other_models");
+const { uploadFile } = require('../../utils/imageUploads/messageFilesUpload');
 let onlineUsers = [];
 let userChatRoomMap = {};
 let socketUserMap = {};
@@ -67,9 +66,9 @@ const typingDebounceTimers = {};
 
 const handleMarkMessagesAsSeen = async (socket, { userId, chatRoomId }) => {
     try {
-        // console.log("handleMarkMessagesAsSeen is called");
-        // console.log("userId: ", userId);
-        // console.log("chatRoomId: ", chatRoomId);
+        console.log("handleMarkMessagesAsSeen is called");
+        console.log("userId: ", userId);
+        console.log("chatRoomId: ", chatRoomId);
 
         const chatRoom = await ChatRoom.findOne({
             _id: chatRoomId,
@@ -127,7 +126,7 @@ const handleJoinRoom = (socket, { userId, chatRoomId }, io) => {
     userChatRoomMap[userId] = chatRoomId;
     socketUserMap[socket.id] = userId;
 
-    // console.log("joinRoom: ", userId, chatRoomId);
+    console.log("joinRoom: ", userId, chatRoomId);
     // Join the chat room
     socket.join(chatRoomId);
 
@@ -151,7 +150,15 @@ const handleAdminLogin = async (socket, userId) => {
         onlineUsers.push(adminUser);
     }
     setTimeout(() => {
-        const adminUser = onlineUsers.find((user) => user.userId === userId);
+        // const adminUser = onlineUsers.find((user) => user.userId === userId);
+
+        let adminUser = null;
+        onlineUsers.forEach((user) => {
+            if (user.userId == senderId) {
+                adminUser = user;
+                return;  // Exit the forEach loop once the sender is found
+            }
+        });
         if (adminUser) {
             adminUser.isAvailable = false;
             socket.emit("adminUnavailable");
@@ -186,8 +193,18 @@ const handleLeaveRoom = (socket, { userId, chatRoomId }, io) => {
     io.emit("getOnlineUsers", onlineUsers);
 };
 const handleHeartbeat = (socket, userId, io) => {
-    const existingUser = onlineUsers.find((user) => user.userId === userId);
-    // console.log("userId: ", userId);
+    // const existingUser = onlineUsers.find((user) => user.userId === userId);
+
+
+    let existingUser = null;
+    onlineUsers.forEach((user) => {
+        if (user.userId == senderId) {
+            existingUser = user;
+            return;  // Exit the forEach loop once the sender is found
+        }
+    });
+
+    console.log("userId: ", userId);
 
     if (existingUser) {
         existingUser.lastActive = new Date();
@@ -198,12 +215,12 @@ const handleHeartbeat = (socket, userId, io) => {
             lastActive: new Date(),
         });
     }
-    const timeoutMinutes = 60;
+    const timeoutMinutes = 30;
     onlineUsers = onlineUsers.filter(
         (user) => (new Date() - user.lastActive) / 60000 < timeoutMinutes
     );
 
-    // console.log("Online users:", onlineUsers);
+    console.log("Online users:", onlineUsers);
     io.emit("getOnlineUsers", onlineUsers);
 };
 const handleRequestChatRooms = async (socket, { userId }) => {
@@ -467,7 +484,7 @@ const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChun
     if (!fileChunksMap[name]) {
         fileChunksMap[name] = { type, chunks: new Array(totalChunks).fill(null), totalChunks };
     }
-    // console.log("call back: ");
+    console.log("call back: ");
     if (!data) {
         console.error(`Received invalid chunk data for file ${name}, chunk ${chunkIndex + 1}/${totalChunks}`);
         return;
@@ -482,7 +499,7 @@ const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChun
 
     const bufferData = Buffer.from(base64Data, 'base64');
 
-    // console.log("bufferData: ", bufferData);
+    console.log("bufferData: ", bufferData);
     // Store the chunk in the correct position
     fileChunksMap[name].chunks[chunkIndex] = bufferData;
 
@@ -497,7 +514,7 @@ const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChun
 
         // Upload the concatenated file
         const uploadedUrl = await uploadFile({ buffer: completeFileData, originalname: name, mimetype: type });
-        // console.log("uploadedUrl: ", uploadedUrl);
+        console.log("uploadedUrl: ", uploadedUrl);
         // console.log(`File ${name} uploaded successfully. URL: ${uploadedUrl.url}`);
 
         // Clean up the stored chunks
@@ -509,13 +526,21 @@ const handleFileChunk = async (socket, { name, type, data, chunkIndex, totalChun
 };
 
 const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoomId, timestamp, files, replyTo }, io, callback) => {
-    // console.log("send message recipientId: ", recipientId);
-    // console.log("send message senderId: ", senderId);
     try {
-        let sender = onlineUsers.find((user) => user.userId == senderId);
+        let sender = null;
+        onlineUsers.forEach((user) => {
+            if (user.userId == senderId) {
+                sender = user;
+                return;  // Exit the forEach loop once the sender is found
+            }
+        });
+        console.log("sender: ", sender);
+        console.log("senderId: ", senderId);
         if (!sender) {
-            handleHeartbeat(socket, senderId, io);
-            sender = onlineUsers.find((user) => user.userId == senderId);
+            const error = { success: false, error: "Sender not found" };
+            socket.emit("errorNotification", error);
+            if (typeof callback === 'function') callback(error);
+            return;
         }
 
         const recipientUser = await Users.findById(recipientId);
@@ -581,12 +606,12 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
             replyTo: customRepliedMessage,
         };
 
-        // console.log("recipient: ", recipient);
+        console.log("recipient: ", recipient);
         if (recipient) {
             const senderChatRoom = userChatRoomMap[senderId];
             const recipientChatRoom = userChatRoomMap[recipientId];
-            // console.log("senderChatRoom: ", senderChatRoom);
-            // console.log("recipientChatRoom: ", recipientChatRoom);
+            console.log("senderChatRoom: ", senderChatRoom);
+            console.log("recipientChatRoom: ", recipientChatRoom);
             if (senderChatRoom && recipientChatRoom && senderChatRoom === recipientChatRoom) {
                 message.seen = true;
                 setTimeout(() => {
@@ -648,12 +673,6 @@ const handleSendMessage = async (socket, { text, recipientId, senderId, chatRoom
 // --------------------------------- File Uploads ---------------------------------
 const handleSingleChatRoom = async (socket, { userId, chatRoomId, limit = 15, skip = 0 }) => {
     try {
-        // console.log("handleSingleChatRoom userId: ", userId);
-        // console.log("handleSingleChatRoom chatRoomId: ", chatRoomId);
-        if (!isValidObjectId(chatRoomId) || !isValidObjectId(userId)) {
-            socket.emit("errorNotification", { status: 400, message: "Invalid chat room or user ID." });
-            return;
-        }
         const chatRoom = await ChatRoom.findOne({
             _id: chatRoomId,
             users: userId,
@@ -739,8 +758,6 @@ const fetchMoreMessages = async (socket, { chatRoomId, userId, currentMessageCou
 }
 // --------------------------------- hundle chatRoom ---------------------------------
 const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
-    // console.log("CreateChatRoom userId: ", userId);
-    // console.log("CreateChatRoom otherUserId: ", otherUserId);
     try {
         const user = await Users.findById(userId);
         if (!user) {

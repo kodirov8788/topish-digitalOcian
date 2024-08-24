@@ -23,6 +23,7 @@ const {
   handleVoiceChunk,
   fetchMoreMessages
 } = require("./socketHandlers");
+const { handleChatGPT } = require("../utils/chatGPT");
 
 let io = null;
 
@@ -61,6 +62,7 @@ const initSocketServer = (server) => {
     socket.on("saveGPTConfig", (data) => handleSaveGPTConfig(socket, data));
     socket.on("getGPTConfig", (data) => handleGetGPTConfig(socket, data));
     socket.on("promptString", (data) => handlePromptString(socket, data, io));
+    socket.on('searchChatGPT', (data) => handleChatGPT(socket, data));
     socket.on("disconnect", () => handleDisconnect(socket, io));
   });
 };
