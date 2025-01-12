@@ -37,16 +37,21 @@ const {
   updateUserNumber,
   updateUserPassword,
   updateUserEmail,
-  updateJobSeekerProfile,
-  updateEmployerProfile,
-  // getRecommendedUsers,
-  updateServiceProfile,
+  updateUserPurpose,
+  // updateJobSeekerProfile,
+  // updateEmployerProfile,
+  // updateServiceProfile,
+
+  updateUserProfile,
   updateRole,
   updateUsername,
   updateCoinsForAllUsers,
   updateCoinsForUser,
   updateUserVisibility,
-  addToAllUsersVisibility
+  addToAllUsersVisibility,
+  migrateJobSeekerDataToResume,
+  updateJobTitle,
+  migrateJobSeekerDataToResumeForAllUsers
 } = require("../controllers/userCTRL");
 const updateLastActivity = require("../middleware/last-active");
 // const { showCurrentUser } = require("../controllers/all-Users/current-user");
@@ -59,31 +64,32 @@ const router = require("express").Router();
 
 router.route("/allUsers").get(authMiddleware, getAllUsers); // ALL USERS
 router.route("/allUsers/:id").get(authMiddleware, getUser); // GET A SINGLE USER BY ID
-router.route("/currentUser").get(authMiddleware, updateLastActivity, showCurrentUser); // showCurrentUser
+router
+  .route("/currentUser")
+  .get(authMiddleware, updateLastActivity, showCurrentUser); // showCurrentUser
 router.route("/updateUsername").patch(authMiddleware, updateUsername); // updateUser
 router.route("/updateRole").patch(authMiddleware, updateRole); // updateUser
-
-
-router.route("/updateCoinsForAllUsers").patch(authMiddleware, updateCoinsForAllUsers); // updateUser
+router.route("/updateJobTitle").patch(authMiddleware, updateJobTitle);
+router
+  .route("/updateCoinsForAllUsers")
+  .patch(authMiddleware, updateCoinsForAllUsers); // updateUser
 router.route("/updateCoinsForUser").patch(authMiddleware, updateCoinsForUser); // updateUser
-router.route("/updateUserVisibility").patch(authMiddleware, updateUserVisibility);
-router.route("/addToAllUsersVisibility").post(authMiddleware, addToAllUsersVisibility);
+router
+  .route("/updateUserVisibility")
+  .patch(authMiddleware, updateUserVisibility);
+router
+  .route("/addToAllUsersVisibility")
+  .post(authMiddleware, addToAllUsersVisibility);
 // ALL JOB SEEKERS
-router.route("/searchJobSeekers").get(authMiddleware, getJobSeekersBySkills); // Search JOB SEEKERS By skill
-router.route("/getAllJobSeekers").get(authMiddleware, getAllJobSeekers);
-router
-  .route("/getRecommendedJobSeekers")
-  .get(getRecommendedJobSeekers);
-router
-  .route("/getExperiencedJobseekers")
-  .get(authMiddleware, getExperiencedJobseekers);
-router.route("/getJobSeekersByName").get(authMiddleware, getJobSeekersByName); // Search JOB SEEKERS By name
-router
-  .route("/searchJobseekersParams")
-  .get(authMiddleware, getJobSeekersByParams); // Search JOB SEEKERS By name
-router
-  .route("/getJobseekersSavedjob")
-  .get(authMiddleware, getJobSeekersSavedJobs);
+// router.route("/searchJobSeekers").get(getJobSeekersBySkills); // Search JOB SEEKERS By skill
+// router.route("/getAllJobSeekers").get(getAllJobSeekers);
+// router.route("/getRecommendedJobSeekers").get(getRecommendedJobSeekers);
+// router.route("/getExperiencedJobseekers").get(getExperiencedJobseekers);
+// router.route("/getJobSeekersByName").get(getJobSeekersByName); // Search JOB SEEKERS By name
+// router.route("/searchJobseekersParams").get(getJobSeekersByParams); // Search JOB SEEKERS By name
+// router
+//   .route("/getJobseekersSavedjob")
+//   .get(authMiddleware, getJobSeekersSavedJobs);
 
 // router.route("/getJobSeekersQuery").get(authMiddleware, getJobSeekersQuery);
 router
@@ -101,15 +107,15 @@ router.route("/searchEmployers").get(authMiddleware, searchEmployers); // Search
 router.route("/getJobMaker/:id").get(authMiddleware, getJobMaker); // Search Employers By companies
 router.route("/getEmployer/:id").get(authMiddleware, getEmployer); // ALL EMPLOYERS
 router.route("/updateUserNumber").patch(authMiddleware, updateUserNumber); // updateUserNumber
+router.route("/updateUserPurpose").patch(authMiddleware, updateUserPurpose); // updateUserTarget
 router.route("/updateUserEmail").patch(authMiddleware, updateUserEmail); // updateUserEmail
 router.route("/updatePassword").patch(authMiddleware, updateUserPassword); // updateUser
-router
-  .route("/updateJobSeekerProfile")
-  .put(authMiddleware, updateJobSeekerProfile); // updateUser
-router
-  .route("/updateEmployerProfile")
-  .put(authMiddleware, updateEmployerProfile); // updateUser
-router.route("/updateServiceProfile").put(authMiddleware, updateServiceProfile); // updateUser
+router.post(
+  "/migrateAllJobSeekerData",
+  authMiddleware,
+  migrateJobSeekerDataToResumeForAllUsers
+);
+router.route("/updateProfile").put(authMiddleware, updateUserProfile); // updateUser
 
 router.route("/favorites/:favoriteId").post(authMiddleware, AddToFavorite); // Add to favorite
 
@@ -120,4 +126,12 @@ router
   .route("/removeFromFavorite/:favoriteId")
   .delete(authMiddleware, RemoveFromFavorite); // ALL EMPLOYERS
 router.route("/getAllMyFavorites").get(authMiddleware, GetAllFavoriteUsers); // ALL EMPLOYERS
+
+
+router.post(
+  "/:targetUserId/migrateJobSeekerData",
+  authMiddleware,
+  migrateJobSeekerDataToResume
+);
+
 module.exports = router;

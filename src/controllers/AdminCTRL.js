@@ -1,3 +1,4 @@
+// src/controllers/AdminCTRL.js
 const public_notification_model = require("../models/notifications/public_notification_model");
 const save_notification = require("../models/notifications/save_notification");
 const Users = require("../models/user_model");
@@ -28,6 +29,7 @@ class AdminCTRL {
 
     try {
       // Pagination parameters
+      // console.log("req.query:", req.query)
       const page = parseInt(req.query.page) || 1; // Default to page 1 if not specified
       const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items if not specified
       const skip = (page - 1) * limit; // Calculate the number of documents to skip
@@ -77,6 +79,76 @@ class AdminCTRL {
       );
     }
   }
+  async getAdmins(req, res) {
+    // Ensure the request is from a logged-in user
+    if (!req.user) {
+      return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+    }
+
+    // Check if the user has the 'admin' role
+    if (req.user.role !== "Admin") {
+      return handleResponse(
+        res,
+        403,
+        "error",
+        "You are not authorized to perform this action.",
+        null,
+        0
+      );
+    }
+
+    try {
+      // Pagination parameters
+      const page = parseInt(req.query.page) || 1; // Default to page 1 if not specified
+      const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items if not specified
+      const skip = (page - 1) * limit; // Calculate the number of documents to skip
+
+      // Fetch only users with the "Admin" role
+      const admins = await Users.find({ role: "Admin" })
+        .skip(skip) // Skip the documents for the current page
+        .limit(limit) // Limit the number of documents returned
+        .exec(); // Execute the query
+
+      // Count the total admin documents for pagination metadata
+      const total = await Users.countDocuments({ role: "Admin" });
+
+      // Handle case where no admins are found
+      if (admins.length === 0) {
+        return handleResponse(res, 404, "error", "No admins found", [], 0);
+      }
+
+      // Prepare pagination metadata
+      const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        limit: limit,
+        totalDocuments: total,
+      };
+
+      // Return successful response with admin data and pagination details
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Admins retrieved successfully",
+        admins,
+        total,
+        pagination
+      );
+    } catch (error) {
+      // Log and return the error
+      console.error("Error fetching admins:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "An error occurred while fetching the admins.",
+        null,
+        0
+      );
+    }
+  }
+
   async getJobSeekersForAdmin(req, res) {
     try {
       if (!req.user) {
@@ -528,8 +600,8 @@ class AdminCTRL {
         const user = userMap[job.createdBy.toString()];
         return {
           ...job._doc, // Assuming you're using Mongoose and want to spread the job document
-          hr_name: user.fullName,
-          hr_avatar: user.avatar,
+          hr_name: user?.fullName,
+          hr_avatar: user?.avatar,
         };
       });
 
@@ -577,9 +649,9 @@ class AdminCTRL {
 
       // Check if 'blocked' field is undefined and set it to true if so
       if (user.blocked === undefined) {
-        console.log("User does not have a 'blocked' field");
+        // console.log("User does not have a 'blocked' field");
         user.blocked = true;
-        console.log("User blocked:", user);
+        // console.log("User blocked:", user);
         await user.save();
         return handleResponse(
           res,
@@ -636,9 +708,9 @@ class AdminCTRL {
 
       // Check if 'blocked' field is undefined and set it to false if so
       if (user.blocked === undefined) {
-        console.log("User does not have a 'blocked' field");
+        // console.log("User does not have a 'blocked' field");
         user.blocked = false;
-        console.log("User unblocked:", user);
+        // console.log("User unblocked:", user);
         await user.save();
         return handleResponse(
           res,

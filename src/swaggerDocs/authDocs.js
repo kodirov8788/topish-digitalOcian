@@ -24,12 +24,6 @@ const AuthEndpoints = {
                   example: "996730970",
 
                 },
-                role: {
-                  type: "string",
-                  enum: ["JobSeeker", "Employer"],
-                  description: "Role of the user in the system",
-                  example: "JobSeeker",
-                },
                 mobileToken: {
                   type: "string",
                   description: "The mobile token of the user",

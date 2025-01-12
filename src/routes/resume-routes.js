@@ -67,6 +67,29 @@ const {
     deleteLanguages
 } = require('../controllers/resumeCTRL/LanguagesCTRL');
 
+
+const {
+    addIndustry,
+    getIndustries,
+    updateIndustry,
+    deleteIndustry,
+} = require('../controllers/resumeCTRL/IndustriesCTRL');
+
+
+const {
+    addExpectedSalary,
+    getExpectedSalary,
+    updateExpectedSalary,
+    deleteExpectedSalary,
+} = require("../controllers/resumeCTRL/ExpectedSalaryCTRL");
+
+
+const {
+    setSearchJobTrue,
+    setSearchJobFalse,
+} = require("../controllers/resumeCTRL/SearchJobCTRL");
+
+
 router.post('/project', addProject);
 router.get('/project', getProjects);
 router.put('/project/:id', updateProject);
@@ -111,5 +134,20 @@ router.post('/languages', addLanguages);
 router.get('/languages', getLanguages);
 router.put('/languages/:id', updateLanguages);
 router.delete('/languages/:id', deleteLanguages);
+
+
+router.post('/industry', addIndustry);
+router.get('/industry', getIndustries);
+router.put('/industry/:id', updateIndustry);
+router.delete('/industry/:id', deleteIndustry);
+
+router.post("/expected-salary", addExpectedSalary);
+router.get("/expected-salary", getExpectedSalary);
+router.put("/expected-salary", updateExpectedSalary);
+router.delete("/expected-salary", deleteExpectedSalary);
+
+
+router.post("/search-job/true", setSearchJobTrue);
+router.post("/search-job/false", setSearchJobFalse);
 
 module.exports = router;

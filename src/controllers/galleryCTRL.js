@@ -1,3 +1,4 @@
+// src/controllers/galleryCTRL.js
 const {
   S3Client,
   PutObjectCommand,
@@ -75,7 +76,7 @@ class GalleryCTRL {
       //     0
       //   );
       // }
-      if (!user || !user.jobSeeker) {
+      if (!user) {
         return handleResponse(
           res,
           401,

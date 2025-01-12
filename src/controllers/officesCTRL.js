@@ -1,3 +1,4 @@
+// src/controllers/officesCTRL.js
 const Offices = require("../models/office_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
@@ -10,17 +11,17 @@ class OfficesCTRL {
       }
       const user = await Users.findById(req.user.id);
       const coins = req.user.coins;
-      const allowedRoles = ["Service", "Employer"];
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const allowedRoles = ["Service", "Employer"];
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       if (coins == null) {
         return handleResponse(
@@ -79,17 +80,17 @@ class OfficesCTRL {
       }
       // Check if the user role is Employer
       const user = await Users.findById(req.user.id);
-      const allowedRoles = ["Service", "Admin", "Employer"];
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const allowedRoles = ["Service", "Admin", "Employer"];
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
       const { id: officeId } = req.params;
 
       let office = await Offices.findById(officeId);
@@ -234,17 +235,17 @@ class OfficesCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const user = await Users.findById(req.user.id);
-      const allowedRoles = ["Service", "Admin", "Employer"];
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const allowedRoles = ["Service", "Admin", "Employer"];
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const page = parseInt(req.query.page) || 1; // Default to first page if not specified
       const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items if not specified
@@ -345,17 +346,17 @@ class OfficesCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const user = await Users.findById(req.user.id);
-      const allowedRoles = ["Service", "Admin", "Employer"];
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const allowedRoles = ["Service", "Admin", "Employer"];
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
       const {
         params: { id: officeId },
       } = req;
@@ -713,16 +714,16 @@ class OfficesCTRL {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const { id: officeId } = req.params;
       const { status } = req.body;
@@ -801,9 +802,9 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized");
       }
-      if (req.user.role !== "Admin" && req.user.role !== "Employer") {
-        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
-      }
+      // if (req.user.role !== "Admin" && req.user.role !== "Employer") {
+      //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      // }
 
       const {
         page = 1,
@@ -858,9 +859,9 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized");
       }
-      if (req.user.role !== "Admin" && req.user.role !== "Employer") {
-        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
-      }
+      // if (req.user.role !== "Admin" && req.user.role !== "Employer") {
+      //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      // }
 
       const {
         page = 1,
@@ -915,9 +916,9 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized");
       }
-      if (req.user.role !== "Admin" && req.user.role !== "Employer") {
-        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
-      }
+      // if (req.user.role !== "Admin" && req.user.role !== "Employer") {
+      //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      // }
       const {
         page = 1,
         limit = 10,

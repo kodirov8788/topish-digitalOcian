@@ -1,3 +1,4 @@
+// src/controllers/employersCTRL.js
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const Jobs = require("../models/job_model");
@@ -64,7 +65,7 @@ class EmployersCTRL {
       const userId = req.params.id;
 
       // Find the user by ID
-      const user = await Users.findById(userId).select("-password");
+      const user = await Users.findById(userId);
 
       // Check if the user was found
       if (!user) {

@@ -4,9 +4,9 @@ const {
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const multer = require("multer");
-const sharp = require("sharp");
 require("dotenv/config");
 
+// Initialize S3 client
 const s3 = new S3Client({
   endpoint: process.env.AWS_S3_ENDPOINT,
   region: process.env.AWS_S3_BUCKET_REGION,
@@ -16,36 +16,46 @@ const s3 = new S3Client({
   },
 });
 
+// File filter to allow only images, PDFs, and document files
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
     "image/jpg",
     "image/jpeg",
     "image/png",
     "image/gif",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/plain",
   ];
+
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Invalid file type. Only images are allowed."), false);
+    cb(
+      new Error(
+        "Invalid file type. Only images, PDFs, and documents are allowed."
+      ),
+      false
+    );
   }
 };
 
-// Configure multer to store files in memory and accept both field names
+// Configure multer to handle multiple file fields
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: fileFilter,
 }).fields([
   { name: "company_logo", maxCount: 1 },
   { name: "logo", maxCount: 1 },
+  { name: "licenseFile", maxCount: 10 }, // Can upload multiple license files
 ]);
 
+// Upload file to S3 without image processing
 const uploadFile = async (file) => {
   try {
-    const buffer = await sharp(file.buffer)
-      .resize(1024)
-      .jpeg({ quality: 40 })
-      .toBuffer();
-
     const fileExtension = file.originalname.split(".").pop();
     const key = `company/company-${Date.now()}.${fileExtension}`;
 
@@ -53,8 +63,8 @@ const uploadFile = async (file) => {
       new PutObjectCommand({
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: key,
-        Body: buffer,
-        ContentType: "image/jpeg",
+        Body: file.buffer,
+        ContentType: file.mimetype,
         ACL: "public-read",
       })
     );
@@ -66,50 +76,73 @@ const uploadFile = async (file) => {
   }
 };
 
+// Middleware to handle multiple file uploads
+// Middleware to handle multiple file uploads and keep fields separate
 const uploadFiles = (req, res, next) => {
   upload(req, res, async (err) => {
     if (err) {
-      // Log the error for server-side debugging.
       console.error("Upload middleware error:", err);
       return res.status(500).json({ error: "File upload error." });
     }
-    // Merge the files from both fields into one array
-    req.files = [...(req.files.company_logo || []), ...(req.files.logo || [])];
 
-    // No files to upload
-    if (req.files.length === 0) {
+    // If no files are uploaded, proceed to the next middleware
+    if (!req.files) {
       console.log("No files were uploaded.");
-      req.files = []; // Ensure req.files is an empty array to indicate no files were processed
       return next();
     }
 
     try {
-      const uploadPromises = req.files.map((file) => uploadFile(file));
-      const results = await Promise.allSettled(uploadPromises);
-      // Filter out the successfully uploaded files and map to their URLs
-      const uploadedFilesUrls = results
-        .filter((result) => result.status === "fulfilled")
-        .map((result) => result.value);
+      // Upload and process the files in each field
+      const uploadResults = {};
 
-      // Directly return the URLs of the uploaded files
-      req.files = uploadedFilesUrls;
+      // Process company logo if uploaded
+      if (req.files.company_logo) {
+        const uploadPromises = req.files.company_logo.map((file) =>
+          uploadFile(file)
+        );
+        const companyLogoUrls = await Promise.allSettled(uploadPromises);
+        uploadResults.logo = companyLogoUrls
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => result.value);
+      }
+
+      // Process general logo if uploaded
+      if (req.files.logo) {
+        const uploadPromises = req.files.logo.map((file) => uploadFile(file));
+        const logoUrls = await Promise.allSettled(uploadPromises);
+        uploadResults.logo = logoUrls
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => result.value);
+      }
+
+      // Process license files if uploaded
+      if (req.files.licenseFile) {
+        const uploadPromises = req.files.licenseFile.map((file) =>
+          uploadFile(file)
+        );
+        const licenseFileUrls = await Promise.allSettled(uploadPromises);
+        uploadResults.licenseFile = licenseFileUrls
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => result.value);
+      }
+
+      // Attach the uploaded URLs back to the request object
+      req.uploadResults = uploadResults;
       next();
     } catch (error) {
-      // Log the error for server-side debugging.
       console.error("Error processing files:", error);
       res.status(500).json({ error: "Failed to process files." });
     }
   });
 };
 
+// Function to delete files from S3
 const deleteFiles = async (fileUrls) => {
   if (!fileUrls || fileUrls.length === 0) {
     console.log("No files to delete.");
     return;
   }
-  // console.log("fileUrls: ", fileUrls);
 
-  // Extract the S3 key from the full URL
   const keysToDelete = fileUrls
     .map((url) => {
       const match = url.match(/https:\/\/[^\/]+\/(.+)/);

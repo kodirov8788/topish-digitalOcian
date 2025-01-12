@@ -4,10 +4,17 @@ const { isTokenValid } = require("../utils/jwt");
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   // console.log(" req.headers.authorization: ", req.headers.authorization)
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = authHeader && authHeader.split(" ")[1];
   // console.log("token: ", token)
   if (!token) {
-    return handleResponse(res, 450, "error", "Authentication invalid: No token provided", {}, 0); // Using 418 I'm a teapot
+    return handleResponse(
+      res,
+      450,
+      "error",
+      "Authentication invalid: No token provided",
+      {},
+      0
+    ); // Using 418 I'm a teapot
   }
   try {
     const payload = isTokenValid(token, process.env.JWT_SECRET);
@@ -25,7 +32,14 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Error in authMiddleware:", error.message);
-    return handleResponse(res, 451, "error", "Authentication invalid: Token verification failed", {}, 0); // Using 451 Unavailable For Legal Reasons
+    return handleResponse(
+      res,
+      451,
+      "error",
+      "Authentication invalid: Token verification failed",
+      {},
+      0
+    ); // Using 451 Unavailable For Legal Reasons
   }
 };
 

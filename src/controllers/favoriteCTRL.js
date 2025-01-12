@@ -1,3 +1,4 @@
+// src/controllers/favoriteCTRL.js
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 
@@ -118,16 +119,16 @@ class FavoriteCTRL {
       }
       // Assuming you want to restrict this action to a specific role, ensure this matches your application logic
       const user = await Users.findById(req.user.id);
-      if (user.role === "JobSeeker") {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "JobSeeker can't remove from favorites",
-          null,
-          0
-        );
-      }
+      // if (user.role === "JobSeeker") {
+      //   return handleResponse(
+      //     res,
+      //     400,
+      //     "error",
+      //     "JobSeeker can't remove from favorites",
+      //     null,
+      //     0
+      //   );
+      // }
       const currentUser = await Users.findById(req.user.id);
       const favoriteId = req.params.favoriteId;
       // Check if the user is in favorites using ObjectId comparison

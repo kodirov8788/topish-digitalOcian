@@ -1,3 +1,4 @@
+// src/controllers/jobsCTRL.js
 const Jobs = require("../models/job_model");
 const Users = require("../models/user_model");
 const QuickJob = require("../models/quickjob_model");
@@ -12,16 +13,16 @@ class JobsCTRL {
       }
       const user = await Users.findOne({ _id: req.user.id });
       const coins = req.user.coins;
-      if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (user.role !== "Employer") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       if (coins == null) {
         return handleResponse(
@@ -78,16 +79,16 @@ class JobsCTRL {
       }
       const user = await Users.findById(req.user.id);
 
-      if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (user.role !== "Employer") {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const {
         params: { id: jobID },
@@ -123,7 +124,7 @@ class JobsCTRL {
   async getSearchTitle(req, res) {
     try {
       const { jobTitle, page = 1, limit = 10 } = req.query;
-      let queryObject
+      let queryObject;
       if (!jobTitle || !jobTitle.trim()) {
         queryObject = {};
       } else {
@@ -189,9 +190,7 @@ class JobsCTRL {
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
+            hr_name: user.employer ? user.fullName : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
@@ -350,9 +349,7 @@ class JobsCTRL {
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
+            hr_name: user.employer ? user.fullName : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
@@ -384,15 +381,6 @@ class JobsCTRL {
       const user = await Users.findOne({ _id: req.user.id });
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      } else if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
       }
 
       const page = parseInt(req.query.page) || 1; // Default to the first page if not specified
@@ -514,9 +502,7 @@ class JobsCTRL {
       } else {
         NewSearchedJob = {
           ...singleJob.toObject(), // Convert Mongoose document to plain object
-          hr_name: NewUser.employer
-            ? NewUser.fullName
-            : "No employer name", // Check if employer exists
+          hr_name: NewUser.employer ? NewUser.fullName : "No employer name", // Check if employer exists
           hr_avatar: NewUser.avatar || "default_avatar.png", // Use default avatar if none is provided
           issuedBy: companyMap[singleJob.createdBy.toString()] || null, // Get company details if available
         };
@@ -698,9 +684,7 @@ class JobsCTRL {
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
+            hr_name: user.employer ? user.fullName : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
@@ -813,9 +797,8 @@ class JobsCTRL {
   async searchByJobType(req, res) {
     try {
       const { jobType, page = 1, limit = 10 } = req.query;
-      let queryObject
+      let queryObject;
       if (!jobType || !jobType.trim()) {
-
         queryObject = {};
         // return handleResponse(res, 400, "error", "Job type is required", [], 0);
       } else {
@@ -907,7 +890,6 @@ class JobsCTRL {
           0
         );
       }
-
 
       const {
         education,
@@ -1038,9 +1020,7 @@ class JobsCTRL {
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
+            hr_name: user.employer ? user.fullName : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
@@ -1067,7 +1047,6 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
-  // make function to approve job post or reject job post
   async approveOrRejectJob(req, res) {
     try {
       if (!req.user) {
@@ -1108,7 +1087,6 @@ class JobsCTRL {
         return handleResponse(res, 400, "error", "Invalid status", null, 0);
       }
 
-
       const updatedJob = await Jobs.findOneAndUpdate(
         { _id: jobID },
         { postingStatus: status },
@@ -1116,15 +1094,27 @@ class JobsCTRL {
       );
 
       if (!updatedJob) {
-        return handleResponse(res, 404, "error", `Job not found with ID: ${jobID}`, null, 0);
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Job not found with ID: ${jobID}`,
+          null,
+          0
+        );
       }
-      return handleResponse(res, 200, "success", `Job ${status} successfully`, updatedJob, 1);
-
+      return handleResponse(
+        res,
+        200,
+        "success",
+        `Job ${status} successfully`,
+        updatedJob,
+        1
+      );
     } catch (error) {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
-
   async approveAllJobs(req, res) {
     try {
       if (!req.user) {
@@ -1137,17 +1127,33 @@ class JobsCTRL {
       //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
       // }
 
-      const updatedJob = await Jobs.updateMany({}, { postingStatus: "Approved" });
+      const updatedJob = await Jobs.updateMany(
+        {},
+        { postingStatus: "Approved" }
+      );
 
       if (!updatedJob) {
         return handleResponse(res, 404, "error", "No jobs found", null, 0);
       }
-      return handleResponse(res, 200, "success", "All jobs Approved successfully", updatedJob, 1);
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "All jobs Approved successfully",
+        updatedJob,
+        1
+      );
     } catch (error) {
-      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
     }
   }
-
   async getRejectedJobs(req, res) {
     try {
       if (!req.user) {
@@ -1166,11 +1172,7 @@ class JobsCTRL {
         );
       }
 
-
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
 
       let queryObject = {};
 
@@ -1178,7 +1180,7 @@ class JobsCTRL {
 
       let resultJobs = await Jobs.find(queryObject)
         .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
-        .limit(parseInt(limit, 10))
+        .limit(parseInt(limit, 10));
 
       const totalJobs = await Jobs.countDocuments(queryObject);
 
@@ -1220,9 +1222,7 @@ class JobsCTRL {
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
+            hr_name: user.employer ? user.fullName : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
@@ -1249,7 +1249,6 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
-
   async getPendingJobs(req, res) {
     try {
       if (!req.user) {
@@ -1268,11 +1267,7 @@ class JobsCTRL {
         );
       }
 
-
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
 
       let queryObject = {};
 
@@ -1280,7 +1275,7 @@ class JobsCTRL {
 
       let resultJobs = await Jobs.find(queryObject)
         .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
-        .limit(parseInt(limit, 10))
+        .limit(parseInt(limit, 10));
 
       const totalJobs = await Jobs.countDocuments(queryObject);
 
@@ -1322,9 +1317,7 @@ class JobsCTRL {
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
+            hr_name: user.employer ? user.fullName : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
@@ -1351,10 +1344,8 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
-
   async getApprovedJobs(req, res) {
     try {
-
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -1370,11 +1361,7 @@ class JobsCTRL {
         );
       }
 
-
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
 
       let queryObject = {};
 
@@ -1382,7 +1369,7 @@ class JobsCTRL {
 
       let resultJobs = await Jobs.find(queryObject)
         .skip((parseInt(page, 10) - 1) * parseInt(limit, 10))
-        .limit(parseInt(limit, 10))
+        .limit(parseInt(limit, 10));
 
       const totalJobs = await Jobs.countDocuments(queryObject);
 
@@ -1424,9 +1411,7 @@ class JobsCTRL {
         } else {
           return {
             ...job._doc,
-            hr_name: user.employer
-              ? user.fullName
-              : "No employer name", // Check if employer exists
+            hr_name: user.employer ? user.fullName : "No employer name", // Check if employer exists
             hr_avatar: user.avatar || "default_avatar.png", // Use default avatar if none is provided
             issuedBy: companyMap[job.createdBy.toString()] || null, // Get company details if available
           };
@@ -1453,7 +1438,124 @@ class JobsCTRL {
       return handleResponse(res, 500, "error", error.message, null, 0);
     }
   }
+  async getAppliedCompaniesCount(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
 
+      // Fetch all jobs where the current user has applied
+      const appliedJobs = await Jobs.find({ appliedBy: req.user.id }).select(
+        "companyId"
+      );
+
+      // Create a set to store unique company IDs
+      const uniqueCompanyIds = new Set(appliedJobs.map((job) => job.companyId));
+
+      // Get the count of unique companies
+      const appliedCompaniesCount = uniqueCompanyIds.size;
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Applied companies count fetched successfully",
+        { appliedCompaniesCount },
+        appliedCompaniesCount
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
+  async getAppliedJobs(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { page = 1, limit = 10 } = req.query;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+
+      // Find all jobs the user has applied to, with pagination
+      const appliedJobs = await Jobs.find({ applicants: req.user.id })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .sort("-createdAt");
+      console.log("appliedJobs: ", appliedJobs);
+      // Get the total count of applied jobs for pagination purposes
+      const totalAppliedJobs = await Jobs.countDocuments({
+        appliedBy: req.user.id,
+      });
+
+      if (appliedJobs.length === 0) {
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "No applied jobs found",
+          [],
+          0
+        );
+      }
+
+      // Fetch user and company details associated with each job
+      const userIds = appliedJobs.map((job) => job.createdBy);
+      const users = await Users.find({ _id: { $in: userIds } });
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id.toString()] = user;
+        return acc;
+      }, {});
+
+      // Fetch companies where users have applied to jobs
+      const companies = await Company.find({
+        "workers.userId": { $in: userIds },
+      });
+      const companyMap = companies.reduce((acc, company) => {
+        company.workers.forEach((worker) => {
+          acc[worker.userId.toString()] = {
+            name: company.name,
+            logo: company.logo,
+          };
+        });
+        return acc;
+      }, {});
+
+      // Format the jobs with HR and company details
+      const formattedAppliedJobs = appliedJobs.map((job) => {
+        const user = userMap[job.createdBy.toString()];
+        return {
+          ...job._doc,
+          hr_name: user ? user.fullName : "deleted user",
+          hr_avatar: user ? user.avatar : "default_avatar.png",
+          issuedBy: companyMap[job.createdBy.toString()] || null,
+        };
+      });
+
+      // Pagination details
+      const pagination = {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalAppliedJobs / parseInt(limit)),
+        limit: parseInt(limit),
+        totalDocuments: totalAppliedJobs,
+      };
+
+      // Include total applied jobs count in response
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Applied jobs retrieved successfully",
+        {
+          appliedJobs: formattedAppliedJobs,
+          totalAppliedJobs,
+          pagination,
+        },
+        formattedAppliedJobs.length
+      );
+    } catch (error) {
+      return handleResponse(res, 500, "error", error.message, null, 0);
+    }
+  }
 }
 
 module.exports = new JobsCTRL();

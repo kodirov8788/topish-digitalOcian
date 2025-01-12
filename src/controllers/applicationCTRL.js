@@ -1,3 +1,4 @@
+// src/controllers/applicationCTRL.js
 const jobs = require("../models/job_model");
 const QuickJobs = require("../models/quickjob_model");
 const Users = require("../models/user_model");
@@ -113,7 +114,7 @@ class ApplicationCTRL {
           0
         );
       }
-      console.log(applicantsData);
+      // console.log(applicantsData);
 
       const pagination = {
         currentPage: page,

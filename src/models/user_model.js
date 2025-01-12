@@ -2,16 +2,19 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Schema = mongoose.Schema;
 
-const refreshSchema = new Schema({
-  token: { type: String, required: true },
-  deviceId: { type: String, required: false },
-  deviceName: { type: String, required: false },
-  region: { type: String, required: false },
-  os: { type: String, required: false },
-  browser: { type: String, required: false },
-  ip: { type: String, required: false },
-  mobileToken: { type: String, required: false },
-}, _id = false);
+const refreshSchema = new Schema(
+  {
+    token: { type: String, required: true },
+    deviceId: { type: String, required: false },
+    deviceName: { type: String, required: false },
+    region: { type: String, required: false },
+    os: { type: String, required: false },
+    browser: { type: String, required: false },
+    ip: { type: String, required: false },
+    mobileToken: { type: String, required: false },
+  },
+  (_id = false)
+);
 
 const UsersSchema = new Schema(
   {
@@ -27,40 +30,10 @@ const UsersSchema = new Schema(
       default: [],
     },
     phoneNumber: { type: String, required: true, unique: true },
+    purpose: { type: String, default: "" },
     phoneConfirmed: { type: Boolean, default: false },
     confirmationCode: { type: String, default: null },
     confirmationCodeExpires: { type: Date, default: null },
-    jobSeeker: {
-      skills: { type: Array, default: [] },
-      professions: {
-        type: Array,
-        default: [],
-      },
-      savedJobs: {
-        type: [{ type: Schema.Types.ObjectId, ref: "Jobs" }],
-        default: [],
-      },
-      cv: {
-        type: String,
-        required: false,
-        validate: {
-          validator: function (v) {
-            // Validate file extension instead of mimetype
-            const allowedFileTypes = ["pdf", "docx"];
-            const fileExtension = v.split(".").pop();
-            return allowedFileTypes.includes(fileExtension);
-          },
-          message: (props) => `${props.value} is not a valid file type!`,
-        },
-      },
-      expectedSalary: { type: String, required: false, default: "" },
-      jobTitle: { type: String, required: false, default: "" },
-      nowSearchJob: { type: Boolean, default: true },
-      workingExperience: { type: String, required: false, default: "" },
-      employmentType: { type: String, required: false, default: "full-time" },
-      educationalBackground: { type: String, required: false, default: "" },
-      profileVisibility: { type: Boolean, default: false },
-    },
     employer: {
       companyName: { type: String, default: "" },
       aboutCompany: { type: String, default: "" },
@@ -70,6 +43,7 @@ const UsersSchema = new Schema(
       jobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
       profileVisibility: { type: Boolean, default: false },
     },
+    jobTitle: { type: String, default: "" },
     fullName: { type: String, default: "" },
     username: { type: String, unique: false, required: false },
     gender: {
@@ -85,7 +59,7 @@ const UsersSchema = new Schema(
     role: {
       type: String,
       required: true,
-      enum: ["JobSeeker", "Employer", "Service", "Admin"],
+      enum: ["JobSeeker", "Employer", "Service", "Admin", "SubAdmin", "Manager"],
     },
     refreshTokens: {
       type: [refreshSchema],
@@ -101,6 +75,7 @@ const UsersSchema = new Schema(
         default: null,
       },
       industry: { type: Array, default: [] },
+      employmentType: { type: Array, default: "" },
       contact: {
         email: { type: String, default: null },
         phone: { type: String, default: null },
@@ -127,7 +102,28 @@ const UsersSchema = new Schema(
           key: null,
         },
       },
+      skills: { type: Array, default: [] },
+      // cv: {
+      //   type: String,
+      //   required: false,
+      //   validate: {
+      //     validator: function (v) {
+      //       // Validate file extension instead of mimetype
+      //       const allowedFileTypes = ["pdf", "docx"];
+      //       const fileExtension = v.split(".").pop();
+      //       return allowedFileTypes.includes(fileExtension);
+      //     },
+      //     message: (props) => `${props.value} is not a valid file type!`,
+      //   },
+      // },
+      expectedSalary: { type: String, required: false, default: "" },
+      profileVisibility: { type: Boolean, default: false },
     },
+    savedJobs: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Jobs" }],
+      default: [],
+    },
+    searchJob: { type: Boolean, default: true },
     recommending: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     birthday: { type: String, default: "" },
@@ -140,7 +136,6 @@ const UsersSchema = new Schema(
       default:
         "https://upload.wikimedia.org/wikipedia/commons/1/1e/Default-avatar.jpg",
     },
-    // telegramChannelIds: [telegramChannelSchema],
     telegram: {
       id: { type: String, required: false },
       channels: [
@@ -149,7 +144,7 @@ const UsersSchema = new Schema(
           id: { type: String, required: false },
           link: { type: String, required: false },
           available: { type: Boolean, default: true },
-        }
+        },
       ],
       post: {
         selectedImage: { type: Number, default: 0 },
@@ -163,10 +158,10 @@ const UsersSchema = new Schema(
       link: { type: String, default: "" },
       additionalInfo: { type: String, default: "" },
     },
-    // telegramId: { type: String, default: "" },
     gptToken: { type: String, default: "" },
     gptPrompt: { type: String, default: "" },
-    lastActivity: { type: Date, default: null }
+    lastActivity: { type: Date, default: null },
+    stories: [{ type: Schema.Types.ObjectId, ref: "Story" }],
   },
   { timestamps: true }
 );

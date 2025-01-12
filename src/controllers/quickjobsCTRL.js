@@ -1,9 +1,10 @@
+// src/controllers/quickjobsCTRL.js
 const Company = require("../models/company_model");
 const QuickJobs = require("../models/quickjob_model");
-const TelegramChannel = require("../models/telegram_channel_modal");
+// const TelegramChannel = require("../models/telegram_channel_modal");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
-const { sendTelegramChannels } = require("../utils/sendingTelegram");
+// const { sendTelegramChannels } = require("../utils/sendingTelegram");
 
 class QuickJobsCTRL {
   async createQuickJobs(req, res) {
@@ -241,18 +242,6 @@ class QuickJobsCTRL {
 
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
-      const user = await Users.findById(req.user.id);
-
-      if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
       }
 
       const page = parseInt(req.query.page) || 1; // Default to first page if not specified
@@ -661,9 +650,9 @@ class QuickJobsCTRL {
 
       const jobMaker = await Users.findById(updatedJob.createdBy);
       console.log("jobMaker", jobMaker)
-      const telegramChannel = await TelegramChannel.find({ createdBy: jobMaker._id })
+      // const telegramChannel = await TelegramChannel.find({ createdBy: jobMaker._id })
       if (updatedJob.postingStatus === "Approved") {
-        await sendTelegramChannels(jobMaker.telegram, telegramChannel, updatedJob);
+        // await sendTelegramChannels(jobMaker.telegram, telegramChannel, updatedJob);
       }
 
       if (!updatedJob) {

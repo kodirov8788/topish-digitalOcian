@@ -1,3 +1,4 @@
+// src/controllers/jobSeekersCTRL.js
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const Jobs = require("../models/job_model");
@@ -13,9 +14,9 @@ class JobSeekerCTRL {
   // it shows all employees
   async getAllJobSeekers(req, res) {
     try {
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
+      // if (!req.user) {
+      //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      // }
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
@@ -24,7 +25,10 @@ class JobSeekerCTRL {
         query["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
       }
 
-      const resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+      const resultUsers = await Users.find(query)
+        .skip(skip)
+        .limit(limit)
+        .exec();
       const total = await Users.countDocuments(query);
 
       if (resultUsers.length === 0) {
@@ -69,7 +73,7 @@ class JobSeekerCTRL {
       if (jobTitle.trim() === "") {
         const query = {
           jobSeeker: { $exists: true },
-          recommending: true
+          recommending: true,
         };
         resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
         total = await Users.countDocuments(query);
@@ -78,7 +82,7 @@ class JobSeekerCTRL {
         const query = {
           jobSeeker: { $exists: true },
           recommending: true,
-          "jobSeeker.jobTitle": { $regex: jobTitle, $options: "i" }
+          "jobSeeker.jobTitle": { $regex: jobTitle, $options: "i" },
         };
         resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
         total = await Users.countDocuments(query);
@@ -94,9 +98,6 @@ class JobSeekerCTRL {
         limit: limit,
         totalDocuments: total,
       };
-
-
-
       return handleResponse(
         res,
         200,
@@ -119,25 +120,20 @@ class JobSeekerCTRL {
   }
   async getExperiencedJobseekers(req, res) {
     try {
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
-      const user = await Users.findById(req.user.id);
-      if (user.role !== "Employer") {
-        return handleResponse(res, 401, "error", "You are not allowed!", null, 0);
-      }
-
       const { jobTitle = "", page = 1, limit = 10 } = req.query;
       const skip = (page - 1) * limit;
 
       // Step 1: Fetch users with working experience
       const experiencedQuery = {
         jobSeeker: { $exists: true },
-        "jobSeeker.workingExperience": { $exists: true, $ne: "" }
+        "jobSeeker.workingExperience": { $exists: true, $ne: "" },
       };
 
       if (jobTitle) {
-        experiencedQuery["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
+        experiencedQuery["jobSeeker.jobTitle"] = {
+          $regex: jobTitle,
+          $options: "i",
+        };
       }
 
       const experiencedUsers = await Users.find(experiencedQuery)
@@ -149,8 +145,8 @@ class JobSeekerCTRL {
         jobSeeker: { $exists: true },
         $or: [
           { "jobSeeker.workingExperience": { $exists: false } },
-          { "jobSeeker.workingExperience": "" }
-        ]
+          { "jobSeeker.workingExperience": "" },
+        ],
       };
 
       if (jobTitle) {
@@ -164,7 +160,7 @@ class JobSeekerCTRL {
       const resultUsers = allUsers.slice(skip, skip + limit);
 
       const total = await Users.countDocuments({
-        jobSeeker: { $exists: true }
+        jobSeeker: { $exists: true },
       });
 
       if (resultUsers.length === 0) {
@@ -274,7 +270,7 @@ class JobSeekerCTRL {
   async deleteSavedJob(req, res) {
     const user = await Users.findOne({ _id: req.user.id });
 
-    if (!req.user || !user.role == "JobSeeker") {
+    if (!req.user) {
       return handleResponse(
         res,
         401,
@@ -359,7 +355,7 @@ class JobSeekerCTRL {
 
       // Check if the user or user's jobSeeker data exists
 
-      if (!user || !user.role == "JobSeeker") {
+      if (!user) {
         return handleResponse(
           res,
           400,
@@ -427,7 +423,7 @@ class JobSeekerCTRL {
       const user = await Users.findById(userID);
       // console.log("user: ", user.id)
       // Check if the user or user's jobSeeker data exists
-      if (!user || !user.role == "JobSeeker") {
+      if (!user) {
         return handleResponse(
           res,
           400,
@@ -496,7 +492,7 @@ class JobSeekerCTRL {
       const user = await Users.findById(userID);
 
       // Check if the user or user's jobSeeker data exists
-      if (!user || !user.role == "JobSeeker") {
+      if (!user) {
         return handleResponse(
           res,
           400,
@@ -549,7 +545,7 @@ class JobSeekerCTRL {
 
       const user = await Users.findById(userID);
 
-      if (!user || !user.role == "JobSeeker") {
+      if (!user) {
         return handleResponse(
           res,
           400,
@@ -624,9 +620,9 @@ class JobSeekerCTRL {
         );
       }
 
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
+      // if (!req.user) {
+      //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      // }
 
       // Calculate the number of results to skip (for pagination)
       const skip = (page - 1) * limit;
@@ -703,9 +699,9 @@ class JobSeekerCTRL {
       );
     }
 
-    if (!req.user) {
-      return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-    }
+    // if (!req.user) {
+    //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+    // }
 
     // Normalize the fullName by removing spaces and converting to lowercase
     const fullname = fullName.replace(/\s+/g, "").toLowerCase();
@@ -776,6 +772,7 @@ class JobSeekerCTRL {
     }
   }
   async getJobSeekersByParams(req, res) {
+    console.log("chaqirildi....");
     let {
       skills,
       location,
@@ -791,16 +788,16 @@ class JobSeekerCTRL {
       limit = 10,
     } = req.query;
 
-    if (!req.user || !req.user.employer) {
-      return handleResponse(
-        res,
-        401,
-        "error",
-        "Unauthorized or Employer only",
-        null,
-        0
-      );
-    }
+    // if (!req.user || !req.user.employer) {
+    //   return handleResponse(
+    //     res,
+    //     401,
+    //     "error",
+    //     "Unauthorized or Employer only",
+    //     null,
+    //     0
+    //   );
+    // }
 
     try {
       let userQueryObject = { jobSeeker: { $exists: true } };

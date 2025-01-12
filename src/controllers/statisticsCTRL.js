@@ -1,3 +1,4 @@
+// src/controllers/statisticsCTRL.js
 const QuickJobs = require("../models/quickjob_model");
 const Jobs = require("../models/job_model");
 const Users = require("../models/user_model");

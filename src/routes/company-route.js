@@ -15,7 +15,14 @@ const {
   getCompanyJobPosts,
   updateCompanyMinorChange,
   getStatusOfEmployerRequest,
-  getAllRequestsStatusForUser
+  getAllRequestsStatusForUser,
+  getCompaniesStatus,
+  getApprovedCompanies,
+  approveCompany,
+  getPendingCompanies,
+  getRejectedCompanies,
+  appliedCompanyCount,
+  changeEmployerRole,
 } = require("../controllers/companyCTRL");
 const authMiddleware = require("../middleware/auth-middleware");
 const router = require("express").Router();
@@ -23,7 +30,13 @@ const { uploadFiles } = require("../utils/imageUploads/companyImageUpload");
 
 router.route("/").get(getAllCompany);
 router.route("/").post(authMiddleware, uploadFiles, createCompany);
+router.route("/status").get(authMiddleware, getCompaniesStatus);
+router.route("/approved").get(authMiddleware, getApprovedCompanies);
+router.route("/pending").get(authMiddleware, getPendingCompanies);
+router.route("/rejected").get(authMiddleware, getRejectedCompanies);
+router.route("/appliedCompanies").get(authMiddleware, appliedCompanyCount);
 
+router.route("/:companyId/approve").put(authMiddleware, approveCompany);
 router.route("/:id").put(authMiddleware, uploadFiles, updateCompany);
 router
   .route("/:id/minorChange")
@@ -40,7 +53,9 @@ router.route("/:id/rejectEmployer").post(authMiddleware, rejectEmployerToComp);
 router
   .route("/:id/users/:userId/status")
   .get(authMiddleware, getStatusOfEmployerRequest);
-router.route("/:userId/requests/status").get(authMiddleware, getAllRequestsStatusForUser);
+router
+  .route("/:userId/requests/status")
+  .get(authMiddleware, getAllRequestsStatusForUser);
 
 router
   .route("/:id/employmentRequests")
@@ -52,5 +67,8 @@ router
   .route("/:id/removeEmployer")
   .delete(authMiddleware, removeEmployerFromCompany);
 router.route("/:id/jobPosts").get(authMiddleware, getCompanyJobPosts);
+router
+  .route("/:id/users/:userId/changeRole")
+  .put(authMiddleware, changeEmployerRole);
 
 module.exports = router;

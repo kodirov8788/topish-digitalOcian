@@ -1,3 +1,4 @@
+// src/controllers/reportUserCTRL.js
 const Users = require("../models/user_model");
 const ReportUserModel = require("../models/reportUser_model");
 const { handleResponse } = require("../utils/handleResponse");

@@ -1,3 +1,4 @@
+// src/controllers/avatarCTRL.js
 const {
   S3Client,
   DeleteObjectCommand,

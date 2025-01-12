@@ -1,3 +1,4 @@
+// src/controllers/companyCTRL.js
 const Company = require("../models/company_model");
 const Jobs = require("../models/job_model");
 const QuickJobs = require("../models/quickjob_model");
@@ -6,6 +7,16 @@ const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteFiles } = require("../utils/imageUploads/companyImageUpload");
 const sendNotification = require("../utils/Notification");
+const getCompaniesByStatus = async (status, page, limit) => {
+  const skip = (page - 1) * limit; // Calculate the number of documents to skip
+  const companies = await Company.find({ status })
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 }); // Sort by creation date (latest first)
+
+  const totalCompanies = await Company.countDocuments({ status });
+  return { companies, totalCompanies };
+};
 
 class CompanyCTRL {
   async createCompany(req, res) {
@@ -13,12 +24,10 @@ class CompanyCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      // console.log("req.body", req.body)
-      // console.log("req.files ctrl: ", req.files)
 
       const user = await Users.findOne({ _id: req.user.id });
       const coins = user.coins;
-      const allowedRoles = ["Admin", "Employer"];
+      const allowedRoles = ["Admin", "Employer", "JobSeeker"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
@@ -41,41 +50,264 @@ class CompanyCTRL {
         );
       }
 
-      if (coins < 5) {
-        return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
-      }
       if (!user) {
         return handleResponse(res, 400, "error", "User not found.", null, 0);
       }
+
+      // Check if the user has already created a company
+      const existingCompany = await Company.findOne({ createdBy: user._id });
+      if (existingCompany) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "You have already created a company. Only one company is allowed per user.",
+          null,
+          0
+        );
+      }
+
       const companyDetails = {
         ...req.body,
         createdBy: user._id,
+        status: "pending", // Set the initial status to "pending"
       };
-      // console.log(req.body)
-      // console.log("req.files => ", req.files);
-      if (req.files && req.files.length > 0) {
-        // Map through the files array and extract the S3 file locations
-        companyDetails.logo = req.files;
+
+      // Check if there are any uploaded files and assign them accordingly
+      if (req.uploadResults) {
+        if (req.uploadResults.logo) {
+          companyDetails.logo = req.uploadResults.logo; // Store logo URLs
+        }
+        if (req.uploadResults.licenseFile) {
+          companyDetails.licenseFiles = req.uploadResults.licenseFile; // Store license file URLs separately
+        }
       }
+
       const company = await Company.create(companyDetails);
-      // console.log("company: ", company)
       await Users.findByIdAndUpdate(user._id, { $inc: { coins: -1 } });
 
       return handleResponse(
         res,
         201,
         "success",
-        "company created successfully",
+        "Company created successfully. Awaiting admin approval.",
         company,
         1
       );
     } catch (error) {
-      console.error("Error in company function:", error);
+      console.error("Error in createCompany function:", error);
       return handleResponse(
         res,
         500,
         "error",
-        "An error occurred while creating the job.",
+        "An error occurred while creating the company.",
+        null,
+        0
+      );
+    }
+  }
+  async approveCompany(req, res) {
+    try {
+      const companyId = req.params.companyId;
+      const { status } = req.body; // either "approved" or "rejected"
+      // console.log("companyId:", companyId);
+      if (!req.user || req.user.role !== "Admin") {
+        return handleResponse(res, 403, "error", "Access denied.", null, 0);
+      }
+
+      if (!["approved", "rejected"].includes(status)) {
+        return handleResponse(res, 400, "error", "Invalid status.", null, 0);
+      }
+
+      const company = await Company.findByIdAndUpdate(
+        companyId,
+        { status },
+        { new: true }
+      );
+      console.log("company:", company);
+      if (!company) {
+        return handleResponse(res, 404, "error", "Company not found.", null, 0);
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        `Company status updated to ${status}.`,
+        company,
+        1
+      );
+    } catch (error) {
+      console.error("Error in approveCompany function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "An error occurred while updating the company status.",
+        null,
+        0
+      );
+    }
+  }
+  async getApprovedCompanies(req, res) {
+    try {
+      const { page = 1, limit = 10 } = req.query; // Default page is 1, limit is 10
+      const { companies, totalCompanies } = await getCompaniesByStatus(
+        "approved",
+        parseInt(page),
+        parseInt(limit)
+      );
+
+      // Pagination object
+      const pagination = {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCompanies / parseInt(limit)),
+        limit: parseInt(limit),
+        totalDocuments: totalCompanies,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Approved companies fetched successfully",
+        { companies, pagination },
+        companies.length
+      );
+    } catch (error) {
+      console.error("Error in fetching approved companies:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "An error occurred while fetching approved companies.",
+        null,
+        0
+      );
+    }
+  }
+  async getPendingCompanies(req, res) {
+    try {
+      const { page = 1, limit = 10 } = req.query; // Default page is 1, limit is 10
+      const { companies, totalCompanies } = await getCompaniesByStatus(
+        "pending",
+        parseInt(page),
+        parseInt(limit)
+      );
+
+      // Pagination object
+      const pagination = {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCompanies / parseInt(limit)),
+        limit: parseInt(limit),
+        totalDocuments: totalCompanies,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Pending companies fetched successfully",
+        { companies, pagination },
+        companies.length
+      );
+    } catch (error) {
+      console.error("Error in fetching pending companies:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "An error occurred while fetching pending companies.",
+        null,
+        0
+      );
+    }
+  }
+  async getRejectedCompanies(req, res) {
+    try {
+      const { page = 1, limit = 10 } = req.query; // Default page is 1, limit is 10
+      const { companies, totalCompanies } = await getCompaniesByStatus(
+        "rejected",
+        parseInt(page),
+        parseInt(limit)
+      );
+
+      // Pagination object
+      const pagination = {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCompanies / parseInt(limit)),
+        limit: parseInt(limit),
+        totalDocuments: totalCompanies,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Rejected companies fetched successfully",
+        { companies, pagination },
+        companies.length
+      );
+    } catch (error) {
+      console.error("Error in fetching rejected companies:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "An error occurred while fetching rejected companies.",
+        null,
+        0
+      );
+    }
+  }
+  async getCompaniesStatus(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: req.user.id });
+      const { page = 1, limit = 10 } = req.query; // Default pagination values
+      const skip = (page - 1) * limit;
+
+      // Validate if user exists
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found.", null, 0);
+      }
+
+      // Fetch companies created by the user
+      const company = await Company.findOne({ createdBy: user._id })
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 }); // Sort by creation date (latest first)
+
+      // const totalCompanies = await Company.countDocuments({
+      //   createdBy: user._id,
+      // });
+
+      // // Pagination object
+      // const pagination = {
+      //   currentPage: parseInt(page),
+      //   totalPages: Math.ceil(totalCompanies / parseInt(limit)),
+      //   limit: parseInt(limit),
+      //   totalDocuments: totalCompanies,
+      // };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Companies fetched successfully",
+        company,
+        1
+      );
+    } catch (error) {
+      console.error("Error in fetching companies by user ID:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "An error occurred while fetching companies.",
         null,
         0
       );
@@ -522,7 +754,6 @@ class CompanyCTRL {
       );
     }
   }
-  // Admin adding and removing Employer
   async addAdminCompany(req, res) {
     try {
       if (!req.user) {
@@ -799,7 +1030,11 @@ class CompanyCTRL {
         // console.log("Sending notification to:", adminDeviceTokens);
         // console.log("Notification payload:", notification, info);
 
-        const notificationResult = await sendNotification(adminDeviceTokens, notification, info);
+        const notificationResult = await sendNotification(
+          adminDeviceTokens,
+          notification,
+          info
+        );
 
         // Debug: Log result of sendNotification
         // console.log("Notification result:", notificationResult);
@@ -929,9 +1164,32 @@ class CompanyCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+
       const { id: companyId } = req.params;
-      const { userId } = req.body;
+      const { userId, role } = req.body;
       const allowedRoles = ["Employer", "Admin"];
+      const assignableRoles = [
+        "CompanyAdmin",
+        "Manager",
+        "TeamLead",
+        "HRManager",
+        "Recruiter",
+        "Employee",
+        "Intern",
+      ];
+
+      // Check if the provided role is within the assignable roles
+      if (!assignableRoles.includes(role)) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid role specified",
+          null,
+          0
+        );
+      }
+
       const user = await Users.findOne({ _id: req.user.id });
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -983,25 +1241,22 @@ class CompanyCTRL {
         );
       }
 
-      company.workers.push({ userId, isAdmin: false });
+      // Assign the specified role to the user
+      company.workers.push({ userId, role, isAdmin: false });
       await company.save();
       await CompanyEmploymentReq.findByIdAndUpdate(newReq.id, {
         status: "accepted",
       });
 
       // Fetch device tokens for the user
-      const userDeviceTokens = newUser.mobileToken || []; // Assuming user object has a mobileToken array
+      const userDeviceTokens = newUser.mobileToken || [];
 
       if (userDeviceTokens.length > 0) {
         const notification = {
           title: "Admitted to Company",
-          body: "You have been admitted to the company.",
+          body: `You have been admitted to the company as ${role}.`,
         };
-        const info = {
-          companyId: companyId,
-          userId: userId,
-        };
-
+        const info = { companyId: companyId, userId: userId };
         sendNotification(userDeviceTokens, notification, info);
       }
 
@@ -1056,7 +1311,9 @@ class CompanyCTRL {
 
       let additionalInfo = null;
       if (requestStatus === "rejected" && rejectionDate) {
-        const canReapplyDate = new Date(rejectionDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+        const canReapplyDate = new Date(
+          rejectionDate.getTime() + 3 * 24 * 60 * 60 * 1000
+        );
         const currentDate = new Date();
         const canReapply = currentDate >= canReapplyDate;
 
@@ -1140,7 +1397,9 @@ class CompanyCTRL {
       const { userId } = req.params;
 
       // Find all employment requests made by the user
-      const employmentRequests = await CompanyEmploymentReq.find({ requesterId: userId });
+      const employmentRequests = await CompanyEmploymentReq.find({
+        requesterId: userId,
+      });
 
       if (!employmentRequests || employmentRequests.length === 0) {
         return handleResponse(
@@ -1154,11 +1413,13 @@ class CompanyCTRL {
       }
 
       // Prepare the response data
-      const requestsStatus = employmentRequests.map(request => {
+      const requestsStatus = employmentRequests.map((request) => {
         const rejectionDate = request.rejectionDate;
         let additionalInfo = null;
         if (request.status === "rejected" && rejectionDate) {
-          const canReapplyDate = new Date(rejectionDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+          const canReapplyDate = new Date(
+            rejectionDate.getTime() + 3 * 24 * 60 * 60 * 1000
+          );
           const currentDate = new Date();
           const canReapply = currentDate >= canReapplyDate;
 
@@ -1170,7 +1431,7 @@ class CompanyCTRL {
         return {
           companyId: request.companyId,
           status: request.status,
-          additionalInfo
+          additionalInfo,
         };
       });
 
@@ -1379,7 +1640,11 @@ class CompanyCTRL {
         // console.log("Sending notification to:", userDeviceTokens);
         // console.log("Notification payload:", notification, info);
 
-        const notificationResult = await sendNotification(userDeviceTokens, notification, info);
+        const notificationResult = await sendNotification(
+          userDeviceTokens,
+          notification,
+          info
+        );
 
         // Debug: Log result of sendNotification
         // console.log("Notification result:", notificationResult);
@@ -1497,6 +1762,256 @@ class CompanyCTRL {
     } catch (error) {
       console.error("Error in getCompanyJobPosts function:", error);
       return handleResponse(res, 500, "error", "Internal Server Error");
+    }
+  }
+  async appliedCompanyCount(req, res) {
+    try {
+      // Ensure the user is authenticated
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      // Find all employment requests made by the user
+      const employmentRequests = await CompanyEmploymentReq.find({
+        requesterId: req.user.id,
+      }).populate("companyId", "name");
+      console.log("employmentRequests:", employmentRequests);
+      // If no requests found, return a response
+      if (!employmentRequests || employmentRequests.length === 0) {
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "No employment requests found",
+          { appliedCompanies: [], totalApplied: 0 },
+          0
+        );
+      }
+
+      // Prepare the response data
+      const appliedCompanies = employmentRequests.map((request) => {
+        return {
+          companyId: request.companyId._id,
+          companyName: request.companyId.name,
+          status: request.status,
+        };
+      });
+
+      // Return the total count and the list of companies
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Applied companies fetched successfully",
+        { appliedCompanies, totalApplied: appliedCompanies.length },
+        appliedCompanies.length
+      );
+    } catch (error) {
+      console.error("Error in appliedCompanyCount function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+
+  async changeEmployerRole(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      const { companyId, userId } = req.params;
+      const { newRole } = req.body;
+      // const allowedRoles = ["Employer", "Admin"];
+      const assignableRoles = [
+        "CompanyAdmin",
+        "Manager",
+        "TeamLead",
+        "HRManager",
+        "Recruiter",
+        "Employee",
+        "Intern",
+      ];
+
+      // Check if the provided role is within the assignable roles
+      if (!assignableRoles.includes(newRole)) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid role specified",
+          null,
+          0
+        );
+      }
+
+      const user = await Users.findOne({ _id: req.user.id });
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
+
+      const company = await Company.findById(companyId);
+      if (!company) {
+        return handleResponse(res, 404, "error", "Company not found", null, 0);
+      }
+
+      // Check if the user requesting the change is a CompanyAdmin or Admin within this company
+      const isCompanyAdmin = company.workers.find(
+        (worker) =>
+          worker.userId.toString() === user._id &&
+          worker.role === "CompanyAdmin"
+      );
+      if (!isCompanyAdmin && user.role !== "Admin") {
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "You are not authorized",
+          null,
+          0
+        );
+      }
+
+      const targetUser = await Users.findById(userId);
+      if (!targetUser) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+
+      // Find the employer in the company's workers and update the role
+      const worker = company.workers.find(
+        (worker) => worker.userId.toString() === userId
+      );
+      if (!worker) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "Employer not found in this company",
+          null,
+          0
+        );
+      }
+
+      worker.role = newRole;
+      await company.save();
+
+      // Notify the user about the role change
+      const userDeviceTokens = targetUser.mobileToken || [];
+      if (userDeviceTokens.length > 0) {
+        const notification = {
+          title: "Role Updated",
+          body: `Your role has been updated to ${newRole}.`,
+        };
+        const info = { companyId, userId };
+        sendNotification(userDeviceTokens, notification, info);
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Role updated successfully",
+        company,
+        1
+      );
+    } catch (error) {
+      console.error("Error in changeEmployerRole function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async addCompanyServices(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { company_id, service_id, price, duration, status, image, description } = req.body;
+
+      // Validate required fields
+      if (!company_id || !service_id || !description) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "company_id, service_id, and description are required fields",
+          null,
+          0
+        );
+      }
+
+      // Check if the company exists
+      const company = await Company.findById(company_id);
+      if (!company) {
+        return handleResponse(res, 404, "error", "Company not found", null, 0);
+      }
+
+      // Check if the user has the "Manager" role within the company
+      const user = await Users.findById(req.user.id);
+      const isManager = company.workers.some(
+        (worker) => worker.userId.toString() === user._id.toString() && worker.role === "Manager"
+      );
+
+      if (!isManager) {
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "You are not authorized to add services",
+          null,
+          0
+        );
+      }
+
+      // Create a new company service
+      const newService = new CompanyServices({
+        company_id,
+        service_id,
+        price,
+        duration,
+        status,
+        image,
+        description,
+      });
+
+      // Save the new service to the database
+      await newService.save();
+
+      return handleResponse(
+        res,
+        201,
+        "success",
+        "Company service added successfully",
+        newService,
+        1
+      );
+    } catch (error) {
+      console.error("Error in addCompanyServices function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
     }
   }
 }

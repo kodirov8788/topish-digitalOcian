@@ -1,48 +1,61 @@
 // swaggerConfig.js
-const swaggerUI = require('swagger-ui-express');
-const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
 // const { MessagesEndpoint } = require('../swaggerDocs/messagesDocs');
-const { UserAvatarEndpoint } = require('../swaggerDocs/userAvatardocs');
-const { ProfileEndpoint } = require('../swaggerDocs/profileDocs');
-const { JobsEndpoint } = require('../swaggerDocs/jobsDocs');
-const { QuickjobsEndpoint } = require('../swaggerDocs/quickjobsDocs');
-const { UpdateUser } = require('../swaggerDocs/UpdateUser');
-const { FavoriteUser } = require('../swaggerDocs/favoriteUser');
-const { UsersEndpoint } = require('../swaggerDocs/userDocs');
-const { JobSeekersEndpoint } = require('../swaggerDocs/jobsSeekersDocs');
-const { EmployersEndpoint } = require('../swaggerDocs/employersDocs');
-const { UserDocResponseSchema, userDocSchema } = require('../swaggerDocs/userResponse');
-const { AuthEndpoints } = require('../swaggerDocs/authDocs');
-const { AllRoutesSchemas } = require('../swaggerDocs/AllRoutesSchemas');
-const { workExperienceEndpoint } = require('../swaggerDocs/workExperienceDocs');
-const { educationEndpoint } = require('../swaggerDocs/educationDocs');
-const { projectEndpoint } = require('../swaggerDocs/projectsDocs');
-const { AwardsEndpoints } = require('../swaggerDocs/awardsDocs');
-const { certificatesEndpoint } = require('../swaggerDocs/certificatesDocs');
-const { contactEndpoint } = require('../swaggerDocs/ContactDocs');
-const { summaryEndpoint } = require('../swaggerDocs/SummaryDocs');
-const { languagesEndpoint } = require('../swaggerDocs/languageDocs');
-const { skillsEndpoint } = require('../swaggerDocs/skillsDocs');
-const { professionsEndpoint } = require('../swaggerDocs/professionsDocs');
-const { cvFileEndpoints } = require('../swaggerDocs/cvFileDocs');
-const { statisticsEndpoint } = require('../swaggerDocs/statisticsDocs');
-const { galleryEndpoint } = require('../swaggerDocs/galleryDocs');
-const { BannerEndpoint } = require('../swaggerDocs/bannerDocs');
-const { OfficesEndpoint } = require('../swaggerDocs/officesDocs');
-const { AdminEndpoint } = require('../swaggerDocs/AdminDocs');
-const { CompanyEndpoint } = require('../swaggerDocs/companyDocs');
-const { reportUserEndPoint } = require('../swaggerDocs/reportUserDocs');
-const { tournamentsEndpoint } = require('../swaggerDocs/tournamentsDocs');
-const { telegramEndpoint } = require('../swaggerDocs/telegramDocs');
-const { othersEndpoint } = require('../swaggerDocs/otherDocs');
+const { UserAvatarEndpoint } = require("../swaggerDocs/userAvatardocs");
+const { ProfileEndpoint } = require("../swaggerDocs/profileDocs");
+const { JobsEndpoint } = require("../swaggerDocs/jobsDocs");
+const { QuickjobsEndpoint } = require("../swaggerDocs/quickjobsDocs");
+const { UpdateUser } = require("../swaggerDocs/UpdateUser");
+const { FavoriteUser } = require("../swaggerDocs/favoriteUser");
+const { UsersEndpoint } = require("../swaggerDocs/userDocs");
+const { JobSeekersEndpoint } = require("../swaggerDocs/jobsSeekersDocs");
+const { EmployersEndpoint } = require("../swaggerDocs/employersDocs");
+const { ExpectedSalaryEndpoints } = require("../swaggerDocs/ExpectedSalaryDocs");
+const {
+  UserDocResponseSchema,
+  userDocSchema,
+} = require("../swaggerDocs/userResponse");
+const { AuthEndpoints } = require("../swaggerDocs/authDocs");
+const { AllRoutesSchemas } = require("../swaggerDocs/AllRoutesSchemas");
+const { workExperienceEndpoint } = require("../swaggerDocs/workExperienceDocs");
+const { educationEndpoint } = require("../swaggerDocs/educationDocs");
+const { projectEndpoint } = require("../swaggerDocs/projectsDocs");
+const { AwardsEndpoints } = require("../swaggerDocs/awardsDocs");
+const { certificatesEndpoint } = require("../swaggerDocs/certificatesDocs");
+const { contactEndpoint } = require("../swaggerDocs/ContactDocs");
+const { summaryEndpoint } = require("../swaggerDocs/SummaryDocs");
+const { languagesEndpoint } = require("../swaggerDocs/languageDocs");
+const { skillsEndpoint } = require("../swaggerDocs/skillsDocs");
+const { professionsEndpoint } = require("../swaggerDocs/professionsDocs");
+const { cvFileEndpoints } = require("../swaggerDocs/cvFileDocs");
+const { statisticsEndpoint } = require("../swaggerDocs/statisticsDocs");
+const { galleryEndpoint } = require("../swaggerDocs/galleryDocs");
+const { BannerEndpoint } = require("../swaggerDocs/bannerDocs");
+const { OfficesEndpoint } = require("../swaggerDocs/officesDocs");
+const { BusinessServicesEndpoint } = require("../swaggerDocs/businessServicesDocs");
+const { AdminEndpoint } = require("../swaggerDocs/AdminDocs");
+const { CompanyEndpoint } = require("../swaggerDocs/companyDocs");
+const { reportUserEndPoint } = require("../swaggerDocs/reportUserDocs");
+const { tournamentsEndpoint } = require("../swaggerDocs/tournamentsDocs");
+const { telegramEndpoint } = require("../swaggerDocs/telegramDocs");
+const { othersEndpoint } = require("../swaggerDocs/otherDocs");
+const { MakeFriendsEndpoints } = require("../swaggerDocs/makeFiendsDocs");
+const { StoryEndpoints } = require("../swaggerDocs/storyDocs");
+const { DiscoverEndpoint } = require("../swaggerDocs/discoverDocs");
+const { DiscoverTagsEndpoint } = require("../swaggerDocs/discoverTagsDocs");
+const { Business_servicesTagsEndpoint } = require("../swaggerDocs/business_servicesTagsDocs");
+const { SearchJobEndpoints } = require("../swaggerDocs/SearchJobDocs");
+const { IndustryEndpoints } = require("../swaggerDocs/IndustryDocs");
+
 
 
 const SecuritySchemes = {
-    bearerAuth: {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-    }
+  bearerAuth: {
+    type: "http",
+    scheme: "bearer",
+    bearerFormat: "JWT",
+  },
 };
 
 // const URL = `http://localhost:5001/api/v1/`;
@@ -50,85 +63,93 @@ const SecuritySchemes = {
 const URL = process.env.SWAGGERT_URL;
 
 const swaggerOptions = {
-    definition: {
-        openapi: "3.0.0",
-        info: {
-            title: "Library API",
-            version: "1.0.0",
-            description: "A simple Express Library API",
-        },
-        servers: [
-            {
-                url: URL,
-                description: 'Development server',
-            },
-        ],
-        tags: [AuthEndpoints.tags, UsersEndpoint.tags],
-        components: {
-            securitySchemes: {
-                ...SecuritySchemes // Include your security schemes here
-            },
-            schemas: {
-                ...userDocSchema.schemas,
-                ...UserDocResponseSchema,
-                ...AllRoutesSchemas.components.schemas
-            },
-        },
-        security: [
-            {
-                bearerAuth: []
-            }
-        ],
-        paths: {
-            ...AuthEndpoints,
-            ...UsersEndpoint,
-            ...JobSeekersEndpoint,
-            ...EmployersEndpoint,
-            ...UpdateUser,
-            ...FavoriteUser,
-            ...JobsEndpoint,
-            ...ProfileEndpoint,
-            ...UserAvatarEndpoint,
-            // ...MessagesEndpoint,
-            ...workExperienceEndpoint,
-            ...educationEndpoint,
-            ...projectEndpoint,
-            ...AwardsEndpoints,
-            ...certificatesEndpoint,
-            ...contactEndpoint,
-            ...summaryEndpoint,
-            ...languagesEndpoint,
-            ...skillsEndpoint,
-            ...cvFileEndpoints,
-            ...QuickjobsEndpoint,
-            ...statisticsEndpoint,
-            ...galleryEndpoint,
-            ...BannerEndpoint,
-            ...professionsEndpoint,
-            ...OfficesEndpoint,
-            ...AdminEndpoint,
-            ...CompanyEndpoint,
-            ...reportUserEndPoint,
-            ...tournamentsEndpoint,
-            ...telegramEndpoint,
-            ...othersEndpoint
-        },
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Library API",
+      version: "1.0.0",
+      description: "A simple Express Library API",
     },
-    apis: ["./routes/*.js"],
+    servers: [
+      {
+        url: URL,
+        description: "Development server",
+      },
+    ],
+    tags: [AuthEndpoints.tags, UsersEndpoint.tags],
+    components: {
+      securitySchemes: {
+        ...SecuritySchemes, // Include your security schemes here
+      },
+      schemas: {
+        ...userDocSchema.schemas,
+        ...UserDocResponseSchema,
+        ...AllRoutesSchemas.components.schemas,
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+    paths: {
+      ...AuthEndpoints,
+      ...UsersEndpoint,
+      // ...JobSeekersEndpoint,
+      ...EmployersEndpoint,
+      ...UpdateUser,
+      ...FavoriteUser,
+      ...JobsEndpoint,
+      ...ProfileEndpoint,
+      ...UserAvatarEndpoint,
+      ...workExperienceEndpoint,
+      ...educationEndpoint,
+      ...projectEndpoint,
+      ...AwardsEndpoints,
+      ...certificatesEndpoint,
+      ...contactEndpoint,
+      ...summaryEndpoint,
+      ...languagesEndpoint,
+      ...skillsEndpoint,
+      ...cvFileEndpoints,
+      ...QuickjobsEndpoint,
+      ...statisticsEndpoint,
+      ...galleryEndpoint,
+      ...BannerEndpoint,
+      ...professionsEndpoint,
+      ...OfficesEndpoint,
+      ...AdminEndpoint,
+      ...CompanyEndpoint,
+      ...reportUserEndPoint,
+      ...tournamentsEndpoint,
+      ...telegramEndpoint,
+      ...othersEndpoint,
+      ...MakeFriendsEndpoints,
+      ...StoryEndpoints,
+      ...DiscoverEndpoint,
+      ...BusinessServicesEndpoint,
+      ...DiscoverTagsEndpoint,
+      ...Business_servicesTagsEndpoint,
+      ...SearchJobEndpoints,
+      ...IndustryEndpoints,
+      ...ExpectedSalaryEndpoints
+    },
+  },
+  apis: ["./routes/*.js"],
 };
 
 // Setup Swagger
 const swaggerSpecs = swaggerJsDoc(swaggerOptions);
 
 const setupSwagger = (app) => {
-    const options = {
-        explorer: false,
-        swaggerOptions: {
-            docExpansion: 'none' // This will collapse all sections by default
-        }
-    };
-    app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs, options));
-    // console.log('Swagger is setup and running');
+  const options = {
+    explorer: false,
+    swaggerOptions: {
+      docExpansion: "none", // This will collapse all sections by default
+    },
+  };
+  app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpecs, options));
+  // console.log('Swagger is setup and running');
 };
 
 module.exports = setupSwagger;

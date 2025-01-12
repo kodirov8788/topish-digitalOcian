@@ -13,7 +13,8 @@ const {
   confirmDeleteAccount,
   checkSmsStatus,
   addUsernamesToAllUsers,
-  sendVoiceCall
+  sendVoiceCall,
+  registerUserByAdmin
 } = require("../controllers/AuthCTRL");
 const express = require("express");
 const router = express.Router();
@@ -21,6 +22,7 @@ const authMiddleware = require("../middleware/auth-middleware");
 router.get("/getRefreshTokens", authMiddleware, getRefreshTokens);
 router.delete("/deleteRefreshToken", authMiddleware, deleteRefreshToken);
 router.post("/create-user", sendRegisterCode);
+router.post("/registerbyadmin", authMiddleware, registerUserByAdmin);
 router.post("/create-user/confirmCode", confirmRegisterCode);
 router.post("/create-user/resendCode", resendConfirmationCode);
 router.post("/sign-in", sendLoginCode);

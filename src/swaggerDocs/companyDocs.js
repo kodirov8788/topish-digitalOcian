@@ -1,65 +1,3 @@
-// async getStatusOfEmployerRequest(req, res) {
-//   try {
-//     if (!req.user) {
-//       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-//     }
-
-//     const { userId, companyId } = req.params;
-
-//     // Find the employment request
-//     const employmentRequest = await CompanyEmploymentReq.findOne({
-//       requesterId: userId,
-//       companyId: companyId,
-//     });
-
-//     if (!employmentRequest) {
-//       return handleResponse(
-//         res,
-//         404,
-//         "error",
-//         "No employment request found for this user and company",
-//         null,
-//         0
-//       );
-//     }
-
-//     // Get the status of the employment request
-//     const requestStatus = employmentRequest.status;
-//     const rejectionDate = employmentRequest.rejectionDate;
-
-//     let additionalInfo = null;
-//     if (requestStatus === "rejected" && rejectionDate) {
-//       const canReapplyDate = new Date(rejectionDate.getTime() + 3 * 24 * 60 * 60 * 1000);
-//       const currentDate = new Date();
-//       const canReapply = currentDate >= canReapplyDate;
-
-//       additionalInfo = {
-//         canReapply,
-//         canReapplyDate,
-//       };
-//     }
-
-//     return handleResponse(
-//       res,
-//       200,
-//       "success",
-//       "Employment request status fetched successfully",
-//       { status: requestStatus, additionalInfo },
-//       1
-//     );
-//   } catch (error) {
-//     console.error("Error in getStatusOfEmployerRequest function:", error);
-//     return handleResponse(
-//       res,
-//       500,
-//       "error",
-//       "Something went wrong: " + error.message,
-//       null,
-//       0
-//     );
-//   }
-// }
-
 const CompanyEndpoint = {
   tags: [
     {
@@ -67,7 +5,6 @@ const CompanyEndpoint = {
       description: "The Company managing API",
     },
   ],
-
   "/companies/": {
     post: {
       summary: "Create a new company",
@@ -100,6 +37,16 @@ const CompanyEndpoint = {
                   type: "string",
                   description: "Size of the company.",
                   example: "201-500",
+                  enum: [
+                    "1-10",
+                    "11-50",
+                    "51-200",
+                    "201-500",
+                    "501-1000",
+                    "1001-5000",
+                    "5001-10000",
+                    "10001+",
+                  ],
                 },
                 type: {
                   type: "string",
@@ -113,12 +60,76 @@ const CompanyEndpoint = {
                     "We are a tech company that specializes in creating innovative solutions.",
                 },
                 logo: {
+                  type: "array",
+                  items: {
+                    type: "string",
+                    format: "binary",
+                  },
+                  description: "Company logo images.",
+                },
+                phoneNumber: {
                   type: "string",
-                  format: "binary",
-                  description: "Company logo image.",
+                  description: "Contact phone number of the company.",
+                  example: "+1 234 567 8900",
+                },
+                telegramName: {
+                  type: "string",
+                  description: "Telegram username of the company.",
+                  example: "@InnovativeTech",
+                },
+                licenseFile: {
+                  type: "array",
+                  items: {
+                    type: "string",
+                    format: "binary",
+                  },
+                  description: "Files for the company's licenses.",
+                },
+                working_time: {
+                  type: "string",
+                  description: "Working hours of the company.",
+                  example: "9 AM - 5 PM",
+                },
+                working_days: {
+                  type: "string",
+                  description: "Days of the week the company operates.",
+                  example: "Monday to Friday",
+                },
+                overtime: {
+                  type: "string",
+                  description: "Overtime information.",
+                  example: "Available upon request",
+                },
+                benefits: {
+                  type: "array",
+                  items: {
+                    type: "string",
+                  },
+                  description: "List of benefits offered by the company.",
+                  example: ["Health Insurance", "Paid Leave"],
+                },
+                info: {
+                  type: "object",
+                  properties: {
+                    legal_representative: {
+                      type: "string",
+                      description: "Legal representative of the company.",
+                      example: "John Doe",
+                    },
+                    registration_capital: {
+                      type: "string",
+                      description: "Registered capital of the company.",
+                      example: "$100,000",
+                    },
+                    date_of_establishment: {
+                      type: "string",
+                      description: "Date of establishment of the company.",
+                      example: "2022-01-01",
+                    },
+                  },
                 },
               },
-              required: ["name", "location"],
+              required: ["name", "phoneNumber", "telegramName"],
             },
           },
         },
@@ -134,7 +145,8 @@ const CompanyEndpoint = {
                   result: { type: "string", example: "success" },
                   msg: {
                     type: "string",
-                    example: "Company created successfully",
+                    example:
+                      "Company created successfully. Awaiting admin approval.",
                   },
                   data: {
                     type: "object",
@@ -174,36 +186,33 @@ const CompanyEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Not enough coins." },
-                  data: { type: "null", example: null },
-                  totalCount: { type: "number", example: 0 },
+                  msg: {
+                    type: "string",
+                    example: "Insufficient coins. Please contact support.",
+                  },
                 },
               },
             },
           },
         },
         401: {
-          description: "Unauthorized. User is not logged in or not allowed.",
+          description:
+            "Unauthorized. User is not authorized to create a company.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: {
-                    type: "string",
-                    example:
-                      "Unauthorized. User is not logged in or not allowed.",
-                  },
-                  data: { type: "null", example: null },
-                  totalCount: { type: "number", example: 0 },
+                  msg: { type: "string", example: "You are not allowed!" },
                 },
               },
             },
           },
         },
         500: {
-          description: "Internal server error.",
+          description:
+            "Internal Server Error. An error occurred while creating the company.",
           content: {
             "application/json": {
               schema: {
@@ -214,8 +223,6 @@ const CompanyEndpoint = {
                     type: "string",
                     example: "An error occurred while creating the company.",
                   },
-                  data: { type: "null", example: null },
-                  totalCount: { type: "number", example: 0 },
                 },
               },
             },
@@ -224,100 +231,71 @@ const CompanyEndpoint = {
       },
     },
     get: {
-      summary: "Retrieve all companies",
+      summary: "Fetch all companies",
       tags: ["Company"],
       description:
-        "Fetches a list of companies, optionally filtered by name, location, and recommendation status, with pagination and sorting capabilities.",
-      security: [
-        {
-          bearerAuth: [],
-        },
-      ],
+        "Retrieve all companies with optional filters for name, location, and pagination.",
       parameters: [
         {
           name: "companyName",
           in: "query",
           required: false,
-          description: "Filter companies by name using a regex pattern.",
-          schema: {
-            type: "string",
-          },
+          description: "Filter companies by name.",
+          schema: { type: "string" },
         },
         {
           name: "location",
           in: "query",
           required: false,
-          description: "Filter companies by location using a regex pattern.",
-          schema: {
-            type: "string",
-          },
-        },
-        {
-          name: "recommended",
-          in: "query",
-          required: false,
-          description: "Filter companies by their recommendation status.",
-          schema: {
-            type: "boolean",
-          },
+          description: "Filter companies by location.",
+          schema: { type: "string" },
         },
         {
           name: "page",
           in: "query",
           required: false,
-          description: "Specify the page of results to return.",
-          schema: {
-            type: "integer",
-            default: 1,
-          },
+          description: "Page number for pagination.",
+          schema: { type: "integer", default: 1 },
         },
         {
           name: "limit",
           in: "query",
           required: false,
-          description: "Limit the number of results per page.",
-          schema: {
-            type: "integer",
-            default: 10,
-          },
+          description: "Number of companies per page.",
+          schema: { type: "integer", default: 10 },
         },
         {
           name: "sort",
           in: "query",
           required: false,
-          description:
-            'Sort the results by specified fields separated by commas (e.g., "-createdDate" for descending).',
-          schema: {
-            type: "string",
-          },
+          description: "Sorting field, e.g., 'createdAt'.",
+          schema: { type: "string", default: "createdAt" },
         },
       ],
       responses: {
         200: {
-          description: "List of companies retrieved successfully.",
+          description: "Companies retrieved successfully.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: {
-                    type: "string",
-                    example: "Company retrieved successfully",
-                  },
+                  msg: { type: "string", example: "Companies retrieved successfully." },
                   data: {
                     type: "array",
                     items: {
-                      $ref: "#/components/schemas/Company",
-                    },
-                    example: [
-                      {
-                        name: "Innovative Tech Solutions",
-                        location: "Silicon Valley, CA",
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        location: { type: "string" },
+                        size: { type: "string" },
+                        type: { type: "string" },
+                        description: { type: "string" },
+                        logo: { type: "string" },
                       },
-                    ],
+                    },
                   },
-                  totalCount: { type: "number", example: 10 },
                   pagination: {
                     type: "object",
                     properties: {
@@ -332,17 +310,595 @@ const CompanyEndpoint = {
             },
           },
         },
-        400: {
-          description: "Bad Request - Title cannot be empty.",
+        404: {
+          description: "No companies found.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Title cannot be empty" },
-                  data: { type: "array", items: {}, example: [] },
-                  totalCount: { type: "number", example: 0 },
+                  msg: { type: "string", example: "No companies found." },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal Server Error.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "An error occurred while fetching companies.",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/companies/status": {
+    get: {
+      summary: "get company status",
+      tags: ["Company"],
+      description:
+        "Allows an authorized user with sufficient coins to create a new company entry.",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      responses: {
+        200: {
+          description: "Company created successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Company created successfully. Awaiting admin approval.",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      name: {
+                        type: "string",
+                        example: "Innovative Tech Solutions",
+                      },
+                      location: {
+                        type: "string",
+                        example: "Silicon Valley, CA",
+                      },
+                      size: { type: "string", example: "100-500" },
+                      type: { type: "string", example: "Technology" },
+                      description: {
+                        type: "string",
+                        example:
+                          "We are a tech company that specializes in creating innovative solutions.",
+                      },
+                      logo: {
+                        type: "string",
+                        example: "https://example.com/logo.jpg",
+                      },
+                    },
+                  },
+                  totalCount: { type: "number", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Bad Request. Validation error or not enough coins.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "Insufficient coins. Please contact support.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description:
+            "Unauthorized. User is not authorized to create a company.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "You are not allowed!" },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description:
+            "Internal Server Error. An error occurred while creating the company.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "An error occurred while creating the company.",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/companies/{companyId}/approve": {
+    put: {
+      summary: "Approve or reject a company",
+      tags: ["Company"],
+      description: "Allows an admin to approve or reject a company.",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      parameters: [
+        {
+          name: "companyId",
+          in: "path",
+          required: true,
+          description: "ID of the company to approve or reject.",
+          schema: {
+            type: "string",
+          },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                status: {
+                  type: "string",
+                  enum: ["approved", "rejected"],
+                  description: "New status for the company.",
+                  example: "approved",
+                },
+              },
+              required: ["status"],
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Company status updated successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Company status updated to approved.",
+                  },
+                  data: {
+                    type: "object",
+                    // Add the properties of the company that are relevant
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Bad Request. Invalid status.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Invalid status." },
+                },
+              },
+            },
+          },
+        },
+        403: {
+          description: "Access denied. User is not an admin.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Access denied." },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "Company not found.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Company not found." },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description:
+            "Internal Server Error. An error occurred while updating the company status.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "An error occurred while updating the company status.",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+
+  "/companies/approved": {
+    get: {
+      summary: "Get approved companies",
+      tags: ["Company"],
+      description: "Fetches a list of approved companies with pagination.",
+      parameters: [
+        {
+          name: "page",
+          in: "query",
+          required: false,
+          description: "Page number for pagination.",
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+        },
+        {
+          name: "limit",
+          in: "query",
+          required: false,
+          description: "Number of companies to return per page.",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Approved companies fetched successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Approved companies fetched successfully.",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      companies: {
+                        type: "array",
+                        items: {
+                          // Add properties of the company
+                        },
+                      },
+                      pagination: {
+                        type: "object",
+                        properties: {
+                          currentPage: { type: "integer", example: 1 },
+                          totalPages: { type: "integer", example: 5 },
+                          limit: { type: "integer", example: 10 },
+                          totalDocuments: { type: "integer", example: 50 },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description:
+            "Internal Server Error. An error occurred while fetching approved companies.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "An error occurred while fetching approved companies.",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+
+  "/companies/pending": {
+    get: {
+      summary: "Get pending companies",
+      tags: ["Company"],
+      description: "Fetches a list of pending companies with pagination.",
+      parameters: [
+        {
+          name: "page",
+          in: "query",
+          required: false,
+          description: "Page number for pagination.",
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+        },
+        {
+          name: "limit",
+          in: "query",
+          required: false,
+          description: "Number of companies to return per page.",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Pending companies fetched successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Pending companies fetched successfully.",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      companies: {
+                        type: "array",
+                        items: {
+                          // Add properties of the company
+                        },
+                      },
+                      pagination: {
+                        type: "object",
+                        properties: {
+                          currentPage: { type: "integer", example: 1 },
+                          totalPages: { type: "integer", example: 5 },
+                          limit: { type: "integer", example: 10 },
+                          totalDocuments: { type: "integer", example: 50 },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description:
+            "Internal Server Error. An error occurred while fetching pending companies.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "An error occurred while fetching pending companies.",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+
+  "/companies/rejected": {
+    get: {
+      summary: "Get rejected companies",
+      tags: ["Company"],
+      description: "Fetches a list of rejected companies with pagination.",
+      parameters: [
+        {
+          name: "page",
+          in: "query",
+          required: false,
+          description: "Page number for pagination.",
+          schema: {
+            type: "integer",
+            default: 1,
+          },
+        },
+        {
+          name: "limit",
+          in: "query",
+          required: false,
+          description: "Number of companies to return per page.",
+          schema: {
+            type: "integer",
+            default: 10,
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Rejected companies fetched successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Rejected companies fetched successfully.",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      companies: {
+                        type: "array",
+                        items: {
+                          // Add properties of the company
+                        },
+                      },
+                      pagination: {
+                        type: "object",
+                        properties: {
+                          currentPage: { type: "integer", example: 1 },
+                          totalPages: { type: "integer", example: 5 },
+                          limit: { type: "integer", example: 10 },
+                          totalDocuments: { type: "integer", example: 50 },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description:
+            "Internal Server Error. An error occurred while fetching rejected companies.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "An error occurred while fetching rejected companies.",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/companies/appliedCompanies": {
+    get: {
+      summary: "Get the number of companies applied to",
+      tags: ["Company"],
+      description:
+        "Fetches the total number of companies a user has applied to.",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      responses: {
+        200: {
+          description: "Successfully fetched applied companies count.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Applied companies fetched successfully.",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      appliedCompanies: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            companyId: {
+                              type: "string",
+                              description: "ID of the company",
+                              example: "60d0fe4f5311236168a109ca",
+                            },
+                            companyName: {
+                              type: "string",
+                              description: "Name of the company",
+                              example: "Tech Solutions",
+                            },
+                            status: {
+                              type: "string",
+                              description: "Application status",
+                              example: "pending",
+                            },
+                          },
+                        },
+                      },
+                      totalApplied: {
+                        type: "number",
+                        description: "Total number of companies applied to",
+                        example: 3,
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -357,41 +913,23 @@ const CompanyEndpoint = {
                 properties: {
                   result: { type: "string", example: "error" },
                   msg: { type: "string", example: "Unauthorized" },
-                  data: { type: "null", example: null },
-                  totalCount: { type: "number", example: 0 },
-                },
-              },
-            },
-          },
-        },
-        404: {
-          description: "Not Found - No companies found.",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "No companies found" },
-                  data: { type: "array", items: {}, example: [] },
-                  totalCount: { type: "number", example: 0 },
                 },
               },
             },
           },
         },
         500: {
-          description:
-            "Internal Server Error - Error in processing the request.",
+          description: "Internal Server Error - An error occurred.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Internal Server Error" },
-                  data: { type: "null", example: null },
-                  totalCount: { type: "number", example: 0 },
+                  msg: {
+                    type: "string",
+                    example: "An error occurred while fetching the count.",
+                  },
                 },
               },
             },
@@ -1223,644 +1761,703 @@ const CompanyEndpoint = {
     },
   },
   "/companies/{id}/admitEmployer": {
-    "post": {
-      "summary": "Admit an employer to a company",
-      "tags": ["Hr Company"],
-      "description": "Allows an authorized user with the Employer or Admin role to admit an employer to a company.",
-      "security": [
+    post: {
+      summary: "Admit an employer to a company",
+      tags: ["Hr Company"],
+      description:
+        "Allows an authorized user with the Employer or Admin role to admit an employer to a company.",
+      security: [
         {
-          "bearerAuth": []
-        }
+          bearerAuth: [],
+        },
       ],
-      "parameters": [
+      parameters: [
         {
-          "name": "id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the company to which the employer will be admitted.",
-          "schema": {
-            "type": "string"
-          }
-        }
+          name: "id",
+          in: "path",
+          required: true,
+          description:
+            "The ID of the company to which the employer will be admitted.",
+          schema: {
+            type: "string",
+          },
+        },
       ],
-      "requestBody": {
-        "required": true,
-        "content": {
+      requestBody: {
+        required: true,
+        content: {
           "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "userId": {
-                  "type": "string",
-                  "description": "The ID of the user to be admitted as an employer.",
-                  "example": "60d0fe4f5311236168a109ca"
-                }
-              }
-            }
-          }
-        }
+            schema: {
+              type: "object",
+              properties: {
+                userId: {
+                  type: "string",
+                  description:
+                    "The ID of the user to be admitted as an employer.",
+                  example: "60d0fe4f5311236168a109ca",
+                },
+                role: {
+                  type: "string",
+                  description:
+                    "The role to assign to the admitted employer. Allowed roles are CompanyAdmin, Manager, TeamLead, HRManager, Recruiter, Employee, Intern.",
+                  example: "Manager",
+                  enum: [
+                    "CompanyAdmin",
+                    "Manager",
+                    "TeamLead",
+                    "HRManager",
+                    "Recruiter",
+                    "Employee",
+                    "Intern",
+                  ],
+                },
+              },
+              required: ["userId", "role"],
+            },
+          },
+        },
       },
-      "responses": {
-        "200": {
-          "description": "Employer added to the company successfully.",
-          "content": {
+      responses: {
+        200: {
+          description: "Employer added to the company successfully.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "success"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "success",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Employer added to the company successfully"
+                  msg: {
+                    type: "string",
+                    example: "Employer added to the company successfully",
                   },
-                  "data": {
-                    "type": "object",
-                    "properties": {
-                      "company": {
-                        "$ref": "#/components/schemas/Company"
-                      }
-                    }
+                  data: {
+                    type: "object",
+                    properties: {
+                      company: {
+                        $ref: "#/components/schemas/Company",
+                      },
+                    },
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 1
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 1,
+                  },
+                },
+              },
+            },
+          },
         },
-        "401": {
-          "description": "Unauthorized - User not logged in or not allowed.",
-          "content": {
+        400: {
+          description: "Bad Request - Invalid role specified.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Unauthorized or You are not allowed!"
+                  msg: {
+                    type: "string",
+                    example: "Invalid role specified",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
         },
-        "404": {
-          "description": "Not Found - No such company or user exists.",
-          "content": {
+        401: {
+          description: "Unauthorized - User not logged in or not allowed.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Company or user not found with provided ID."
+                  msg: {
+                    type: "string",
+                    example: "Unauthorized or You are not allowed!",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
         },
-        "500": {
-          "description": "Internal Server Error - Error in processing the request.",
-          "content": {
+        404: {
+          description: "Not Found - No such company or user exists.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Internal Server Error"
+                  msg: {
+                    type: "string",
+                    example: "Company or user not found with provided ID.",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description:
+            "Internal Server Error - Error in processing the request.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Internal Server Error",
+                  },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   "/companies/{id}/rejectEmployer": {
-    "post": {
-      "summary": "Reject an employer from a company",
-      "tags": ["Hr Company"],
-      "description": "Allows an authorized user with the Employer or Admin role to reject an employer from a company.",
-      "security": [
+    post: {
+      summary: "Reject an employer from a company",
+      tags: ["Hr Company"],
+      description:
+        "Allows an authorized user with the Employer or Admin role to reject an employer from a company.",
+      security: [
         {
-          "bearerAuth": []
-        }
+          bearerAuth: [],
+        },
       ],
-      "parameters": [
+      parameters: [
         {
-          "name": "id",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the company from which the employer will be rejected.",
-          "schema": {
-            "type": "string"
-          }
-        }
+          name: "id",
+          in: "path",
+          required: true,
+          description:
+            "The ID of the company from which the employer will be rejected.",
+          schema: {
+            type: "string",
+          },
+        },
       ],
-      "requestBody": {
-        "required": true,
-        "content": {
+      requestBody: {
+        required: true,
+        content: {
           "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "userId": {
-                  "type": "string",
-                  "description": "The ID of the user to be rejected as an employer.",
-                  "example": "60d0fe4f5311236168a109ca"
-                }
-              }
-            }
-          }
-        }
+            schema: {
+              type: "object",
+              properties: {
+                userId: {
+                  type: "string",
+                  description:
+                    "The ID of the user to be rejected as an employer.",
+                  example: "60d0fe4f5311236168a109ca",
+                },
+              },
+            },
+          },
+        },
       },
-      "responses": {
-        "200": {
-          "description": "Employer rejected from the company successfully.",
-          "content": {
+      responses: {
+        200: {
+          description: "Employer rejected from the company successfully.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "success"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "success",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Employer rejected from the company successfully"
+                  msg: {
+                    type: "string",
+                    example: "Employer rejected from the company successfully",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 1
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 1,
+                  },
+                },
+              },
+            },
+          },
         },
-        "401": {
-          "description": "Unauthorized - User not logged in or not allowed.",
-          "content": {
+        401: {
+          description: "Unauthorized - User not logged in or not allowed.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Unauthorized or You are not allowed!"
+                  msg: {
+                    type: "string",
+                    example: "Unauthorized or You are not allowed!",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
         },
-        "404": {
-          "description": "Not Found - No such company or user exists.",
-          "content": {
+        404: {
+          description: "Not Found - No such company or user exists.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Company or user not found with provided ID."
+                  msg: {
+                    type: "string",
+                    example: "Company or user not found with provided ID.",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
         },
-        "500": {
-          "description": "Internal Server Error - Error in processing the request.",
-          "content": {
+        500: {
+          description:
+            "Internal Server Error - Error in processing the request.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Internal Server Error"
+                  msg: {
+                    type: "string",
+                    example: "Internal Server Error",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   "/companies/{userId}/requests/status": {
-    "get": {
-      "summary": "Get the status of all employment requests for a user",
-      "tags": ["Hr Company"],
-      "description": "Fetches the status of all employment requests made by a user to different companies.",
-      "security": [
+    get: {
+      summary: "Get the status of all employment requests for a user",
+      tags: ["Hr Company"],
+      description:
+        "Fetches the status of all employment requests made by a user to different companies.",
+      security: [
         {
-          "bearerAuth": []
-        }
+          bearerAuth: [],
+        },
       ],
-      "parameters": [
+      parameters: [
         {
-          "name": "userId",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the user.",
-          "schema": {
-            "type": "string"
-          }
-        }
+          name: "userId",
+          in: "path",
+          required: true,
+          description: "The ID of the user.",
+          schema: {
+            type: "string",
+          },
+        },
       ],
-      "responses": {
-        "200": {
-          "description": "Employment requests status fetched successfully.",
-          "content": {
+      responses: {
+        200: {
+          description: "Employment requests status fetched successfully.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "success"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "success",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Employment requests status fetched successfully"
+                  msg: {
+                    type: "string",
+                    example: "Employment requests status fetched successfully",
                   },
-                  "data": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "companyId": {
-                          "type": "string",
-                          "example": "60d0fe4f5311236168a109ca"
+                  data: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        companyId: {
+                          type: "string",
+                          example: "60d0fe4f5311236168a109ca",
                         },
-                        "status": {
-                          "type": "string",
-                          "example": "accepted"
+                        status: {
+                          type: "string",
+                          example: "accepted",
                         },
-                        "additionalInfo": {
-                          "type": "object",
-                          "properties": {
-                            "canReapply": {
-                              "type": "boolean",
-                              "example": true
+                        additionalInfo: {
+                          type: "object",
+                          properties: {
+                            canReapply: {
+                              type: "boolean",
+                              example: true,
                             },
-                            "canReapplyDate": {
-                              "type": "string",
-                              "format": "date-time",
-                              "example": "2023-07-21T17:32:28Z"
-                            }
-                          }
-                        }
-                      }
-                    }
+                            canReapplyDate: {
+                              type: "string",
+                              format: "date-time",
+                              example: "2023-07-21T17:32:28Z",
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 1
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 1,
+                  },
+                },
+              },
+            },
+          },
         },
-        "401": {
-          "description": "Unauthorized - User not logged in or not allowed.",
-          "content": {
+        401: {
+          description: "Unauthorized - User not logged in or not allowed.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Unauthorized or You are not allowed!"
+                  msg: {
+                    type: "string",
+                    example: "Unauthorized or You are not allowed!",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
         },
-        "404": {
-          "description": "Not Found - No employment requests found for this user.",
-          "content": {
+        404: {
+          description:
+            "Not Found - No employment requests found for this user.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "No employment requests found for this user."
+                  msg: {
+                    type: "string",
+                    example: "No employment requests found for this user.",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
         },
-        "500": {
-          "description": "Internal Server Error - Error in processing the request.",
-          "content": {
+        500: {
+          description:
+            "Internal Server Error - Error in processing the request.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Internal Server Error"
+                  msg: {
+                    type: "string",
+                    example: "Internal Server Error",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   "/companies/{id}/users/{userId}/status": {
-    "get": {
-      "summary": "Get the status of an employer request",
-      "tags": ["Hr Company"],
-      "description": "Fetches the status of an employment request for a user to a company.",
-      "security": [
+    get: {
+      summary: "Get the status of an employer request",
+      tags: ["Hr Company"],
+      description:
+        "Fetches the status of an employment request for a user to a company.",
+      security: [
         {
-          "bearerAuth": []
-        }
+          bearerAuth: [],
+        },
       ],
-      "parameters": [
+      parameters: [
         {
-          "name": "companyId",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the company.",
-          "schema": {
-            "type": "string"
-          }
+          name: "companyId",
+          in: "path",
+          required: true,
+          description: "The ID of the company.",
+          schema: {
+            type: "string",
+          },
         },
         {
-          "name": "userId",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the user.",
-          "schema": {
-            "type": "string"
-          }
-        }
+          name: "userId",
+          in: "path",
+          required: true,
+          description: "The ID of the user.",
+          schema: {
+            type: "string",
+          },
+        },
       ],
-      "responses": {
-        "200": {
-          "description": "Employment request status fetched successfully.",
-          "content": {
+      responses: {
+        200: {
+          description: "Employment request status fetched successfully.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "success"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "success",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Employment request status fetched successfully"
+                  msg: {
+                    type: "string",
+                    example: "Employment request status fetched successfully",
                   },
-                  "data": {
-                    "type": "object",
-                    "properties": {
-                      "status": {
-                        "type": "string",
-                        "example": "accepted"
+                  data: {
+                    type: "object",
+                    properties: {
+                      status: {
+                        type: "string",
+                        example: "accepted",
                       },
-                      "additionalInfo": {
-                        "type": "object",
-                        "properties": {
-                          "canReapply": {
-                            "type": "boolean",
-                            "example": true
+                      additionalInfo: {
+                        type: "object",
+                        properties: {
+                          canReapply: {
+                            type: "boolean",
+                            example: true,
                           },
-                          "canReapplyDate": {
-                            "type": "string",
-                            "format": "date-time",
-                            "example": "2023-07-21T17:32:28Z"
-                          }
-                        }
-                      }
-                    }
+                          canReapplyDate: {
+                            type: "string",
+                            format: "date-time",
+                            example: "2023-07-21T17:32:28Z",
+                          },
+                        },
+                      },
+                    },
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 1
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 1,
+                  },
+                },
+              },
+            },
+          },
         },
-        "401": {
-          "description": "Unauthorized - User not logged in or not allowed.",
-          "content": {
+        401: {
+          description: "Unauthorized - User not logged in or not allowed.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Unauthorized or You are not allowed!"
+                  msg: {
+                    type: "string",
+                    example: "Unauthorized or You are not allowed!",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
         },
-        "404": {
-          "description": "Not Found - No employment request found for this user and company.",
-          "content": {
+        404: {
+          description:
+            "Not Found - No employment request found for this user and company.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "No employment request found for this user and company."
+                  msg: {
+                    type: "string",
+                    example:
+                      "No employment request found for this user and company.",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
         },
-        "500": {
-          "description": "Internal Server Error - Error in processing the request.",
-          "content": {
+        500: {
+          description:
+            "Internal Server Error - Error in processing the request.",
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "result": {
-                    "type": "string",
-                    "example": "error"
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
                   },
-                  "msg": {
-                    "type": "string",
-                    "example": "Internal Server Error"
+                  msg: {
+                    type: "string",
+                    example: "Internal Server Error",
                   },
-                  "data": {
-                    "type": "null",
-                    "example": null
+                  data: {
+                    type: "null",
+                    example: null,
                   },
-                  "totalCount": {
-                    "type": "number",
-                    "example": 0
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   "/companies/{id}/employmentRequests": {
     get: {
@@ -2652,6 +3249,219 @@ const CompanyEndpoint = {
                   },
                   totalCount: {
                     type: "integer",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/companies/{id}/users/{userId}/changeRole": {
+    put: {
+      summary: "Change the role of an employer in a company",
+      tags: ["Hr Company"],
+      description:
+        "Allows an authorized user with the Employer or Admin role to change the role of an existing employer within a company.",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      parameters: [
+        {
+          name: "id",
+          in: "path",
+          required: true,
+          description: "The ID of the company.",
+          schema: {
+            type: "string",
+          },
+        },
+        {
+          name: "userId",
+          in: "path",
+          required: true,
+          description: "The ID of the user whose role will be changed.",
+          schema: {
+            type: "string",
+          },
+        },
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                newRole: {
+                  type: "string",
+                  description:
+                    "The new role to assign to the user. Allowed roles are CompanyAdmin, Manager, TeamLead, HRManager, Recruiter, Employee, Intern.",
+                  example: "TeamLead",
+                  enum: [
+                    "CompanyAdmin",
+                    "Manager",
+                    "TeamLead",
+                    "HRManager",
+                    "Recruiter",
+                    "Employee",
+                    "Intern",
+                  ],
+                },
+              },
+              required: ["newRole"],
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Role changed successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "success",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Employer role updated successfully.",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      userId: {
+                        type: "string",
+                        example: "60d0fe4f5311236168a109ca",
+                      },
+                      newRole: {
+                        type: "string",
+                        example: "TeamLead",
+                      },
+                    },
+                  },
+                  totalCount: {
+                    type: "number",
+                    example: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Bad Request - Invalid role specified.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Invalid role specified.",
+                  },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized - User not logged in or not allowed.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Unauthorized or You are not allowed!",
+                  },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "Not Found - No such company or user exists.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Company or user not found with provided ID.",
+                  },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: {
+                    type: "number",
+                    example: 0,
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description:
+            "Internal Server Error - Error in processing the request.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: {
+                    type: "string",
+                    example: "error",
+                  },
+                  msg: {
+                    type: "string",
+                    example: "Internal Server Error",
+                  },
+                  data: {
+                    type: "null",
+                    example: null,
+                  },
+                  totalCount: {
+                    type: "number",
                     example: 0,
                   },
                 },

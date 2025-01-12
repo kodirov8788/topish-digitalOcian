@@ -31,7 +31,7 @@ const companySchema = new mongoose.Schema(
     },
     name: {
       type: String,
-      required: [true, "Company name is required"],
+      required: true,
     },
     size: {
       type: String,
@@ -65,7 +65,7 @@ const companySchema = new mongoose.Schema(
     benefits: [],
     location: {
       type: String,
-      required: [true, "Company location is required"],
+      default: "",
     },
     type: {
       type: String,
@@ -82,6 +82,10 @@ const companySchema = new mongoose.Schema(
           type: Boolean,
           default: false,
         },
+        role: {
+          type: String,
+          default: "",
+        },
       },
     ],
     likedBy: [
@@ -93,7 +97,27 @@ const companySchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
-      required: [true, "Creator user ID is required"],
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending", // New companies are pending approval
+    },
+    phoneNumber: {
+      type: String,
+      required: true,
+      default: "",
+    },
+    telegramName: {
+      type: String,
+      required: true,
+      default: "",
+    },
+    licenseFiles: {
+      type: Array,
+      required: false,
+      default: [],
     },
   },
   {

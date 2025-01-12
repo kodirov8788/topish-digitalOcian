@@ -1,3 +1,4 @@
+// src/controllers/bannerCTRL.js
 const {
   S3Client,
   PutObjectCommand,

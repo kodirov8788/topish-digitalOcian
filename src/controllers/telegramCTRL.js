@@ -1,3 +1,4 @@
+// src/controllers/telegramCTRL.js
 const bot = require("../../bot");
 const Users = require("../models/user_model");
 const TelegramChannel = require("../models/telegram_channel_modal");

@@ -1,3 +1,4 @@
+// src/controllers/othersCTRL.js
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const { Professions } = require("../models/other_models");
