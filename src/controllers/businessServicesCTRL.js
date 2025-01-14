@@ -69,7 +69,7 @@ class BusinessServicesCTRL {
                 title: serializedTitle,
                 sub_title: serializedSubTitle || "",
                 description: description.trim(),
-                price: price || 0,
+                price: price || "",
                 duration: duration || "",
                 status: status || "active",
             });

@@ -27,7 +27,7 @@ class CompanyCTRL {
 
       const user = await Users.findOne({ _id: req.user.id });
       const coins = user.coins;
-      const allowedRoles = ["Admin", "Employer", "JobSeeker"];
+      const allowedRoles = ["Admin"]
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
@@ -935,18 +935,18 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
 
       const user = await Users.findOne({ _id: req.user.id });
-      const allowedRoles = ["Employer"];
+      // const allowedRoles = ["Employer"];
 
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       // Check if the user is already employed in any company
       const isEmployed = await Company.findOne({ "workers.userId": user._id });
@@ -1068,17 +1068,17 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-      const user = await Users.findById(req.user.id);
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const user = await Users.findById(req.user.id);
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const company = await Company.findById(companyId);
       if (!company) {
@@ -1167,7 +1167,7 @@ class CompanyCTRL {
 
       const { id: companyId } = req.params;
       const { userId, role } = req.body;
-      const allowedRoles = ["Employer", "Admin"];
+      // const allowedRoles = ["Employer", "Admin"];
       const assignableRoles = [
         "CompanyAdmin",
         "Manager",
@@ -1191,16 +1191,16 @@ class CompanyCTRL {
       }
 
       const user = await Users.findOne({ _id: req.user.id });
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const company = await Company.findById(companyId);
       if (!company) {

@@ -77,7 +77,7 @@ class JobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id);
 
       // if (user.role !== "Employer") {
       //   return handleResponse(
@@ -378,7 +378,7 @@ class JobsCTRL {
   }
   async getEmployerPosts(req, res) {
     try {
-      const user = await Users.findOne({ _id: req.user.id });
+      // const user = await Users.findOne({ _id: req.user.id });
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -522,19 +522,20 @@ class JobsCTRL {
   }
   async updateJobs(req, res) {
     try {
-      const user = await Users.findOne({ _id: req.user.id });
+      // const user = await Users.findOne({ _id: req.user.id });
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      } else if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
       }
+      //  if (user.role !== "Employer") {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const {
         params: { id: jobID },
@@ -879,17 +880,17 @@ class JobsCTRL {
   }
   async getAllJobsForAdmin(req, res) {
     try {
-      const user = await Users.findOne({ _id: req.user.id });
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const user = await Users.findOne({ _id: req.user.id });
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const {
         education,
@@ -1053,17 +1054,17 @@ class JobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const user = await Users.findOne({ _id: req.user.id });
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const {
         params: { id: jobID },
@@ -1160,17 +1161,17 @@ class JobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const user = await Users.findOne({ _id: req.user.id });
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const { page = 1, limit = 10 } = req.query;
 
@@ -1255,17 +1256,17 @@ class JobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const user = await Users.findOne({ _id: req.user.id });
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const { page = 1, limit = 10 } = req.query;
 
@@ -1349,17 +1350,17 @@ class JobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findOne({ _id: req.user.id });
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const user = await Users.findOne({ _id: req.user.id });
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const { page = 1, limit = 10 } = req.query;
 

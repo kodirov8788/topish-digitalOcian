@@ -108,11 +108,19 @@ class DiscoverCTRL {
       const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
       const sort = req.query.sort || "-createdAt";
       const language = req.query.language; // Extract the language parameter from the request
+      const tags = req.query.tags; // Extract the tags parameter from the request
 
       // Create a filter object to apply conditional filtering
       const filter = {};
       if (language) {
         filter.language = language; // Add language filter if provided
+      }
+      if (tags) {
+        // Search for tag IDs matching the provided tag names or IDs
+        const tagIds = await DiscoverTag.find({ keyText: { $regex: new RegExp(tags, "i") } }).distinct("_id");
+        if (tagIds.length > 0) {
+          filter.tags = { $in: tagIds }; // Add tags filter if matching tag IDs are found
+        }
       }
 
       const discovers = await Discover.find(filter)
@@ -147,7 +155,6 @@ class DiscoverCTRL {
       );
     }
   }
-
 
   // Get a single discover item by ID
   async getDiscoverById(req, res) {
@@ -333,7 +340,7 @@ class DiscoverCTRL {
   // Search discover items by title, tags, or location
   async searchDiscovers(req, res) {
     try {
-      const { query, tags, location, page = 1, limit = 10 } = req.query;
+      const { query, tags, language, location, page = 1, limit = 10 } = req.query;
 
       const searchQuery = {};
 
@@ -348,6 +355,10 @@ class DiscoverCTRL {
 
       if (location) {
         searchQuery["location.country"] = { $regex: new RegExp(location, "i") };
+      }
+
+      if (language) {
+        searchQuery.language = { $regex: new RegExp(language, "i") }; // Add language filter
       }
 
       const discovers = await Discover.find(searchQuery)
@@ -382,6 +393,7 @@ class DiscoverCTRL {
       );
     }
   }
+
 }
 
 module.exports = new DiscoverCTRL();
