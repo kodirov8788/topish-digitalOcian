@@ -14,10 +14,20 @@ const s3 = new S3Client({
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image")) {
-      cb(null, true);
+    if (file.fieldname === 'licenseFile') {
+      // Only accept PDF files for licenseFile
+      if (file.mimetype === 'application/pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Not a PDF! Please upload only PDF files for licenseFile.'), false);
+      }
     } else {
-      cb(new Error("Not an image! Please upload only images."), false);
+      // Accept only image files for other fields
+      if (file.mimetype.startsWith('image')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Not an image! Please upload only images.'), false);
+      }
     }
   },
 }).fields([
