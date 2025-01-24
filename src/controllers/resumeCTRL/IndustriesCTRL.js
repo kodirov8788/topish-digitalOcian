@@ -1,3 +1,4 @@
+// src/controllers/resumeCTRL/IndustriesCTRL.js
 const Users = require("../../models/user_model"); // Update path if needed
 const { v4: uuidv4 } = require("uuid");
 const { handleResponse } = require("../../utils/handleResponse");

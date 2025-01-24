@@ -1,3 +1,4 @@
+// src/routes/banner-route.js
 const express = require('express');
 const {
   createBanner,

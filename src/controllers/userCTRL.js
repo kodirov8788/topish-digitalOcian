@@ -77,65 +77,43 @@ class UserCTRL {
   }
   //  GET CURRENT USER
   async showCurrentUser(req, res) {
-    // console.log("current user");
     try {
-      // console.log("req.user: ", req.user)
       if (!req.user || !req.user.id) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
       const userId = req.user.id;
       const user = await Users.findById(userId);
-      // console.log("req.user 2: ", user)
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      if (user.role === "Employer") {
-        const company = await Company.findOne({ "workers.userId": userId });
+      const company = await Company.findOne({ "workers.userId": userId });
+      if (company) {
+        const newWorkers = await Promise.all(
+          company.workers.map(async (workerData) => {
+            const worker = await Users.findById(workerData.userId);
+            if (worker) {
+              return {
+                avatar: worker.avatar,
+                phoneNumber: worker.phoneNumber,
+                fullName: worker.employer?.fullName || worker.fullName,
+                isAdmin: workerData.isAdmin,
+                userId: worker.id,
+              };
+            }
+            return null;
+          })
+        );
 
-        if (company) {
-          const newWorkers = await Promise.all(
-            company.workers.map(async (workerData) => {
-              const worker = await Users.findById(workerData.userId);
-              if (worker) {
-                return {
-                  avatar: worker.avatar,
-                  phoneNumber: worker.phoneNumber,
-                  fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
-                  isAdmin: workerData.isAdmin,
-                  userId: worker.id,
-                };
-              }
-              return null; // Return null if user is not found
-            })
-          );
-
-          const filteredWorkers = newWorkers.filter(
-            (worker) => worker !== null
-          ); // Filter out any null values
-
-          const newUser = {
-            ...user.toObject(),
-            company: {
-              ...company.toObject(),
-              workers: filteredWorkers,
-            },
-          };
-
-          return handleResponse(
-            res,
-            200,
-            "success",
-            "User retrieved successfully",
-            newUser,
-            1
-          );
-        }
+        const filteredWorkers = newWorkers.filter((worker) => worker !== null);
 
         const newUser = {
           ...user.toObject(),
-          company: null,
+          company: {
+            ...company.toObject(),
+            workers: filteredWorkers,
+          },
         };
 
         return handleResponse(
@@ -146,16 +124,21 @@ class UserCTRL {
           newUser,
           1
         );
-      } else {
-        return handleResponse(
-          res,
-          200,
-          "success",
-          "User retrieved successfully",
-          user,
-          1
-        );
       }
+
+      const newUser = {
+        ...user.toObject(),
+        company: null,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "User retrieved successfully",
+        newUser,
+        1
+      );
     } catch (error) {
       console.error("Error in showCurrentUser function:", error);
       return handleResponse(
@@ -558,7 +541,6 @@ class UserCTRL {
       );
     }
   }
-
   // async updateJobSeekerProfile(req, res) {
   //   try {
   //     if (!req.user) {
@@ -841,7 +823,6 @@ class UserCTRL {
       );
     }
   }
-
   async updateUsername(req, res) {
     try {
       if (!req.user) {
@@ -1122,8 +1103,6 @@ class UserCTRL {
       );
     }
   }
-
-
   async migrateJobSeekerDataToResume(req, res) {
     try {
       if (!req.user) {
@@ -1416,7 +1395,6 @@ class UserCTRL {
       );
     }
   }
-
   async updateJobTitle(req, res) {
     try {
       // 1) Verify user is authenticated
@@ -1470,7 +1448,50 @@ class UserCTRL {
       );
     }
   }
+  async addRolesToUser(req, res) {
+    console.log("addRolesToUser")
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      // console.log("req.user:", req.user)
 
+      if (!req.user.admin) {
+        return handleResponse(res, 401, "error", "user does not have admin role", null, 0);
+      }
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      const { userId, roles } = req.body;
+      console.log("roles:", roles)
+      if (!userId) {
+        return handleResponse(res, 400, "error", "Please provide valid userId and roles", null, 0);
+      }
+      const user = await Users.findById(userId);
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found", null, 0);
+      }
+
+      // Ensure roles are valid
+      // "Admin", "Supervisor", "Consultant", "Copywriter"
+
+      const validRoles = ["Admin", "Supervisor", "Consultant", "Copywriter"];
+      const newRoles = roles.filter(role => validRoles.includes(role));
+
+      // if (newRoles.length === 0) {
+      //   return handleResponse(res, 400, "error", "No valid roles provided", null, 0);
+      // }
+      console.log("newRoles:", newRoles)
+      // Add new roles to the user's existing roles
+      user.roles = newRoles;
+
+      await user.save();
+
+      return handleResponse(res, 200, "success", "Roles updated successfully", user, 1);
+    } catch (error) {
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+    }
+  }
 }
 
 module.exports = new UserCTRL();

@@ -1,3 +1,4 @@
+// src/utils/chatGPT.js
 const dotenv = require('dotenv');
 const OpenAI = require('openai');
 const Article = require('../models/Article_model'); // Import the Article model

@@ -1,8 +1,6 @@
+// src/models/companyEmploymentReq_model.js
 const mongoose = require("mongoose");
-//  await CompanyEmploymentReq.findByIdAndUpdate(newReq.id, {
-//   status: "rejected",
-//   rejectionDate: new Date(), // Add a rejection date
-// });
+
 const companyEmploymentRequestSchema = new mongoose.Schema({
   requesterId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },

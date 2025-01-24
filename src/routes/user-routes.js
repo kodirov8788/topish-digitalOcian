@@ -1,7 +1,4 @@
-// const {
-//   getAllUsers,
-// } = require("../controllers/all-Users/all-users-controller");
-// const { getUser } = require("../controllers/all-Users/singleUser-controller");
+// src/routes/user-routes.js
 const {
   getAllJobSeekers,
   getJobSeekersBySkills,
@@ -51,7 +48,8 @@ const {
   addToAllUsersVisibility,
   migrateJobSeekerDataToResume,
   updateJobTitle,
-  migrateJobSeekerDataToResumeForAllUsers
+  migrateJobSeekerDataToResumeForAllUsers,
+  addRolesToUser
 } = require("../controllers/userCTRL");
 const updateLastActivity = require("../middleware/last-active");
 // const { showCurrentUser } = require("../controllers/all-Users/current-user");
@@ -80,6 +78,7 @@ router
 router
   .route("/addToAllUsersVisibility")
   .post(authMiddleware, addToAllUsersVisibility);
+router.patch('/roles', authMiddleware, addRolesToUser);
 // ALL JOB SEEKERS
 // router.route("/searchJobSeekers").get(getJobSeekersBySkills); // Search JOB SEEKERS By skill
 // router.route("/getAllJobSeekers").get(getAllJobSeekers);

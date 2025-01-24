@@ -1,3 +1,4 @@
+// src/models/PhoneConfirmationCode.js
 const mongoose = require("mongoose");
 
 // Define a schema for the ConfirmationCode collection

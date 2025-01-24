@@ -1,6 +1,5 @@
-const bot = require("../../bot");
+// src/routes/telegram-route.js
 const {
-    addTelegramChannel,
     deleteTelegramChannel,
     updateTelegramChannel,
     getTelegramChannels,

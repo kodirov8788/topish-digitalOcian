@@ -1,3 +1,4 @@
+// src/models/message_model.js
 const mongoose = require("mongoose");
 
 // Define the schema for reply messages

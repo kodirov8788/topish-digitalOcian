@@ -1,12 +1,6 @@
+// src/models/notifications/public_notification_model.js
 const mongoose = require("mongoose");
-// const notifications = users.map(user => {
-//     return {
-//         user: user._id,
-//         title,
-//         message,
-//         read: false
-//     }; 
-// });
+
 const Public_notification = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,

@@ -1,3 +1,4 @@
+// src/models/user_model.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Schema = mongoose.Schema;
@@ -60,6 +61,12 @@ const UsersSchema = new Schema(
       type: String,
       required: true,
       enum: ["JobSeeker", "Employer", "Service", "Admin", "SubAdmin", "Manager"],
+    },
+    roles: {
+      type: [String],
+      required: false,
+      enum: ["Admin", "Supervisor", "Consultant", "Copywriter"],
+      default: [],
     },
     refreshTokens: {
       type: [refreshSchema],

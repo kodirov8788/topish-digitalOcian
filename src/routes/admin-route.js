@@ -1,3 +1,4 @@
+// src/routes/admin-route.js
 const { getUsersForAdmin, getJobSeekersForAdmin, getEmployersForAdmin, getJobsForAdmin, getOfficesForAdmin, getQuickjobsForAdmin, blockUserByAdmin, unblockUserByAdmin, sendNewsToAllUsers, getAdmins } = require("../controllers/AdminCTRL");
 const express = require("express");
 const router = express.Router();

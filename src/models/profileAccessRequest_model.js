@@ -1,3 +1,4 @@
+// src/models/profileAccessRequest_model.js
 const mongoose = require("mongoose");
 const profileAccessRequestSchema = new mongoose.Schema({
   requesterId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

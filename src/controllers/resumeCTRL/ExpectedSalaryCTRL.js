@@ -1,3 +1,4 @@
+// src/controllers/resumeCTRL/ExpectedSalaryCTRL.js
 const Users = require("../../models/user_model"); // adjust path if needed
 const { handleResponse } = require("../../utils/handleResponse");
 

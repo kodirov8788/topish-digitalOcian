@@ -1,3 +1,4 @@
+// src/models/tournament_model.js
 const mongoose = require("mongoose");
 
 const ParticipantSchema = new mongoose.Schema(

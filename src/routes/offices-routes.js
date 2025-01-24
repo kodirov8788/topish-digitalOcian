@@ -1,3 +1,4 @@
+// src/routes/offices-routes.js
 const {
     createOffice,
     deleteOffice,

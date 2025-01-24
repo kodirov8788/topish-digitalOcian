@@ -1,3 +1,4 @@
+// src/utils/imageUploads/messageFilesUpload.js
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');

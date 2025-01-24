@@ -1,3 +1,4 @@
+// src/middleware/auth-middleware.js
 const { handleResponse } = require("../utils/handleResponse");
 const { isTokenValid } = require("../utils/jwt");
 
@@ -18,6 +19,7 @@ const authMiddleware = async (req, res, next) => {
   }
   try {
     const payload = isTokenValid(token, process.env.JWT_SECRET);
+    // console.log("payload: ", payload);
     req.user = {
       phoneNumber: payload.phoneNumber,
       employer: payload.employer,
@@ -28,6 +30,8 @@ const authMiddleware = async (req, res, next) => {
       role: payload.role,
       avatar: payload.avatar,
       fullName: payload.fullName,
+      admin: payload.admin,
+      roles: payload.roles,
     };
     next();
   } catch (error) {

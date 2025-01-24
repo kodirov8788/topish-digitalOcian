@@ -1,3 +1,4 @@
+// src/routes/makeFriends-routes.js
 const {
   sendInvitationToFriend,
   acceptFriendRequest,

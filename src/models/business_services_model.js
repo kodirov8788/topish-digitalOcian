@@ -1,3 +1,4 @@
+// src/models/business_services_model.js
 const mongoose = require("mongoose");
 
 const companyServicesSchema = new mongoose.Schema(
@@ -22,8 +23,12 @@ const companyServicesSchema = new mongoose.Schema(
       default: "",
     },
     price: {
-      type: Number,
-      default: 0,
+      type: String,
+      default: "",
+    },
+    currency: {
+      type: String,
+      default: "",
     },
     duration: {
       type: String,
@@ -44,10 +49,15 @@ const companyServicesSchema = new mongoose.Schema(
       required: true,
       trim: true, // Trims unnecessary spaces
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+    },
     tags: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Business_servicesTags",
+        ref: "DiscoverTag",
       },
     ],
   },

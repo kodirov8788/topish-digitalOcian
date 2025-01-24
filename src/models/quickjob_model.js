@@ -1,3 +1,4 @@
+// src/models/quickjob_model.js
 const mongoose = require("mongoose");
 
 // Create a Job model

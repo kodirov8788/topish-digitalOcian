@@ -1,3 +1,4 @@
+// src/routes/profile_access.js
 const {
   AcceptProfileAccessRequest,
   DeclineProfileAccessRequest,

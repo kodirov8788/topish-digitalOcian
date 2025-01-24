@@ -1,3 +1,4 @@
+// src/models/banner_model.js
 const mongoose = require("mongoose");
 
 const BannerModel = new mongoose.Schema({

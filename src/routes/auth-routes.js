@@ -1,3 +1,4 @@
+// src/routes/auth-routes.js
 const {
   confirmRegisterCode,
   sendRegisterCode,

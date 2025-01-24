@@ -1,3 +1,4 @@
+// src/routes/other-routers.js
 const router = require("express").Router();
 const { getProfessions, postProfessions } = require("../controllers/othersCTRL");
 

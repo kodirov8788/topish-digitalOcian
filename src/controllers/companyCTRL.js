@@ -27,28 +27,28 @@ class CompanyCTRL {
 
       const user = await Users.findOne({ _id: req.user.id });
       const coins = user.coins;
-      const allowedRoles = ["Admin"]
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // const allowedRoles = ["Admin"]
+      // if (!allowedRoles.includes(user.role)) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
 
-      if (coins == null) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "There are some problems with your coins. Please contact support.",
-          null,
-          0
-        );
-      }
+      // if (coins == null) {
+      //   return handleResponse(
+      //     res,
+      //     400,
+      //     "error",
+      //     "There are some problems with your coins. Please contact support.",
+      //     null,
+      //     0
+      //   );
+      // }
 
       if (!user) {
         return handleResponse(res, 400, "error", "User not found.", null, 0);
@@ -124,7 +124,7 @@ class CompanyCTRL {
         { status },
         { new: true }
       );
-      console.log("company:", company);
+      // console.log("company:", company);
       if (!company) {
         return handleResponse(res, 404, "error", "Company not found.", null, 0);
       }
@@ -476,6 +476,7 @@ class CompanyCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
+
       const {
         params: { id: companyId },
       } = req; // request gives the ID of the item
@@ -534,70 +535,53 @@ class CompanyCTRL {
     }
   }
   async updateCompany(req, res) {
-    // console.log("req.body: ", req.body);
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const allowedRoles = ["Admin", "Employer"];
+      const allowedRoles = ["Admin"];
       const user = await Users.findOne({ _id: req.user.id });
-      console.log("user: ", user);
       if (!allowedRoles.includes(user.role)) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
+        return handleResponse(res, 401, "error", "You are not allowed!", null, 0);
       }
 
       const {
         params: { id: companyId },
         body,
       } = req;
+      console.log("req body: ", req.body);
       let company = await Company.findById(companyId);
       if (!company) {
-        return handleResponse(
-          res,
-          404,
-          "error",
-          `Company not found with ID: ${companyId}`,
-          null,
-          0
-        );
+        return handleResponse(res, 404, "error", `Company not found with ID: ${companyId}`, null, 0);
       }
 
       let hrAdmin = company.workers.find(
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
       if (!hrAdmin && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not authorized",
-          null,
-          0
-        );
+        return handleResponse(res, 401, "error", "You are not authorized", null, 0);
       }
 
       // Process new images if provided
-      let newImages = [];
-      if (req.files && req.files.length > 0) {
-        newImages = req.files.map((file) => file);
-      }
-      // console.log("newImages: ", newImages);
-
-      if (newImages.length > 0) {
-        const delete_logo = company.logo.map((image) => image);
-        company.logo = newImages;
-        await deleteFiles(delete_logo);
+      console.log("req.uploadResults 1: ", req.uploadResults);
+      if (req.uploadResults) {
+        if (req.uploadResults.logo && req.uploadResults.logo.length > 0) {
+          company.logo = req.uploadResults.logo;
+        }
+        if (req.uploadResults.company_logo && req.uploadResults.company_logo.length > 0) {
+          company.company_logo = req.uploadResults.company_logo;
+        }
+        if (req.uploadResults.images && req.uploadResults.images.length > 0) {
+          company.images = req.uploadResults.images;
+        }
+        if (req.uploadResults.licenseFile && req.uploadResults.licenseFile.length > 0) {
+          company.licenseFile = req.uploadResults.licenseFile;
+        }
       }
 
       // Update company details
+      console.log("body: ", body);
       company.name = body.name || company.name;
       company.description = body.description || company.description;
       company.size = body.size || company.size;
@@ -606,45 +590,25 @@ class CompanyCTRL {
       company.working_time = body.working_time || company.working_time;
       company.working_days = body.working_days || company.working_days;
       company.overtime = body.overtime || company.overtime;
+      company.phoneNumber = body.phoneNumber || company.phoneNumber;
 
-      company.info.legal_representative =
-        body.legal_representative || company.info.legal_representative;
-      company.info.registration_capital =
-        body.registration_capital || company.info.registration_capital;
-      company.info.date_of_establishment =
-        body.date_of_establishment || company.info.date_of_establishment;
+      company.info.legal_representative = body.legal_representative || company.info.legal_representative;
+      company.info.registration_capital = body.registration_capital || company.info.registration_capital;
+      company.info.date_of_establishment = body.date_of_establishment || company.info.date_of_establishment;
 
       // Special handling for benefits as an array of strings
       if (body.benefits === "" || body.benefits === undefined) {
         company.benefits = [];
       } else {
-        company.benefits = body.benefits
-          .split(",")
-          .map((benefit) => String(benefit));
+        company.benefits = body.benefits.split(",").map((benefit) => String(benefit));
       }
 
       await company.save();
 
-      // console.log("company: ", company);
-
-      return handleResponse(
-        res,
-        200,
-        "success",
-        "Company updated successfully",
-        company,
-        1
-      );
+      return handleResponse(res, 200, "success", "Company updated successfully", company, 1);
     } catch (error) {
       console.error("Error in updateCompany function:", error);
-      return handleResponse(
-        res,
-        500,
-        "error",
-        "Something went wrong: " + error.message,
-        null,
-        0
-      );
+      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
   async updateCompanyMinorChange(req, res) {

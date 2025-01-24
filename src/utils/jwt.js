@@ -1,3 +1,4 @@
+// src/utils/jwt.js
 const jwt = require("jsonwebtoken");
 
 // Function to create JWT
@@ -22,6 +23,8 @@ const generateTokens = (user) => {
     service: user.service,
     avatar: user.avatar,
     fullName: user.fullName,
+    admin: user.admin,
+    roles: user.roles
   };
 
   // Create access token
@@ -56,6 +59,8 @@ const createTokenUser = (user) => ({
   service: user.service,
   avatar: user.avatar,
   fullName: user.fullName,
+  admin: user.admin,
+  roles: user.roles
 });
 
 module.exports = {

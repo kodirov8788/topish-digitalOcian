@@ -1,7 +1,5 @@
-// src/controllers/businessServicesCTRL.js
 const BusinessService = require("../models/business_services_model");
 const Company = require("../models/company_model");
-const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 
 class BusinessServicesCTRL {
@@ -12,7 +10,7 @@ class BusinessServicesCTRL {
                 return handleResponse(res, 401, "error", "Unauthorized", null, 0);
             }
 
-            const { company_id, tagIds, title, subTitle, description, price, duration, status } = req.body;
+            const { company_id, tagIds, title, subTitle, description, price, duration, status, currency } = req.body;
 
             // Validate required fields
             if (!company_id || !title || !description) {
@@ -33,24 +31,11 @@ class BusinessServicesCTRL {
                 return handleResponse(res, 404, "error", "Company not found.", null, 0);
             }
 
-            // Verify if the user is authorized to add business services for the company
-            if (company.createdBy.toString() !== req.user.id) {
-                return handleResponse(
-                    res,
-                    403,
-                    "error",
-                    "You are not authorized to add services for this company.",
-                    null,
-                    0
-                );
-            }
-
             // Parse and validate `tagIds`
-            let parsedTagIds = [];
+            // console.log("tagIds: ", tagIds);
             if (tagIds) {
                 try {
-                    parsedTagIds = JSON.parse(tagIds); // Assuming `tagIds` is sent as a JSON array
-                    if (!Array.isArray(parsedTagIds) || parsedTagIds.length === 0) {
+                    if (!Array.isArray(tagIds) || tagIds.length === 0) {
                         return handleResponse(res, 400, "error", "At least one tag ID is required.", null, 0);
                     }
                 } catch (err) {
@@ -58,20 +43,18 @@ class BusinessServicesCTRL {
                 }
             }
 
-            // Convert title and subTitle to JSON strings for storage
-            const serializedTitle = JSON.stringify(title);
-            const serializedSubTitle = JSON.stringify(subTitle);
-
             // Create the new business service
             const newService = new BusinessService({
                 company_id,
-                tags: parsedTagIds,
-                title: serializedTitle,
-                sub_title: serializedSubTitle || "",
+                tags: tagIds,
+                title: title,
+                sub_title: subTitle || "",
                 description: description.trim(),
                 price: price || "",
+                currency: currency || "",
                 duration: duration || "",
                 status: status || "active",
+                createdBy: req.user.id,
             });
 
             const savedService = await newService.save();
@@ -104,8 +87,9 @@ class BusinessServicesCTRL {
                 .sort(sort)
                 .skip((page - 1) * parseInt(limit))
                 .limit(parseInt(limit))
-                .populate("company_id", "name")
-                .populate("tags", "name");
+                .populate({ path: "company_id", select: "name logo" })
+                .populate({ path: "tags", select: "keyText" })
+                .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
             const totalCount = await BusinessService.countDocuments();
 
@@ -134,7 +118,6 @@ class BusinessServicesCTRL {
             );
         }
     }
-
     async searchTagByParam(req, res) {
         try {
             const { tag } = req.query;
@@ -156,8 +139,9 @@ class BusinessServicesCTRL {
             })
                 .skip((page - 1) * parseInt(limit))
                 .limit(parseInt(limit))
-                .populate("company_id", "name")
-                .populate("tags", "name");
+                .populate({ path: "company_id", select: "name logo" })
+                .populate({ path: "tags", select: "keyText" })
+                .populate({ path: "createdBy", select: "name email" });
 
             const totalCount = await BusinessService.countDocuments({
                 tags: { $regex: new RegExp(tag, "i") },
@@ -188,14 +172,14 @@ class BusinessServicesCTRL {
             );
         }
     }
-
-
-    // Get all business services for a company
     async getBusinessServices(req, res) {
         try {
             const { company_id } = req.params;
 
-            const services = await BusinessService.find({ company_id });
+            const services = await BusinessService.find({ company_id })
+                .populate({ path: "company_id", select: "name logo" })
+                .populate({ path: "tags", select: "keyText" })
+                .populate({ path: "createdBy", select: "name email" });
 
             if (!services || services.length === 0) {
                 return handleResponse(
@@ -228,13 +212,14 @@ class BusinessServicesCTRL {
             );
         }
     }
-
-    // Get a single business service
     async getBusinessServiceById(req, res) {
         try {
             const { id } = req.params;
 
-            const service = await BusinessService.findById(id);
+            const service = await BusinessService.findById(id)
+                .populate({ path: "company_id", select: "name logo" })
+                .populate({ path: "tags", select: "keyText" })
+                .populate({ path: "createdBy", select: "name email" });
 
             if (!service) {
                 return handleResponse(
@@ -267,8 +252,6 @@ class BusinessServicesCTRL {
             );
         }
     }
-
-    // Update a business service
     async updateBusinessService(req, res) {
         try {
             if (!req.user) {
@@ -306,9 +289,19 @@ class BusinessServicesCTRL {
             }
 
             // Update the service with provided fields
-            Object.keys(updates).forEach((key) => {
-                service[key] = updates[key];
-            });
+            // Object.keys(updates).forEach((key) => {
+            //     service[key] = updates[key];
+            // });
+
+            service.title = updates.title || service.title;
+            service.sub_title = updates.subTitle || service.sub_title;
+            service.description = updates.description || service.description;
+            service.price = updates.price || service.price;
+            service.currency = updates.currency || service.currency;
+            service.duration = updates.duration || service.duration;
+            service.status = updates.status || service.status;
+            service.tags = updates.tagIds || service.tags;
+
 
             const updatedService = await service.save();
 
@@ -332,8 +325,6 @@ class BusinessServicesCTRL {
             );
         }
     }
-
-    // Delete a business service
     async deleteBusinessService(req, res) {
         try {
             if (!req.user) {
@@ -356,20 +347,20 @@ class BusinessServicesCTRL {
             }
 
             // Check if the user is authorized to delete the service
-            const company = await Company.findById(service.company_id);
-            const isAuthorized = company.createdBy.toString() === req.user.id;
-            if (!isAuthorized) {
-                return handleResponse(
-                    res,
-                    403,
-                    "error",
-                    "You are not authorized to delete this service.",
-                    null,
-                    0
-                );
-            }
+            // const company = await Company.findById(service.company_id);
+            // const isAuthorized = company.createdBy.toString() === req.user.id;
+            // if (!isAuthorized) {
+            //     return handleResponse(
+            //         res,
+            //         403,
+            //         "error",
+            //         "You are not authorized to delete this service.",
+            //         null,
+            //         0
+            //     );
+            // }
 
-            await service.remove();
+            await service.deleteOne();
 
             return handleResponse(
                 res,

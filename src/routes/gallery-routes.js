@@ -1,3 +1,4 @@
+// src/routes/gallery-routes.js
 const express = require('express');
 const {
   createGalleryPost,

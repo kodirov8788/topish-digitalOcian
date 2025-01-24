@@ -1,3 +1,4 @@
+// src/utils/telegramForm.js
 function Form_0_uz(message, telegram) {
     const newMessage = `
 ${message.title !== '' ? `💻 <b>${message.title}</b>\n` : ''}

@@ -1,3 +1,4 @@
+// src/routes/statistics-routes.js
 const {
   getJobSeekerCount,
   getEmployerCount,

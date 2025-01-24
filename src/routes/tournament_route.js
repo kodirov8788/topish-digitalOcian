@@ -1,3 +1,4 @@
+// src/routes/tournament_route.js
 const TournamentsCTRL = require("../controllers/tournamentCTRL");
 const router = require("express").Router();
 const authMiddleware = require("../middleware/auth-middleware");

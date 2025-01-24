@@ -1,4 +1,4 @@
-//write mongoose schema to save notifications to the database
+// src/models/notifications/save_notification.js
 const mongoose = require("mongoose");
 const Save_notification = new mongoose.Schema({
     user: {

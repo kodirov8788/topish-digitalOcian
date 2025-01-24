@@ -465,9 +465,9 @@ class AuthCTRL {
           0
         );
       } else {
-        const token = await getEskizAuthToken();
-        const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-        await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        // const token = await getEskizAuthToken();
+        // const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
+        // await sendCustomSms(token, phoneNumberWithCountryCode, message);
         return handleResponse(
           res,
           200,
@@ -777,11 +777,11 @@ class AuthCTRL {
     }
   }
   async renewAccessToken(req, res) {
-    console.log("renewAccessToken called");
+    // console.log("renewAccessToken called");
 
     try {
       const { refreshToken } = req.body;
-      console.log("Received refreshToken: ", refreshToken);
+      // console.log("Received refreshToken: ", refreshToken);
 
       if (!refreshToken) {
         console.warn("No refresh token provided");
@@ -1118,7 +1118,7 @@ class AuthCTRL {
       const token = await getEskizAuthToken();
       const { dispatchId } = req.body;
       const response = await checkSmsStatus(token, dispatchId);
-      console.log("SMS status response:", response);
+      // console.log("SMS status response:", response);
       return handleResponse(
         res,
         200,

@@ -1,5 +1,4 @@
-const router = require("express").Router();
-const app = require("express");
+// src/routes/googlePlay-route.js
 
 function DeleteAccount(req, res) {
   res.send(`

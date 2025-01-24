@@ -1,3 +1,4 @@
+// src/utils/statisticService.js
 const Statistics = require("../models/statistic_count");
 
 // Increment the count of users entering the site

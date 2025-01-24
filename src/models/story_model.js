@@ -1,5 +1,4 @@
-// models/Story.js
-
+// src/models/story_model.js
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

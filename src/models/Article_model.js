@@ -1,3 +1,4 @@
+// src/models/Article_model.js
 const mongoose = require('mongoose');
 
 const ArticleSchema = new mongoose.Schema({

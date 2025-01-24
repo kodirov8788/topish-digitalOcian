@@ -1,3 +1,4 @@
+// src/models/friendship_model.js
 const mongoose = require('mongoose');
 
 // Friendship Schema Example

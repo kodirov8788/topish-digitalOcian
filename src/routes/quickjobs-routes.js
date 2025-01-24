@@ -1,3 +1,4 @@
+// src/routes/quickjobs-routes.js
 const {
   createQuickJobs,
   getSingleQuickJob,

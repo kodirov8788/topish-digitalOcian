@@ -1,3 +1,4 @@
+// src/routes/index.js
 const router = require("express").Router();
 const authRouter = require("./auth-routes");
 const avatarRouter = require("./avatar-routes");

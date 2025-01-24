@@ -1,3 +1,4 @@
+// src/utils/sendingTelegram.js
 const bot = require('../../bot');
 const { Form_0_uz, Form_1_uz } = require('./telegramForm');
 

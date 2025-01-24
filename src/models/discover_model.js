@@ -1,3 +1,4 @@
+// src/models/discover_model.js
 const mongoose = require("mongoose");
 
 const locationSchema = new mongoose.Schema(

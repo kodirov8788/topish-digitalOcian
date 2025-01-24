@@ -1,3 +1,4 @@
+// src/utils/handleResponse.js
 exports.handleResponse = (res, status, result, msg, data = null, totalCount = 0, pagination = null) => {
   res.status(status).json({
     result,

@@ -1,3 +1,4 @@
+// src/models/gallery_model.js
 const mongoose = require("mongoose");
 
 const GalleryModel = new mongoose.Schema({
