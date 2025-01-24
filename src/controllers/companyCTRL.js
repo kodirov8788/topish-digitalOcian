@@ -26,30 +26,6 @@ class CompanyCTRL {
       }
 
       const user = await Users.findOne({ _id: req.user.id });
-      const coins = user.coins;
-      // const allowedRoles = ["Admin"]
-      // if (!allowedRoles.includes(user.role)) {
-      //   return handleResponse(
-      //     res,
-      //     401,
-      //     "error",
-      //     "You are not allowed!",
-      //     null,
-      //     0
-      //   );
-      // }
-
-      // if (coins == null) {
-      //   return handleResponse(
-      //     res,
-      //     400,
-      //     "error",
-      //     "There are some problems with your coins. Please contact support.",
-      //     null,
-      //     0
-      //   );
-      // }
-
       if (!user) {
         return handleResponse(res, 400, "error", "User not found.", null, 0);
       }
@@ -71,6 +47,13 @@ class CompanyCTRL {
         ...req.body,
         createdBy: user._id,
         status: "pending", // Set the initial status to "pending"
+        workers: [
+          {
+            userId: user._id,
+            isAdmin: true,
+            role: "Admin",
+          },
+        ],
       };
 
       // Check if there are any uploaded files and assign them accordingly
