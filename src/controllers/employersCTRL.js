@@ -1,4 +1,3 @@
-// src/controllers/employersCTRL.js
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const Jobs = require("../models/job_model");
@@ -15,14 +14,10 @@ class EmployersCTRL {
       const page = parseInt(req.query.page) || 1; // Default to page 1 if not specified
       const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items if not specified
       const skip = (page - 1) * limit;
-      // Adjusted to use $in operator for role matching
-      const query = {
-        role: { $in: ["Employer"] },
-      };
 
-      const searchedUsers = await Users.find(query).skip(skip).limit(limit);
+      const searchedUsers = await Users.find().skip(skip).limit(limit);
 
-      const totalUsers = await Users.countDocuments(query);
+      const totalUsers = await Users.countDocuments();
 
       if (searchedUsers.length === 0) {
         return handleResponse(res, 200, "success", "No employers found", [], 0);
@@ -56,6 +51,7 @@ class EmployersCTRL {
       );
     }
   }
+
   async getEmployer(req, res) {
     try {
       if (!req.user) {
@@ -181,6 +177,7 @@ class EmployersCTRL {
       );
     }
   }
+
   // search by their company
   async searchEmployers(req, res) {
     try {
@@ -191,7 +188,7 @@ class EmployersCTRL {
       const { fullName, page = 1, limit = 10 } = req.query;
 
       const skip = (page - 1) * limit;
-      let searchCriteria = { role: "Employer" };
+      let searchCriteria = {};
 
       if (fullName) {
         // Remove spaces from the search query and create a regex pattern
@@ -246,7 +243,6 @@ class EmployersCTRL {
       );
     }
   }
-
 }
 
 module.exports = new EmployersCTRL();
