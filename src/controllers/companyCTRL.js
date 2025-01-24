@@ -522,18 +522,12 @@ class CompanyCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-
-      const allowedRoles = ["Admin"];
       const user = await Users.findOne({ _id: req.user.id });
-      if (!allowedRoles.includes(user.role)) {
-        return handleResponse(res, 401, "error", "You are not allowed!", null, 0);
-      }
-
       const {
         params: { id: companyId },
         body,
       } = req;
-      console.log("req body: ", req.body);
+      // console.log("req body: ", req.body);
       let company = await Company.findById(companyId);
       if (!company) {
         return handleResponse(res, 404, "error", `Company not found with ID: ${companyId}`, null, 0);
@@ -547,7 +541,7 @@ class CompanyCTRL {
       }
 
       // Process new images if provided
-      console.log("req.uploadResults 1: ", req.uploadResults);
+      // console.log("req.uploadResults 1: ", req.uploadResults);
       if (req.uploadResults) {
         if (req.uploadResults.logo && req.uploadResults.logo.length > 0) {
           company.logo = req.uploadResults.logo;
@@ -559,12 +553,12 @@ class CompanyCTRL {
           company.images = req.uploadResults.images;
         }
         if (req.uploadResults.licenseFile && req.uploadResults.licenseFile.length > 0) {
-          company.licenseFile = req.uploadResults.licenseFile;
+          company.licenseFiles = req.uploadResults.licenseFile;
         }
       }
 
       // Update company details
-      console.log("body: ", body);
+      // console.log("body: ", body);
       company.name = body.name || company.name;
       company.description = body.description || company.description;
       company.size = body.size || company.size;

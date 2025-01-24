@@ -1155,7 +1155,7 @@ const CompanyEndpoint = {
       summary: "Update a company",
       tags: ["Company"],
       description:
-        "Allows an authorized user with specific roles (Admin, Employer) to update details of a company.",
+        "Allows an authorized user to update details of a company.",
       security: [
         {
           bearerAuth: [],
@@ -1193,6 +1193,76 @@ const CompanyEndpoint = {
                   type: "string",
                   format: "binary",
                   description: "Updated logo file for the company.",
+                },
+                company_logo: {
+                  type: "string",
+                  format: "binary",
+                  description: "Updated company_logo file for the company.",
+                },
+                images: {
+                  type: "string",
+                  format: "binary",
+                  description: "Updated images file for the company.",
+                },
+                licenseFile: {
+                  type: "string",
+                  format: "binary",
+                  description: "Updated licenseFile file for the company.",
+                },
+                size: {
+                  type: "string",
+                  description: "Updated size of the company.",
+                  example: "51-200",
+                },
+                location: {
+                  type: "string",
+                  description: "Updated location of the company.",
+                  example: "New York, NY",
+                },
+                type: {
+                  type: "string",
+                  description: "Updated type of the company.",
+                  example: "Technology",
+                },
+                working_time: {
+                  type: "string",
+                  description: "Updated working time of the company.",
+                  example: "9 AM - 5 PM",
+                },
+                working_days: {
+                  type: "string",
+                  description: "Updated working days of the company.",
+                  example: "Monday to Friday",
+                },
+                overtime: {
+                  type: "string",
+                  description: "Updated overtime policy of the company.",
+                  example: "Occasional",
+                },
+                phoneNumber: {
+                  type: "string",
+                  description: "Updated phone number of the company.",
+                  example: "123-456-7890",
+                },
+                legal_representative: {
+                  type: "string",
+                  description: "Updated legal representative of the company.",
+                  example: "John Doe",
+                },
+                registration_capital: {
+                  type: "string",
+                  description: "Updated registration capital of the company.",
+                  example: "1,000,000 USD",
+                },
+                date_of_establishment: {
+                  type: "string",
+                  description: "Updated date of establishment of the company.",
+                  example: "2020-01-01",
+                },
+                benefits: {
+                  type: "string",
+                  description: "Updated benefits of the company, comma-separated.",
+                  example: "Health Insurance, Paid Time Off",
                 },
               },
             },
