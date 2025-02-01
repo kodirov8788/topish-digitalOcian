@@ -20,7 +20,9 @@ const path = require("path");
 const server = http.createServer(app);
 initSocketServer(server);
 app.set("trust proxy", 1);
-app.use(morgan("tiny"));
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("tiny"));
+}
 app.use(express.json());
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(bodyParser.json({ limit: "20mb" }));
