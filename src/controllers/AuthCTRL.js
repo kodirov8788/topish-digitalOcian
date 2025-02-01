@@ -531,7 +531,6 @@ class AuthCTRL {
       const now = Date.now();
       let confirmationCode = null;
       let confirmationCodeExpires = null;
-
       // console.log("process.env.NODE_ENV: ", process.env.NODE_ENV)
       if (process.env.NODE_ENV === "production") {
         if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501" || phoneNumberWithCountryCode === "+998951112233") {
