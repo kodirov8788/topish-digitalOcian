@@ -851,7 +851,6 @@ class AuthCTRL {
               }
               return tokenObj;
             });
-
             if (!tokenUpdated) {
               console.error("Failed to find the refresh token in the database");
               return handleResponse(
