@@ -862,6 +862,7 @@ class AuthCTRL {
                 0
               );
             }
+
             await user.save();
             console.info(
               "Access token renewed successfully for user:",
