@@ -388,22 +388,17 @@ class BusinessServicesCTRL {
             if (!req.user) {
                 return handleResponse(res, 401, "error", "Unauthorized", null, 0);
             }
-            let user = Users.findById(req.user.id)
+            const services = await BusinessService.find({ createdBy: req.user.id })
+                .populate({ path: "company_id", select: "name logo" })
+                .populate({ path: "tags", select: "keyText" })
+                .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
 
-            if (user.company_id) {
-                const services = await BusinessService.find({ createdBy: req.user.id })
-                    .populate({ path: "company_id", select: "name logo" })
-                    .populate({ path: "tags", select: "keyText" })
-                    .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
+            if (!services || services.length === 0) {
 
-                if (!services || services.length === 0) {
-
-                    return handleResponse(res, 404, "error", "No business services found for this user", [], 0);
-                }
-                return handleResponse(res, 200, "success", "User services retrieved successfully", services, services.length);
+                return handleResponse(res, 404, "error", "No business services found for this user", [], 0);
             }
+            return handleResponse(res, 200, "success", "User services retrieved successfully", services, services.length);
 
-            return handleResponse(res, 404, "error", "User has no company", [], 0);
         } catch (error) {
             return handleResponse(res, 500, "error", "Internal server error", null, 0);
         }
