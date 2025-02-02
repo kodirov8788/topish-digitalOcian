@@ -159,6 +159,111 @@ const BusinessServicesEndpoint = {
             },
         },
     },
+    "/business-services/myServices": {
+        get: {
+            summary: "Retrieve the logged in user's business services",
+            tags: ["BusinessServices"],
+            description: "Fetches the business services that belong to the authenticated user.",
+            security: [
+                {
+                    bearerAuth: [],
+                },
+            ],
+            responses: {
+                200: {
+                    description: "User's business services retrieved successfully.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    data: {
+                                        type: "array",
+                                        items: {
+                                            type: "object",
+                                            // Further service schema details here
+                                        },
+                                    },
+                                    message: {
+                                        type: "string",
+                                        example: "User services retrieved successfully",
+                                    },
+                                    count: {
+                                        type: "number",
+                                        example: 1,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: "Unauthorized - user is not authenticated.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "error",
+                                    },
+                                    message: {
+                                        type: "string",
+                                        example: "Unauthorized",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                404: {
+                    description: "No companies found for this user.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "error",
+                                    },
+                                    message: {
+                                        type: "string",
+                                        example: "No companies found for this user.",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                500: {
+                    description: "Internal server error.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "error",
+                                    },
+                                    message: {
+                                        type: "string",
+                                        example: "Internal server error",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
     "/business-services/{company_id}": {
         get: {
             summary: "Retrieve all business services for a company",

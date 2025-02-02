@@ -1,5 +1,6 @@
 const BusinessService = require("../models/business_services_model");
 const Company = require("../models/company_model");
+const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 
 class BusinessServicesCTRL {
@@ -382,6 +383,32 @@ class BusinessServicesCTRL {
             );
         }
     }
+    async getMyBusinessServices(req, res) {
+        try {
+            if (!req.user) {
+                return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+            }
+            let user = Users.findById(req.user.id)
+
+            if (user.company_id) {
+                const services = await BusinessService.find({ createdBy: req.user.id })
+                    .populate({ path: "company_id", select: "name logo" })
+                    .populate({ path: "tags", select: "keyText" })
+                    .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
+
+                if (!services || services.length === 0) {
+
+                    return handleResponse(res, 404, "error", "No business services found for this user", [], 0);
+                }
+                return handleResponse(res, 200, "success", "User services retrieved successfully", services, services.length);
+            }
+
+            return handleResponse(res, 404, "error", "User has no company", [], 0);
+        } catch (error) {
+            return handleResponse(res, 500, "error", "Internal server error", null, 0);
+        }
+    }
+
 }
 
 module.exports = new BusinessServicesCTRL();

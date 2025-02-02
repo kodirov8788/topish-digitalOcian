@@ -7,13 +7,16 @@ const {
     deleteBusinessService,
     getAll,
     searchTagByParam,
+    getMyBusinessServices
 } = require("../controllers/businessServicesCTRL");
 const authMiddleware = require("../middleware/auth-middleware");
 const router = require("express").Router();
 
 // Create a new business service
 router.post("/", authMiddleware, createBusinessService);
-
+// ...existing code...
+router.get("/myServices", authMiddleware, getMyBusinessServices);
+// ...existing code...
 // Get all business services (global list)
 router.get("/", getAll);
 
