@@ -1,4 +1,3 @@
-// src/controllers/bannerCTRL.js
 const {
   S3Client,
   PutObjectCommand,
@@ -23,14 +22,14 @@ const s3 = new S3Client({
 const multerStorage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = ["image/png"];
+  const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg"];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(
       new Error(
-        "Invalid file format. Only images ( png) are allowed."
+        "Invalid file format. Only images (png, jpg, jpeg) are allowed."
       ),
       false
     );
@@ -48,7 +47,6 @@ class BannerCTRL {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
-
     upload(req, res, async (err) => {
       if (err) {
         return handleResponse(
@@ -61,18 +59,17 @@ class BannerCTRL {
         );
       }
       try {
+        // console.log("req files: ", req.files);
+
         const files = req.files;
-        let uploadPromises = files.map(async (file) => {
-          const buffer = await sharp(file.buffer)
-            .png({ quality: 10 }) // Keep as PNG, adjust compression level as needed
-            .toBuffer();
-          const fileName = `banner-post/file-${Date.now()}.png`; // Maintain PNG extension
+        const uploadPromises = files.map(async (file) => {
+          const fileName = `banner-post/file-${Date.now()}.${file.mimetype.split("/")[1]}`;
           await s3.send(
             new PutObjectCommand({
               Bucket: process.env.AWS_BUCKET_NAME,
               Key: fileName,
-              Body: buffer,
-              ContentType: "image/png",
+              Body: file.buffer,
+              ContentType: file.mimetype,
               ACL: "public-read",
             })
           );
@@ -80,22 +77,13 @@ class BannerCTRL {
         });
         const imageUrls = await Promise.all(uploadPromises);
 
-        let banners = await Banner.find();
-        let banner;
-
-        if (banners.length < 1) {
+        let banner = await Banner.findOne();
+        if (!banner) {
           banner = new Banner({
-            bannerImages: imageUrls.filter(
-              (url) => url !== "Non-PNG file skipped or default image URL"
-            ), // Filter out placeholders
+            bannerImages: imageUrls,
           });
         } else {
-          banner = banners[0];
-          banner.bannerImages.push(
-            ...imageUrls.filter(
-              (url) => url !== "Non-PNG file skipped or default image URL"
-            )
-          ); // Filter out placeholders
+          banner.bannerImages.push(...imageUrls);
         }
 
         await banner.save();
@@ -130,6 +118,7 @@ class BannerCTRL {
     // }
 
     try {
+      // console.log("req.body: ", req.body);
       const imageUrl = req.body.imageUrl; // The URL of the image to be deleted
       if (!imageUrl) {
         return handleResponse(res, 400, "error", "Image URL is required");
@@ -154,13 +143,13 @@ class BannerCTRL {
         (image) => image !== imageUrl
       );
       await banner.save();
-
+      // console.log("banner: ", banner);
       return handleResponse(
         res,
         200,
         "success",
         "Image deleted successfully",
-        banner
+        { imageUrl: banner.bannerImages[0] }
       );
     } catch (error) {
       return handleResponse(
