@@ -403,6 +403,23 @@ class BusinessServicesCTRL {
             return handleResponse(res, 500, "error", "Internal server error", null, 0);
         }
     }
+    // write functions to get services by user id
+    async getServicesByUserId(req, res) {
+        try {
+            const { id } = req.params;
+            const services = await BusinessService.find({ createdBy: id })
+                .populate({ path: "company_id", select: "name logo" })
+                .populate({ path: "tags", select: "keyText" })
+                .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
+
+            if (!services || services.length === 0) {
+                return handleResponse(res, 404, "error", "No business services found for this user", [], 0);
+            }
+            return handleResponse(res, 200, "success", "User services retrieved successfully", services, services.length);
+        } catch (error) {
+            return handleResponse(res, 500, "error", "Internal server error", null, 0);
+        }
+    }
 
 }
 

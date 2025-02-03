@@ -7,7 +7,8 @@ const {
     deleteBusinessService,
     getAll,
     searchTagByParam,
-    getMyBusinessServices
+    getMyBusinessServices,
+    getServicesByUserId
 } = require("../controllers/businessServicesCTRL");
 const authMiddleware = require("../middleware/auth-middleware");
 const router = require("express").Router();
@@ -25,7 +26,8 @@ router.get("/search", authMiddleware, searchTagByParam);
 
 // Get all business services for a specific company
 router.get("/:company_id", authMiddleware, getBusinessServices);
-
+// Get all business services for a specific user
+router.get("/user/:id", authMiddleware, getServicesByUserId);
 // Get a single business service by ID
 router.get("/service/:id", authMiddleware, getBusinessServiceById);
 

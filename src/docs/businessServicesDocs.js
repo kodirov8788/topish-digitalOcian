@@ -385,6 +385,133 @@ const BusinessServicesEndpoint = {
             },
         },
     },
+    "/business-services/user/{id}": {
+        get: {
+            summary: "Retrieve all business services for a specific user",
+            tags: ["BusinessServices"],
+            description: `
+        Fetches business services belonging to a user by their unique ID.
+        The user must be authenticated through bearerAuth. 
+        If the user exists and has created or been associated with any services, 
+        they will be returned in an array containing each service object.
+      `,
+            security: [
+                {
+                    bearerAuth: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: "id",
+                    in: "path",
+                    required: true,
+                    description: "User ID whose business services are being retrieved.",
+                    schema: {
+                        type: "string",
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: "Business services retrieved successfully for this user.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    message: {
+                                        type: "string",
+                                        example: "Services for user found successfully.",
+                                    },
+                                    data: {
+                                        type: "array",
+                                        items: {
+                                            type: "object",
+                                            properties: {
+                                                _id: { type: "string", example: "606c67..." },
+                                                company_id: { type: "string", example: "607e21..." },
+                                                title: { type: "string", example: "Web Design Service" },
+                                                sub_title: { type: "string", example: "Professional website design" },
+                                                description: { type: "string", example: "Creating responsive websites..." },
+                                                price: { type: "string", example: "200" },
+                                                currency: { type: "string", example: "USD" },
+                                                duration: { type: "string", example: "3 days" },
+                                                status: { type: "string", example: "active" },
+                                                createdBy: { type: "string", example: "6065ab..." },
+                                                createdAt: { type: "string", format: "date-time" },
+                                            },
+                                        },
+                                    },
+                                    count: {
+                                        type: "number",
+                                        example: 2,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: "Unauthorized - user has not provided valid credentials.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "error",
+                                    },
+                                    message: {
+                                        type: "string",
+                                        example: "Unauthorized access. Please login first.",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                404: {
+                    description: "No business services found for this user ID.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: { type: "string", example: "error" },
+                                    message: { type: "string", example: "No services found for this user." },
+                                },
+                            },
+                        },
+                    },
+                },
+                500: {
+                    description: "Internal server error.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "error",
+                                    },
+                                    message: {
+                                        type: "string",
+                                        example: "An error occurred while retrieving services for the user.",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
 };
 
 module.exports = {
