@@ -413,7 +413,7 @@ class BusinessServicesCTRL {
                 .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
 
             if (!services || services.length === 0) {
-                return handleResponse(res, 404, "error", "No business services found for this user", [], 0);
+                return handleResponse(res, 200, "success", "No business services found for this user", [], 0);
             }
             return handleResponse(res, 200, "success", "User services retrieved successfully", services, services.length);
         } catch (error) {
