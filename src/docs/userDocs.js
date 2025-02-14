@@ -1029,400 +1029,7 @@ const UsersEndpoint = {
       },
     },
   },
-  // "/users/updateJobSeekerProfile": {
-  //   put: {
-  //     summary: "Update JobSeeker profile",
-  //     description: "Update JobSeeker profile based on user role (JobSeeker or Employer)",
-  //     tags: ["Users"],
-  //     requestBody: {
-  //       required: true,
-  //       content: {
-  //         "application/json": {
-  //           schema: {
-  //             type: "object",
-  //             properties: {
-  //               jobTitle: { type: "string", example: "Software Developer" },
-  //               fullName: { type: "string", example: "John Doe" },
-  //               gender: { type: "string", example: "Male" },
-  //               birthday: { type: "string", example: "1990-01-01" },
-  //               location: { type: "string", example: "Tashkent" },
-  //               expectedSalary: { type: "string", example: "0-10000" },
-  //               skills: {
-  //                 type: "array",
-  //                 items: { type: "string" },
-  //                 example: ["JavaScript", "React", "Node.js"],
-  //               },
-  //               professions: {
-  //                 type: "array",
-  //                 items: { type: "string" },
-  //                 example: ["Teacher", "Engineer", "Doctor"],
-  //               },
-  //               educationalBackground: { type: "string", example: "Bachelor" },
-  //               workingExperience: { type: "string", example: "5 years" },
-  //               employmentType: { type: "string", example: "full-time" },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //     responses: {
-  //       200: {
-  //         description: "Profile updated successfully",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "success" },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Profile updated successfully",
-  //                 },
-  //                 data: { $ref: "#/components/schemas/Users" },
-  //                 totalCount: { type: "integer", example: 1 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       400: {
-  //         description: "Update operation is not supported for this user role",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Update operation is not supported for this user role.",
-  //                 },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       401: {
-  //         description: "Unauthorized",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "Unauthorized" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       404: {
-  //         description: "User not found",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "User not found" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       500: {
-  //         description: "Internal server error",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "Internal server error" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // },
-  // "/users/updateEmployerProfile": {
-  //   put: {
-  //     summary: "Update Employer profile",
-  //     description: "Update Employer profile based on user role (JobSeeker or Employer)",
-  //     tags: ["Users"],
-  //     requestBody: {
-  //       required: true,
-  //       content: {
-  //         "application/json": {
-  //           schema: {
-  //             type: "object",
-  //             properties: {
-  //               companyName: { type: "string", example: "Google" },
-  //               fullName: { type: "string", example: "John Doe" },
-  //               industry: { type: "string", example: "IT" },
-  //               aboutCompany: {
-  //                 type: "string",
-  //                 example: "Google is a multinational technology company",
-  //               },
-  //               location: { type: "string", example: "Andijon" },
-  //               number: { type: "string", example: "1234567890" },
-  //               email: { type: "string", example: "kkd@gmail.com" },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //     responses: {
-  //       200: {
-  //         description: "Profile updated successfully",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "success" },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Profile updated successfully",
-  //                 },
-  //                 data: { $ref: "#/components/schemas/Users" },
-  //                 totalCount: { type: "integer", example: 1 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       400: {
-  //         description: "Update operation is not supported for this user role",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Update operation is not supported for this user role.",
-  //                 },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       401: {
-  //         description: "Unauthorized",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "Unauthorized" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       404: {
-  //         description: "User not found",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "User not found" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       500: {
-  //         description: "Internal server error",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "Internal server error" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // },
-  // "/users/updateServiceProfile": {
-  //   put: {
-  //     summary: "Update Service profile",
-  //     description: "Update Service profile based on user role Service",
-  //     tags: ["Users"],
-  //     requestBody: {
-  //       required: true,
-  //       content: {
-  //         "application/json": {
-  //           schema: {
-  //             type: "object",
-  //             properties: {
-  //               gender: {
-  //                 type: "string",
-  //                 required: false,
-  //                 default: "Choose",
-  //               },
-  //               fullName: { type: "string", example: "John Doe" },
-  //               location: { type: "string", example: "Tashkent" },
-  //               email: { type: "string", example: "example@example.com" }
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //     responses: {
-  //       200: {
-  //         description: "Profile updated successfully",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "success" },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Profile updated successfully",
-  //                 },
-  //                 data: { $ref: "#/components/schemas/Users" },
-  //                 totalCount: { type: "integer", example: 1 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       400: {
-  //         description: "Update operation is not supported for this user role",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: {
-  //                   type: "string",
-  //                   example: "Update operation is not supported for this user role.",
-  //                 },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       401: {
-  //         description: "Unauthorized",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "Unauthorized" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       404: {
-  //         description: "User not found",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "User not found" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       500: {
-  //         description: "Internal server error",
-  //         content: {
-  //           "application/json": {
-  //             schema: {
-  //               type: "object",
-  //               properties: {
-  //                 result: { type: "string", example: "error" },
-  //                 msg: { type: "string", example: "Internal server error" },
-  //                 data: {
-  //                   type: "null",
-  //                   example: null,
-  //                 },
-  //                 totalCount: { type: "integer", example: 0 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   },
-  // },
+
   "/users/updateUsername": {
     patch: {
       summary: "Update username",
@@ -1836,8 +1443,200 @@ const UsersEndpoint = {
         },
       },
     },
+// ...existing code...
+},
+"/users/searchUsers": {
+  get: {
+    summary: "Search users",
+    tags: ["Users"],
+    description: "Endpoint to search users by fullName, email, username, or phoneNumber.",
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+    parameters: [
+      {
+        in: "query",
+        name: "searchTerm",
+        required: true,
+        schema: {
+          type: "string",
+        },
+        description: "The search term to look for in fullName, email, username, or phoneNumber.",
+      },
+      {
+        in: "query",
+        name: "page",
+        schema: {
+          type: "integer",
+          default: 1,
+        },
+        description: "Page number for pagination.",
+      },
+      {
+        in: "query",
+        name: "limit",
+        schema: {
+          type: "integer",
+          default: 10,
+        },
+        description: "Number of items per page.",
+      },
+    ],
+    responses: {
+      200: {
+        description: "Users retrieved successfully.",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                result: {
+                  type: "string",
+                  example: "success",
+                },
+                msg: {
+                  type: "string",
+                  example: "Users retrieved successfully",
+                },
+                data: {
+                  type: "array",
+                  items: {
+                    $ref: "#/components/schemas/UserResponse",
+                  },
+                },
+                totalCount: {
+                  type: "integer",
+                  example: 3,
+                },
+                pagination: {
+                  type: "object",
+                  properties: {
+                    currentPage: {
+                      type: "integer",
+                    },
+                    totalPages: {
+                      type: "integer",
+                    },
+                    limit: {
+                      type: "integer",
+                    },
+                    totalDocuments: {
+                      type: "integer",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      400: {
+        description: "Please provide a search term",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                result: {
+                  type: "string",
+                  example: "error",
+                },
+                msg: {
+                  type: "string",
+                  example: "Please provide a search term",
+                },
+                data: {
+                  type: "null",
+                  example: null,
+                },
+              },
+            },
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access attempt.",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                result: {
+                  type: "string",
+                  example: "error",
+                },
+                msg: {
+                  type: "string",
+                  example: "Unauthorized!",
+                },
+                data: {
+                  type: "null",
+                  example: null,
+                },
+              },
+            },
+          },
+        },
+      },
+      404: {
+        description: "No users found.",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                result: {
+                  type: "string",
+                  example: "info",
+                },
+                msg: {
+                  type: "string",
+                  example: "No users found",
+                },
+                data: {
+                  type: "array",
+                  example: [],
+                },
+                totalCount: {
+                  type: "integer",
+                  example: 0,
+                },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: "Internal server error.",
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                result: {
+                  type: "string",
+                  example: "error",
+                },
+                msg: {
+                  type: "string",
+                  example: "Something went wrong: {error.message}",
+                },
+                data: {
+                  type: "null",
+                  example: null,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
-  "/users/updateJobTitle": {
+},
+"/users/updateJobTitle": {
+// ...existing code...
     patch: {
       summary: "Update the user's job title",
       tags: ["Users"],

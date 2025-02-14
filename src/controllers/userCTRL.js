@@ -6,75 +6,129 @@ const { handleResponse } = require("../utils/handleResponse");
 
 class UserCTRL {
   //   GET ALL USERS
-  async getAllUsers(req, res) {
-    try {
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
-      // console.log("req.query:", req.query)
-      // const user = await Users.findById(req.user.id);
-      // Determine the target role for searching based on the requester's role
-      // let targetRole = user.role === "Employer" ? "JobSeeker" : "Employer";
+async getAllUsers(req, res) {
+  try {
+    // if (!req.user) {
+    //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+    // }
 
-      // let query = { role: targetRole }; // Filter users based on the target role
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
-      // Pagination parameters
-      const page = parseInt(req.query.page) || 1; // Default to first page
-      const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items
-      const skip = (page - 1) * limit; // Calculate the number of documents to skip
+    // Get total count for pagination
+    const total = await Users.countDocuments();
 
-      let resultUsers = await Users.find()
-        .skip(skip) // Skip documents for pagination
-        .limit(limit) // Limit the number of documents
-        .exec(); // Execute the query
+    // Calculate skip based on page and limit
+    const skip = (page - 1) * limit;
 
-      if (resultUsers.length === 0) {
-        return handleResponse(res, 404, "info", "No users found", [], 0);
-      }
+    // Fetch users, applying skip, limit, and sort by _id
+    let resultUsers = await Users.aggregate([
+      { $sample: { size: total } }, // Shuffle all documents
+      { $skip: skip }, // Apply skip
+      { $limit: limit } // Apply limit
+    ]);
 
-      // Count the total documents matching the query (without limit and skip) for pagination metadata
-      const total = await Users.countDocuments();
+    if (resultUsers.length === 0) {
+      return handleResponse(res, 404, "info", "No users found", [], 0);
+    }
 
-      // Prepare users data for the response
-      // const usersData = resultUsers.map((user) => {
-      //   return {
-      //     id: user._id,
-      //     phoneNumber: user.phoneNumber,
-      //     email: user.email,
-      //     role: user.role,
-      //     jobSeeker: user.jobSeeker, // Include or exclude based on privacy/security considerations
-      //     employer: user.employer, // Include or exclude based on privacy/security considerations
-      //   };
-      // });
+    const pagination = {
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      limit: limit,
+      totalDocuments: total,
+    };
 
-      // Pagination metadata
-      const pagination = {
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        limit: limit,
-        totalDocuments: total,
-      };
+    return handleResponse(
+      res,
+      200,
+      "success",
+      "Users retrieved successfully",
+      resultUsers,
+      total,
+      pagination
+    );
+  } catch (error) {
+    return handleResponse(
+      res,
+      500,
+      "error",
+      "Something went wrong: " + error.message,
+      null,
+      0
+    );
+  }
+}
+async searchUsers(req, res) {
+  try {
+  
 
+    const { searchTerm } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    if (!searchTerm) {
       return handleResponse(
         res,
-        200,
-        "success",
-        "Users retrieved successfully",
-        resultUsers,
-        total,
-        pagination
-      );
-    } catch (error) {
-      return handleResponse(
-        res,
-        500,
+        400,
         "error",
-        "Something went wrong: " + error.message,
+        "Please provide a search term",
         null,
         0
       );
     }
+
+    // Create a case-insensitive regex for the search term
+    const regex = new RegExp(searchTerm, "i");
+
+    // Search across multiple fields: fullName, phoneNumber, and jobTitle
+    const query = {
+      $or: [
+        { fullName: { $regex: regex } },
+        { phoneNumber: { $regex: regex } },
+        { jobTitle: { $regex: regex } },
+      ],
+    };
+
+    const users = await Users.find(query)
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    const total = await Users.countDocuments(query);
+
+    if (users.length === 0) {
+      return handleResponse(res, 404, "info", "No users found", [], 0);
+    }
+
+    const pagination = {
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      limit: limit,
+      totalDocuments: total,
+    };
+
+    return handleResponse(
+      res,
+      200,
+      "success",
+      "Users retrieved successfully",
+      users,
+      users.length,
+      pagination
+    );
+  } catch (error) {
+    return handleResponse(
+      res,
+      500,
+      "error",
+      "Something went wrong: " + error.message,
+      null,
+      0
+    );
   }
+}
   //  GET CURRENT USER
   async showCurrentUser(req, res) {
     try {
@@ -155,9 +209,9 @@ class UserCTRL {
     const userId = req.params.id;
 
     try {
-      if (!req.user) {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
+      // if (!req.user) {
+      //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      // }
 
       // Query for a user with the target role and the specified ID
       const user = await Users.findOne({

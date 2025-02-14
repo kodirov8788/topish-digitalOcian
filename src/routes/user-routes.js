@@ -1,18 +1,10 @@
 // src/routes/user-routes.js
 const {
-  getAllJobSeekers,
-  getJobSeekersBySkills,
-  getJobSeekersByName,
-  getJobSeekersByParams,
-  getJobSeekersSavedJobs,
   deleteSavedJob,
-  getRecommendedJobSeekers,
   postFavoriteJob,
   postFavoriteQuickJob,
   getFavoriteJobs,
   deleteFavoriteJob,
-  getExperiencedJobseekers,
-  // getJobSeekersQuery,
 } = require("../controllers/jobSeekersCTRL");
 const {
   getAllEmployers,
@@ -35,10 +27,7 @@ const {
   updateUserPassword,
   updateUserEmail,
   updateUserPurpose,
-  // updateJobSeekerProfile,
-  // updateEmployerProfile,
-  // updateServiceProfile,
-
+  searchUsers,
   updateUserProfile,
   updateRole,
   updateUsername,
@@ -52,16 +41,11 @@ const {
   addRolesToUser
 } = require("../controllers/userCTRL");
 const updateLastActivity = require("../middleware/last-active");
-// const { showCurrentUser } = require("../controllers/all-Users/current-user");
-// const {
-//   updateUser,
-//   updateUserPassword,
-// } = require("../controllers/all-Users/update-user");
-
 const router = require("express").Router();
 
-router.route("/allUsers").get(authMiddleware, getAllUsers); // ALL USERS
-router.route("/allUsers/:id").get(authMiddleware, getUser); // GET A SINGLE USER BY ID
+router.route("/allUsers").get( getAllUsers); // ALL USERS
+router.route("/searchUsers").get( searchUsers);
+router.route("/allUsers/:id").get( getUser); // GET A SINGLE USER BY ID
 router
   .route("/currentUser")
   .get(authMiddleware, updateLastActivity, showCurrentUser); // showCurrentUser
@@ -79,18 +63,6 @@ router
   .route("/addToAllUsersVisibility")
   .post(authMiddleware, addToAllUsersVisibility);
 router.patch('/roles', authMiddleware, addRolesToUser);
-// ALL JOB SEEKERS
-// router.route("/searchJobSeekers").get(getJobSeekersBySkills); // Search JOB SEEKERS By skill
-// router.route("/getAllJobSeekers").get(getAllJobSeekers);
-// router.route("/getRecommendedJobSeekers").get(getRecommendedJobSeekers);
-// router.route("/getExperiencedJobseekers").get(getExperiencedJobseekers);
-// router.route("/getJobSeekersByName").get(getJobSeekersByName); // Search JOB SEEKERS By name
-// router.route("/searchJobseekersParams").get(getJobSeekersByParams); // Search JOB SEEKERS By name
-// router
-//   .route("/getJobseekersSavedjob")
-//   .get(authMiddleware, getJobSeekersSavedJobs);
-
-// router.route("/getJobSeekersQuery").get(authMiddleware, getJobSeekersQuery);
 router
   .route("/deleteJobseekersSavedjob/:id")
   .delete(authMiddleware, deleteSavedJob);
