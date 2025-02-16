@@ -106,28 +106,32 @@ class DiscoverCTRL {
     try {
       const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
       const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
-      const sort = req.query.sort || "-createdAt";
-      const language = req.query.language; // Extract the language parameter from the request
-      const tags = req.query.tags; // Extract the tags parameter from the request
+      const language = req.query.language;
+      const tags = req.query.tags;
   
-      // Create a filter object to apply conditional filtering
+      // Create a filter object for conditional filtering
       const filter = {};
       if (language) {
-        filter.language = language; // Add language filter if provided
+        filter.language = language;
       }
       if (tags) {
-        // Search for tag IDs matching the provided tag names or IDs
-        const tagIds = await DiscoverTag.find({ keyText: { $regex: new RegExp(tags, "i") } }).distinct("_id");
+        const tagIds = await DiscoverTag.find({
+          keyText: { $regex: new RegExp(tags, "i") },
+        }).distinct("_id");
         if (tagIds.length > 0) {
-          filter.tags = { $in: tagIds }; // Add tags filter if matching tag IDs are found
+          filter.tags = { $in: tagIds };
         }
       }
   
+      // Count total documents to set up pagination
+      const totalCount = await Discover.countDocuments(filter);
+      const skip = (page - 1) * limit;
+  
+      // Use $sample to randomly retrieve results
       const discovers = await Discover.aggregate([
         { $match: filter },
-        { $sample: { size: await Discover.countDocuments(filter) } },
-        { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
-        { $skip: (page - 1) * limit },
+        { $sample: { size: totalCount } },
+        { $skip: skip },
         { $limit: limit },
         {
           $lookup: {
@@ -139,12 +143,11 @@ class DiscoverCTRL {
         },
       ]);
   
-      const totalCount = await Discover.countDocuments(filter);
       return handleResponse(
         res,
         200,
         "success",
-        "Discover items fetched successfully.",
+        "Discover items fetched randomly.",
         {
           discovers,
           totalCount,
@@ -159,7 +162,7 @@ class DiscoverCTRL {
         res,
         500,
         "error",
-        "An error occurred while fetching discover items.",
+        "An error occurred while fetching discover items randomly.",
         null,
         0
       );
