@@ -82,70 +82,101 @@ class BusinessServicesCTRL {
     }
     async getAll(req, res) {
         try {
-            const { page = 1, limit = 10 } = req.query;
-    
-            const totalCount = await BusinessService.countDocuments();
-            const skip = (page - 1) * parseInt(limit);
-    
-            const services = await BusinessService.aggregate([
-                { $sample: { size: totalCount } }, // Shuffle all documents
-                { $skip: skip },
-                { $limit: parseInt(limit) },
-                {
-                    $lookup: {
-                        from: "companies",
-                        localField: "company_id",
-                        foreignField: "_id",
-                        as: "company_id",
-                    },
-                },
-                { $unwind: "$company_id" },
-                { $project: { "company_id.name": 1, "company_id.logo": 1, _id: 1, tags: 1, title: 1, sub_title: 1, description: 1, price: 1, currency: 1, duration: 1, status: 1, createdBy: 1 } },
-                {
-                    $lookup: {
-                        from: "tags",
-                        localField: "tags",
-                        foreignField: "_id",
-                        as: "tags",
-                    },
-                },
-                {
-                    $lookup: {
-                        from: "users",
-                        localField: "createdBy",
-                        foreignField: "_id",
-                        as: "createdBy",
-                    },
-                },
-                { $unwind: "$createdBy" },
-                { $project: { "createdBy.avatar": 1, "createdBy.phoneNumber": 1, "createdBy.fullName": 1, _id: 0, company_id: 1, tags: 1, title: 1, sub_title: 1, description: 1, price: 1, currency: 1, duration: 1, status: 1 } }
-            ]);
-    
-            return handleResponse(
-                res,
-                200,
-                "success",
-                "Business services retrieved successfully.",
-                {
-                    services,
-                    totalCount,
-                    totalPages: Math.ceil(totalCount / limit),
-                    currentPage: parseInt(page),
-                },
-                services.length
-            );
+          const { page = 1, limit = 10 } = req.query;
+      
+          const totalCount = await BusinessService.countDocuments();
+          const skip = (page - 1) * parseInt(limit);
+      
+          const services = await BusinessService.aggregate([
+            { $sample: { size: totalCount } }, // Shuffle all documents
+            { $skip: skip },
+            { $limit: parseInt(limit) },
+            {
+              $lookup: {
+                from: "companies",
+                localField: "company_id",
+                foreignField: "_id",
+                as: "company_id",
+              },
+            },
+            { $unwind: "$company_id" },
+            {
+              $project: {
+                "company_id.name": 1,
+                "company_id.logo": 1,
+                _id: 1,
+                tags: 1,
+                title: 1,
+                sub_title: 1,
+                description: 1,
+                price: 1,
+                currency: 1,
+                duration: 1,
+                status: 1,
+                createdBy: 1,
+              },
+            },
+            {
+              $lookup: {
+                from: "tags",
+                localField: "tags",
+                foreignField: "_id",
+                as: "tags",
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "createdBy",
+                foreignField: "_id",
+                as: "createdBy",
+              },
+            },
+            { $unwind: "$createdBy" },
+            {
+              $project: {
+                "createdBy.avatar": 1,
+                "createdBy.phoneNumber": 1,
+                "createdBy.fullName": 1,
+                _id: 1,
+                company_id: 1,
+                tags: 1,
+                title: 1,
+                sub_title: 1,
+                description: 1,
+                price: 1,
+                currency: 1,
+                duration: 1,
+                status: 1,
+              },
+            },
+          ]);
+      
+          return handleResponse(
+            res,
+            200,
+            "success",
+            "Business services retrieved successfully.",
+            {
+              services,
+              totalCount,
+              totalPages: Math.ceil(totalCount / limit),
+              currentPage: parseInt(page),
+            },
+            services.length
+          );
         } catch (error) {
-            console.error("Error in getAll:", error);
-            return handleResponse(
-                res,
-                500,
-                "error",
-                "An error occurred while retrieving all business services.",
-                null,
-                0
-            );
+          console.error("Error in getAll:", error);
+          return handleResponse(
+            res,
+            500,
+            "error",
+            "An error occurred while retrieving all business services.",
+            null,
+            0
+          );
         }
-    }
+      }
     async searchTagByParam(req, res) {
         try {
             const { tag } = req.query;
