@@ -109,7 +109,7 @@ class DiscoverCTRL {
       const sort = req.query.sort || "-createdAt";
       const language = req.query.language; // Extract the language parameter from the request
       const tags = req.query.tags; // Extract the tags parameter from the request
-
+  
       // Create a filter object to apply conditional filtering
       const filter = {};
       if (language) {
@@ -122,13 +122,23 @@ class DiscoverCTRL {
           filter.tags = { $in: tagIds }; // Add tags filter if matching tag IDs are found
         }
       }
-
-      const discovers = await Discover.find(filter)
-        .populate("tags", "keyText")
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit);
-
+  
+      const discovers = await Discover.aggregate([
+        { $match: filter },
+        { $sample: { size: await Discover.countDocuments(filter) } },
+        { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: "discoverTags",
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags",
+          },
+        },
+      ]);
+  
       const totalCount = await Discover.countDocuments(filter);
       return handleResponse(
         res,
