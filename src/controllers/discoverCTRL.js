@@ -127,10 +127,11 @@ class DiscoverCTRL {
       const totalCount = await Discover.countDocuments(filter);
       const skip = (page - 1) * limit;
   
-      // Use $sample to randomly retrieve results
+      // Shuffle the data using a random field and then paginate
       const discovers = await Discover.aggregate([
         { $match: filter },
-        { $sample: { size: totalCount } },
+        { $addFields: { random: { $rand: {} } } },
+        { $sort: { random: 1 } },
         { $skip: skip },
         { $limit: limit },
         {
