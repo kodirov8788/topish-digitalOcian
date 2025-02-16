@@ -178,7 +178,44 @@ class BusinessServicesCTRL {
     //     }
     //   }
 
-      async getAll(req, res) {
+    async getAll(req, res) {
+        try {
+            const { page = 1, limit = 10, sort = "-createdAt" } = req.query;
+
+            const services = await BusinessService.find()
+                .sort(sort)
+                .skip((page - 1) * parseInt(limit))
+                .limit(parseInt(limit))
+                .populate({ path: "company_id", select: "name logo" })
+                .populate({ path: "tags", select: "keyText" })
+                .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
+
+            const totalCount = await BusinessService.countDocuments();
+
+            return handleResponse(
+                res,
+                200,
+                "success",
+                "Business services retrieved successfully.",
+                {
+                    services,
+                    totalCount,
+                    totalPages: Math.ceil(totalCount / limit),
+                    currentPage: parseInt(page),
+                },
+                services.length
+            );
+        } catch (error) {
+            console.error("Error in getAll:", error);
+            return handleResponse(
+                res,
+                500,
+                "error",
+                "An error occurred while retrieving all business services.",
+                null,
+                0
+            );
+        }
     }
     async searchTagByParam(req, res) {
         try {
