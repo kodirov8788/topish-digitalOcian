@@ -89,6 +89,51 @@ class CompanyCTRL {
       );
     }
   }
+  async getMyCompanyRequest(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const user = await Users.findOne({ _id: req.user.id });
+      if (!user) {
+        return handleResponse(res, 404, "error", "User not found.", null, 0);
+      }
+
+      // Find the company created by the logged-in user
+      const company = await Company.findOne({ createdBy: user._id });
+
+      if (!company) {
+        return handleResponse(
+          res,
+        200,
+        "success",
+        "No company request found",
+        [],
+        0
+      );
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Company request fetched successfully",
+        company,
+        1
+      );
+    } catch (error) {
+      console.error("Error in getMyCompanyRequest function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
   async approveCompany(req, res) {
     try {
       const companyId = req.params.companyId;

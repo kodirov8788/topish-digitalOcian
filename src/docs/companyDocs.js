@@ -345,6 +345,95 @@ const CompanyEndpoint = {
       },
     },
   },
+  "/companies/getMyRequest": {
+    get: {
+      summary: "Get my company request",
+      tags: ["Company"],
+      description: "Fetch the company request created by the logged-in user.",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      responses: {
+        200: {
+          description: "Company request fetched successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Company request fetched successfully",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      // Define the properties of the company object here
+                      id: { type: "string", example: "companyId" },
+                      name: { type: "string", example: "Company Name" },
+                      // Add other company properties as needed
+                    },
+                  },
+                  totalCount: { type: "number", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized - User not logged in.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "Not Found - No company found for this user.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "info" },
+                  msg: {
+                    type: "string",
+                    example: "No company found for this user.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal Server Error.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "Something went wrong: {error message}",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   "/companies/status": {
     get: {
       summary: "get company status",
