@@ -12,26 +12,30 @@ class QuickJobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-
-      const user = await Users.findById(req.user.id);
-      const coins = user.coins; // Corrected this to use 'user' instead of 'req.user'
-
-      if (user.role !== "Employer") {
-        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
-      }
-
-      if (coins == null) {
-        return handleResponse(res, 400, "error", "There are some problems with your coins. Please contact support.", null, 0);
-      }
-
+      const user = await Users.findOne({ _id: req.user.id });
+      const coins = req.user.coins;
+  
       if (coins < 5) {
         return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
       }
-
-      if (!user || !user.employer) {
-        return handleResponse(res, 400, "error", "Employer details not found.", null, 0);
+  
+      // Check if the user has a company
+      const companies = await Company.find({
+        "workers.userId": { $in: user._id },
+      });
+  
+      if (companies.length === 0) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "You must have a company to post a job.",
+          null,
+          0
+        );
       }
-
+  
+  
       const jobDetails = {
         ...req.body,
         createdBy: user._id,

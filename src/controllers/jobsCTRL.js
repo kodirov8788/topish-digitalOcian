@@ -14,17 +14,6 @@ async createJobs(req, res) {
     const user = await Users.findOne({ _id: req.user.id });
     const coins = req.user.coins;
 
-    if (coins == null) {
-      return handleResponse(
-        res,
-        400,
-        "error",
-        "There are some problems with your coins. Please contact support.",
-        null,
-        0
-      );
-    }
-
     if (coins < 5) {
       return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
     }
