@@ -35,7 +35,7 @@ class QuickJobsCTRL {
         );
       }
   
-  
+      console.log("companies: ", companies);
       const jobDetails = {
         ...req.body,
         createdBy: user._id,
@@ -62,19 +62,9 @@ class QuickJobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      // Check if the user role is Employer
-      const user = await Users.findById(req.user.id);
+    
 
-      if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+   
       const { id: jobID } = req.params;
       // Perform the deletion operation
       const deleteJob = await QuickJobs.findOneAndDelete({
@@ -414,18 +404,9 @@ class QuickJobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
 
-      if (user.role !== "Employer") {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+
+      
       const {
         params: { id: jobID },
       } = req;
@@ -479,7 +460,7 @@ class QuickJobsCTRL {
 
     const user = await Users.findById(req.user.id);
 
-    if (user.role !== "Employer" && user.role !== "Admin") {
+    if ( user.role !== "Admin") {
       return handleResponse(
         res,
         403,
@@ -621,7 +602,7 @@ class QuickJobsCTRL {
 
       const user = await Users.findById(req.user.id);
 
-      if (user.role !== "Employer" && user.role !== "Admin") {
+      if (user.role !== "Admin") {
         return handleResponse(
           res,
           403,
@@ -699,18 +680,18 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id);
 
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
       const {
         page = 1,
         limit = 10,
@@ -810,18 +791,18 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id);
 
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
       const {
         page = 1,
         limit = 10,
@@ -913,8 +894,6 @@ class QuickJobsCTRL {
       );
     }
   }
-
-
   async getApprovedJobs(req, res) {
     try {
 
@@ -922,18 +901,18 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id);
 
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(
-          res,
-          403,
-          "error",
-          "You are not allowed!",
-          null,
-          0
-        );
-      }
+      // if (user.role !== "Employer" && user.role !== "Admin") {
+      //   return handleResponse(
+      //     res,
+      //     403,
+      //     "error",
+      //     "You are not allowed!",
+      //     null,
+      //     0
+      //   );
+      // }
       const {
         page = 1,
         limit = 10,
