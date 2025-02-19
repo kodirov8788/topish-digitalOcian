@@ -134,29 +134,42 @@ class CompanyCTRL {
       );
     }
   }
+
   async approveCompany(req, res) {
     try {
       const companyId = req.params.companyId;
       const { status } = req.body; // either "approved" or "rejected"
-      // console.log("companyId:", companyId);
-      if (!req.user || req.user.role !== "Admin") {
-        return handleResponse(res, 403, "error", "Access denied.", null, 0);
-      }
-
-      if (!["approved", "rejected"].includes(status)) {
+       console.log("companyId:", companyId);
+      // if (!req.user || req.user.role !== "Admin") {
+      //   return handleResponse(res, 403, "error", "Access denied.", null, 0);
+      // }
+      if (!["approved", "rejected","pending"].includes(status)) {
         return handleResponse(res, 400, "error", "Invalid status.", null, 0);
       }
-
+  
       const company = await Company.findByIdAndUpdate(
         companyId,
         { status },
         { new: true }
       );
-      // console.log("company:", company);
+  
       if (!company) {
         return handleResponse(res, 404, "error", "Company not found.", null, 0);
       }
-
+  
+      // If the company is approved, make the createdBy user an admin
+      if (status === "approved") {
+        const userId = company.createdBy;
+        const isAlreadyAdmin = company.workers.some(
+          (worker) => worker.userId.toString() === userId.toString() && worker.isAdmin
+        );
+  
+        if (!isAlreadyAdmin) {
+          company.workers.push({ userId, isAdmin: true, role: "Admin" });
+          await company.save();
+        }
+      }
+  
       return handleResponse(
         res,
         200,
