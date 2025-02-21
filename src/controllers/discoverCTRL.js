@@ -106,49 +106,35 @@ class DiscoverCTRL {
     try {
       const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
       const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
-      const language = req.query.language;
-      const tags = req.query.tags;
-  
-      // Create a filter object for conditional filtering
+      const sort = req.query.sort || "-createdAt";
+      const language = req.query.language; // Extract the language parameter from the request
+      const tags = req.query.tags; // Extract the tags parameter from the request
+
+      // Create a filter object to apply conditional filtering
       const filter = {};
       if (language) {
-        filter.language = language;
+        filter.language = language; // Add language filter if provided
       }
       if (tags) {
-        const tagIds = await DiscoverTag.find({
-          keyText: { $regex: new RegExp(tags, "i") },
-        }).distinct("_id");
+        // Search for tag IDs matching the provided tag names or IDs
+        const tagIds = await DiscoverTag.find({ keyText: { $regex: new RegExp(tags, "i") } }).distinct("_id");
         if (tagIds.length > 0) {
-          filter.tags = { $in: tagIds };
+          filter.tags = { $in: tagIds }; // Add tags filter if matching tag IDs are found
         }
       }
-  
-      // Count total documents to set up pagination
+
+      const discovers = await Discover.find(filter)
+        .populate("tags", "keyText")
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
       const totalCount = await Discover.countDocuments(filter);
-      const skip = (page - 1) * limit;
-  
-      // Shuffle the data using a random field and then paginate
-      const discovers = await Discover.aggregate([
-        { $match: filter },
-        { $addFields: { random: { $rand: {} } } },
-        { $sort: { random: 1 } },
-        { $skip: skip },
-        { $limit: limit },
-        {
-          $lookup: {
-            from: "discoverTags",
-            localField: "tags",
-            foreignField: "_id",
-            as: "tags",
-          },
-        },
-      ]);
-  
       return handleResponse(
         res,
         200,
         "success",
-        "Discover items fetched randomly.",
+        "Discover items fetched successfully.",
         {
           discovers,
           totalCount,
@@ -163,12 +149,80 @@ class DiscoverCTRL {
         res,
         500,
         "error",
-        "An error occurred while fetching discover items randomly.",
+        "An error occurred while fetching discover items.",
         null,
         0
       );
     }
   }
+
+  // async getAllDiscovers(req, res) {
+  //   try {
+  //     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  //     const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
+  //     const language = req.query.language;
+  //     const tags = req.query.tags;
+  
+  //     // Create a filter object for conditional filtering
+  //     const filter = {};
+  //     if (language) {
+  //       filter.language = language;
+  //     }
+  //     if (tags) {
+  //       const tagIds = await DiscoverTag.find({
+  //         keyText: { $regex: new RegExp(tags, "i") },
+  //       }).distinct("_id");
+  //       if (tagIds.length > 0) {
+  //         filter.tags = { $in: tagIds };
+  //       }
+  //     }
+  
+  //     // Count total documents to set up pagination
+  //     const totalCount = await Discover.countDocuments(filter);
+  //     const skip = (page - 1) * limit;
+  
+  //     // Shuffle the data using a random field and then paginate
+  //     const discovers = await Discover.aggregate([
+  //       { $match: filter },
+  //       { $addFields: { random: { $rand: {} } } },
+  //       { $sort: { random: 1 } },
+  //       { $skip: skip },
+  //       { $limit: limit },
+  //       {
+  //         $lookup: {
+  //           from: "discoverTags",
+  //           localField: "tags",
+  //           foreignField: "_id",
+  //           as: "tags",
+  //         },
+  //       },
+  //     ]);
+  
+  //     return handleResponse(
+  //       res,
+  //       200,
+  //       "success",
+  //       "Discover items fetched randomly.",
+  //       {
+  //         discovers,
+  //         totalCount,
+  //         totalPages: Math.ceil(totalCount / limit),
+  //         currentPage: page,
+  //       },
+  //       discovers.length
+  //     );
+  //   } catch (error) {
+  //     console.error("Error in getAllDiscovers function:", error);
+  //     return handleResponse(
+  //       res,
+  //       500,
+  //       "error",
+  //       "An error occurred while fetching discover items randomly.",
+  //       null,
+  //       0
+  //     );
+  //   }
+  // }
 
   // Get a single discover item by ID
   async getDiscoverById(req, res) {

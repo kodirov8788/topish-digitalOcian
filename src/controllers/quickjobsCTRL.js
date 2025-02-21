@@ -14,7 +14,12 @@ class QuickJobsCTRL {
       }
       const user = await Users.findOne({ _id: req.user.id });
       const coins = req.user.coins;
-  
+
+      // delete after testing
+      if (user.role !== "Employer") {
+        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      }
+      //----------------------------------------------
       if (coins < 5) {
         return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
       }
@@ -593,7 +598,6 @@ class QuickJobsCTRL {
       );
     }
   }
-
   async approveOrRejectJob(req, res) {
     try {
       if (!req.user) {
@@ -649,7 +653,6 @@ class QuickJobsCTRL {
       return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
     }
   }
-
   // make function to add Approved status to all jobs in the database
   async approveAllJobs(req, res) {
     try {
