@@ -434,6 +434,94 @@ const CompanyEndpoint = {
       },
     },
   },
+  "/companies/user/{userId}": {
+    get: {
+      summary: "Get companies by user ID",
+      tags: ["Company"],
+      description: "Fetches all companies associated with the specified user by their ID.",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      parameters: [
+        {
+          name: "userId",
+          in: "path",
+          required: true,
+          description: "The ID of the user to retrieve companies for.",
+          schema: {
+            type: "string",
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Companies retrieved successfully.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: { type: "string", example: "Companies retrieved successfully" },
+                  data: {
+                    type: "array",
+                    items: {
+                      $ref: "#/components/schemas/Company"
+                    }
+                  },
+                  totalCount: { type: "number", example: 2 },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description: "No companies found for this user.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "No companies found for this user." },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized - User not logged in or not allowed.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal Server Error.",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "An error occurred while fetching companies." },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   "/companies/status": {
     get: {
       summary: "get company status",

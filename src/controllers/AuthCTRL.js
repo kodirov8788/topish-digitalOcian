@@ -668,7 +668,6 @@ class AuthCTRL {
       for (let tokenObj of user.refreshTokens) {
         if (
           tokenObj.mobileToken === mobileToken &&
-          tokenObj.os === os &&
           tokenObj.browser === browser
         ) {
           tokenObj.token = refreshToken;

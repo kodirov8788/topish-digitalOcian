@@ -24,7 +24,8 @@ const {
   getRejectedCompanies,
   appliedCompanyCount,
   changeEmployerRole,
-  getMyCompanyRequest
+  getMyCompanyRequest,
+  getCompanyByUserId
 } = require("../controllers/companyCTRL");
 const authMiddleware = require("../middleware/auth-middleware");
 const router = require("express").Router();
@@ -39,6 +40,7 @@ router.route("/rejected").get(authMiddleware, getRejectedCompanies);
 router.route("/appliedCompanies").get(authMiddleware, appliedCompanyCount);
 router.route("/getMyRequest").get(authMiddleware, getMyCompanyRequest);
 
+router.route("/user/:userId").get(authMiddleware, getCompanyByUserId);
 router.route("/:companyId/approve").put(authMiddleware, approveCompany);
 router.route("/:id").put(authMiddleware, uploadFiles, updateCompany);
 router

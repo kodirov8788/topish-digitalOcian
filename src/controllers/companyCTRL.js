@@ -134,7 +134,53 @@ class CompanyCTRL {
       );
     }
   }
-
+  async getCompanyByUserId(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+      // Get userId from params if provided, otherwise use logged-in user's id
+      const userId = req.params.userId || req.user.id;
+  
+      // Find companies where the user is either the creator or a worker
+      const companies = await Company.find({
+        $or: [
+          { createdBy: userId },
+          { "workers.userId": userId }
+        ]
+      });
+  
+      if (!companies || companies.length === 0) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "No companies found for this user",
+          [],
+          0
+        );
+      }
+  
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Companies retrieved successfully",
+        companies,
+        companies.length
+      );
+    } catch (error) {
+      console.error("Error in getCompanyByUserId function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
   async approveCompany(req, res) {
     try {
       const companyId = req.params.companyId;
