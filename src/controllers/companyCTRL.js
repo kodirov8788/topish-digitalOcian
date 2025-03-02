@@ -153,9 +153,9 @@ class CompanyCTRL {
       if (!companies || companies.length === 0) {
         return handleResponse(
           res,
-          404,
-          "error",
-          "No companies found for this user",
+          200,
+          "success",
+          "No companies found",
           [],
           0
         );
