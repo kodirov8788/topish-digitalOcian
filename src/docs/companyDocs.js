@@ -282,7 +282,10 @@ const CompanyEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Companies retrieved successfully." },
+                  msg: {
+                    type: "string",
+                    example: "Companies retrieved successfully.",
+                  },
                   data: {
                     type: "array",
                     items: {
@@ -438,7 +441,8 @@ const CompanyEndpoint = {
     get: {
       summary: "Get companies by user ID",
       tags: ["Company"],
-      description: "Fetches all companies associated with the specified user by their ID.",
+      description:
+        "Fetches all companies associated with the specified user by their ID.",
       security: [
         {
           bearerAuth: [],
@@ -464,12 +468,15 @@ const CompanyEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Companies retrieved successfully" },
+                  msg: {
+                    type: "string",
+                    example: "Companies retrieved successfully",
+                  },
                   data: {
                     type: "array",
                     items: {
-                      $ref: "#/components/schemas/Company"
-                    }
+                      $ref: "#/components/schemas/Company",
+                    },
                   },
                   totalCount: { type: "number", example: 2 },
                 },
@@ -485,7 +492,10 @@ const CompanyEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "No companies found for this user." },
+                  msg: {
+                    type: "string",
+                    example: "No companies found for this user.",
+                  },
                 },
               },
             },
@@ -513,7 +523,10 @@ const CompanyEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "An error occurred while fetching companies." },
+                  msg: {
+                    type: "string",
+                    example: "An error occurred while fetching companies.",
+                  },
                 },
               },
             },
@@ -1331,8 +1344,7 @@ const CompanyEndpoint = {
     put: {
       summary: "Update a company",
       tags: ["Company"],
-      description:
-        "Allows an authorized user to update details of a company.",
+      description: "Allows an authorized user to update details of a company.",
       security: [
         {
           bearerAuth: [],
@@ -1438,7 +1450,8 @@ const CompanyEndpoint = {
                 },
                 benefits: {
                   type: "string",
-                  description: "Updated benefits of the company, comma-separated.",
+                  description:
+                    "Updated benefits of the company, comma-separated.",
                   example: "Health Insurance, Paid Time Off",
                 },
               },
@@ -3720,6 +3733,371 @@ const CompanyEndpoint = {
       },
     },
   },
+  // Add this endpoint documentation before the components section
+  "/companies/user/status": {
+    get: {
+      summary: "Get user's company employment status",
+      tags: ["Hr Company"],
+      description:
+        "Returns detailed information about a user's employment status across companies",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      parameters: [
+        {
+          name: "userId",
+          in: "path",
+          required: false,
+          description:
+            "ID of the user to check (if omitted, returns status of the current user)",
+          schema: {
+            type: "string",
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Successfully retrieved user's employment status",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "User employment status retrieved successfully",
+                  },
+                  data: {
+                    type: "object",
+                    properties: {
+                      isEmployed: { type: "boolean", example: true },
+                      companies: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            companyId: {
+                              type: "string",
+                              example: "60d0fe4f5311236168a109ca",
+                            },
+                            companyName: {
+                              type: "string",
+                              example: "Tech Solutions Inc.",
+                            },
+                            companyLogo: {
+                              type: "string",
+                              example: "https://example.com/logo.jpg",
+                            },
+                            role: { type: "string", example: "Manager" },
+                            isAdmin: { type: "boolean", example: false },
+                            joinedAt: {
+                              type: "string",
+                              format: "date-time",
+                              example: "2023-01-15T08:30:00Z",
+                            },
+                          },
+                        },
+                      },
+                      companyCount: { type: "number", example: 1 },
+                      pendingRequests: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            companyId: {
+                              type: "string",
+                              example: "60d0fe4f5311236168a109cb",
+                            },
+                            companyName: {
+                              type: "string",
+                              example: "Another Company",
+                            },
+                            companyLogo: {
+                              type: "string",
+                              example: "https://example.com/logo2.jpg",
+                            },
+                            requestDate: {
+                              type: "string",
+                              format: "date-time",
+                              example: "2023-03-20T10:15:00Z",
+                            },
+                          },
+                        },
+                      },
+                      pendingRequestCount: { type: "number", example: 1 },
+                    },
+                  },
+                  totalCount: { type: "number", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized - User not logged in",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal Server Error",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "Something went wrong: {error message}",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/companies/{companyId}/cancelRequest": {
+    delete: {
+      summary: "Cancel a company join request",
+      tags: ["Hr Company"],
+      description:
+        "Allows a user to cancel their pending request to join a company",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      parameters: [
+        {
+          name: "companyId",
+          in: "path",
+          required: true,
+          description:
+            "The ID of the company for which to cancel the join request",
+          schema: {
+            type: "string",
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Join request canceled successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Employment request canceled successfully",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized - User not logged in",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description:
+            "Not Found - No pending request found for this company or company not found",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "No pending request found for this company",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description:
+            "Internal Server Error - Error in processing the request",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "Something went wrong: {error message}",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  // Add this new endpoint documentation before the components section
+  "/companies/{companyId}/leave": {
+    delete: {
+      summary: "Leave a company",
+      tags: ["Hr Company"],
+      description:
+        "Allows a user to leave a company they are currently employed in",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      parameters: [
+        {
+          name: "companyId",
+          in: "path",
+          required: true,
+          description: "ID of the company the user wants to leave",
+          schema: {
+            type: "string",
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Successfully left the company",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "success" },
+                  msg: {
+                    type: "string",
+                    example: "Successfully left the company",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 1 },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          description: "Bad Request - You are the only admin of the company",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example:
+                      "You are the only admin of this company. Please appoint another admin before leaving.",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized - User not logged in",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: { type: "string", example: "Unauthorized" },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        404: {
+          description:
+            "Not Found - Company not found or user not employed in this company",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "You are not employed in this company",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+        500: {
+          description: "Internal Server Error",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  result: { type: "string", example: "error" },
+                  msg: {
+                    type: "string",
+                    example: "Something went wrong: {error message}",
+                  },
+                  data: { type: "null", example: null },
+                  totalCount: { type: "number", example: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+
   components: {
     schemas: {
       CompanyUpdate: {

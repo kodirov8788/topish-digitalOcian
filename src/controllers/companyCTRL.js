@@ -106,12 +106,12 @@ class CompanyCTRL {
       if (!company) {
         return handleResponse(
           res,
-        200,
-        "success",
-        "No company request found",
-        [],
-        0
-      );
+          200,
+          "success",
+          "No company request found",
+          [],
+          0
+        );
       }
 
       return handleResponse(
@@ -141,26 +141,16 @@ class CompanyCTRL {
       }
       // Get userId from params if provided, otherwise use logged-in user's id
       const userId = req.params.userId || req.user.id;
-  
+
       // Find companies where the user is either the creator or a worker
       const companies = await Company.find({
-        $or: [
-          { createdBy: userId },
-          { "workers.userId": userId }
-        ]
+        $or: [{ createdBy: userId }, { "workers.userId": userId }],
       });
-  
+
       if (!companies || companies.length === 0) {
-        return handleResponse(
-          res,
-          200,
-          "success",
-          "No companies found",
-          [],
-          0
-        );
+        return handleResponse(res, 200, "success", "No companies found", [], 0);
       }
-  
+
       return handleResponse(
         res,
         200,
@@ -185,37 +175,38 @@ class CompanyCTRL {
     try {
       const companyId = req.params.companyId;
       const { status } = req.body; // either "approved" or "rejected"
-       console.log("companyId:", companyId);
+      console.log("companyId:", companyId);
       // if (!req.user || req.user.role !== "Admin") {
       //   return handleResponse(res, 403, "error", "Access denied.", null, 0);
       // }
-      if (!["approved", "rejected","pending"].includes(status)) {
+      if (!["approved", "rejected", "pending"].includes(status)) {
         return handleResponse(res, 400, "error", "Invalid status.", null, 0);
       }
-  
+
       const company = await Company.findByIdAndUpdate(
         companyId,
         { status },
         { new: true }
       );
-  
+
       if (!company) {
         return handleResponse(res, 404, "error", "Company not found.", null, 0);
       }
-  
+
       // If the company is approved, make the createdBy user an admin
       if (status === "approved") {
         const userId = company.createdBy;
         const isAlreadyAdmin = company.workers.some(
-          (worker) => worker.userId.toString() === userId.toString() && worker.isAdmin
+          (worker) =>
+            worker.userId.toString() === userId.toString() && worker.isAdmin
         );
-  
+
         if (!isAlreadyAdmin) {
           company.workers.push({ userId, isAdmin: true, role: "Admin" });
           await company.save();
         }
       }
-  
+
       return handleResponse(
         res,
         200,
@@ -522,6 +513,7 @@ class CompanyCTRL {
                   fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
                   isAdmin: workerData.isAdmin,
                   userId: worker.id,
+                  role: workerData.role,
                 };
               }
               return workerData; // Return original workerData if user is not found
@@ -590,6 +582,7 @@ class CompanyCTRL {
                 fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
                 isAdmin: workerData.isAdmin,
                 userId: worker.id,
+                role: workerData.role,
               };
             }
             return workerData; // Return original workerData if user is not found
@@ -634,14 +627,28 @@ class CompanyCTRL {
       // console.log("req body: ", req.body);
       let company = await Company.findById(companyId);
       if (!company) {
-        return handleResponse(res, 404, "error", `Company not found with ID: ${companyId}`, null, 0);
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Company not found with ID: ${companyId}`,
+          null,
+          0
+        );
       }
 
       let hrAdmin = company.workers.find(
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
       if (!hrAdmin && user.role !== "Admin") {
-        return handleResponse(res, 401, "error", "You are not authorized", null, 0);
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "You are not authorized",
+          null,
+          0
+        );
       }
 
       // Process new images if provided
@@ -650,13 +657,19 @@ class CompanyCTRL {
         if (req.uploadResults.logo && req.uploadResults.logo.length > 0) {
           company.logo = req.uploadResults.logo;
         }
-        if (req.uploadResults.company_logo && req.uploadResults.company_logo.length > 0) {
+        if (
+          req.uploadResults.company_logo &&
+          req.uploadResults.company_logo.length > 0
+        ) {
           company.company_logo = req.uploadResults.company_logo;
         }
         if (req.uploadResults.images && req.uploadResults.images.length > 0) {
           company.images = req.uploadResults.images;
         }
-        if (req.uploadResults.licenseFile && req.uploadResults.licenseFile.length > 0) {
+        if (
+          req.uploadResults.licenseFile &&
+          req.uploadResults.licenseFile.length > 0
+        ) {
           company.licenseFiles = req.uploadResults.licenseFile;
         }
       }
@@ -673,23 +686,42 @@ class CompanyCTRL {
       company.overtime = body.overtime || company.overtime;
       company.phoneNumber = body.phoneNumber || company.phoneNumber;
 
-      company.info.legal_representative = body.legal_representative || company.info.legal_representative;
-      company.info.registration_capital = body.registration_capital || company.info.registration_capital;
-      company.info.date_of_establishment = body.date_of_establishment || company.info.date_of_establishment;
+      company.info.legal_representative =
+        body.legal_representative || company.info.legal_representative;
+      company.info.registration_capital =
+        body.registration_capital || company.info.registration_capital;
+      company.info.date_of_establishment =
+        body.date_of_establishment || company.info.date_of_establishment;
 
       // Special handling for benefits as an array of strings
       if (body.benefits === "" || body.benefits === undefined) {
         company.benefits = [];
       } else {
-        company.benefits = body.benefits.split(",").map((benefit) => String(benefit));
+        company.benefits = body.benefits
+          .split(",")
+          .map((benefit) => String(benefit));
       }
 
       await company.save();
 
-      return handleResponse(res, 200, "success", "Company updated successfully", company, 1);
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Company updated successfully",
+        company,
+        1
+      );
     } catch (error) {
       console.error("Error in updateCompany function:", error);
-      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
     }
   }
   async updateCompanyMinorChange(req, res) {
@@ -980,18 +1012,6 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
 
       const user = await Users.findOne({ _id: req.user.id });
-      // const allowedRoles = ["Employer"];
-
-      // if (!allowedRoles.includes(user.role)) {
-      //   return handleResponse(
-      //     res,
-      //     401,
-      //     "error",
-      //     "You are not allowed!",
-      //     null,
-      //     0
-      //   );
-      // }
 
       // Check if the user is already employed in any company
       const isEmployed = await Company.findOne({ "workers.userId": user._id });
@@ -1394,10 +1414,10 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const { id: companyId } = req.params;
-      const user = await Users.findOne({ _id: req.user.id });
-      if (user.role !== "Employer" && user.role !== "Admin") {
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-      }
+      // const user = await Users.findOne({ _id: req.user.id });
+      // if ( user.role !== "Admin") {
+      //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      // }
 
       const company = await Company.findById(companyId);
       if (!company) {
@@ -1407,7 +1427,15 @@ class CompanyCTRL {
         (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
       );
       if (!hrAdmin)
-        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+        // message will be you are not hr admin
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "You are not hr admin",
+          null,
+          0
+        );
 
       const employmentRequests = await CompanyEmploymentReq.find({
         companyId: companyId,
@@ -1863,7 +1891,6 @@ class CompanyCTRL {
       );
     }
   }
-
   async changeEmployerRole(req, res) {
     try {
       if (!req.user) {
@@ -1988,7 +2015,15 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const { company_id, service_id, price, duration, status, image, description } = req.body;
+      const {
+        company_id,
+        service_id,
+        price,
+        duration,
+        status,
+        image,
+        description,
+      } = req.body;
 
       // Validate required fields
       if (!company_id || !service_id || !description) {
@@ -2011,7 +2046,9 @@ class CompanyCTRL {
       // Check if the user has the "Manager" role within the company
       const user = await Users.findById(req.user.id);
       const isManager = company.workers.some(
-        (worker) => worker.userId.toString() === user._id.toString() && worker.role === "Manager"
+        (worker) =>
+          worker.userId.toString() === user._id.toString() &&
+          worker.role === "Manager"
       );
 
       if (!isManager) {
@@ -2049,6 +2086,273 @@ class CompanyCTRL {
       );
     } catch (error) {
       console.error("Error in addCompanyServices function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+
+  //// filepath: /Users/Kodirovdev/Desktop/TOPISH project/topish-digitalOcian/src/controllers/companyCTRL.js
+  // Add this method to your CompanyCTRL class
+  // Add this method to your CompanyCTRL class
+  async getUserCompanyStatus(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const userId = req.params.userId || req.user.id;
+
+      // Find all companies where the user is a worker
+      const companies = await Company.find({
+        "workers.userId": userId,
+      });
+
+      if (!companies || companies.length === 0) {
+        // Check if the user has any pending employment requests
+        const pendingRequests = await CompanyEmploymentReq.find({
+          requesterId: userId,
+          status: "pending",
+        }).populate("companyId", "name logo");
+
+        // Return status information with pending requests
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "User is not employed in any company",
+          {
+            isEmployed: false,
+            status: "pending",
+            pendingRequests: pendingRequests.map((req) => ({
+              companyId: req.companyId._id,
+              companyName: req.companyId.name,
+              companyLogo: req.companyId.logo,
+              requestDate: req.createdAt,
+            })),
+            pendingRequestCount: pendingRequests.length,
+          },
+          1
+        );
+      }
+
+      // Format company data with user's role in each company
+      const employmentDetails = companies.map((company) => {
+        const workerData = company.workers.find(
+          (worker) => worker.userId.toString() === userId.toString()
+        );
+
+        return {
+          companyId: company._id,
+          companyName: company.name,
+          companyLogo: company.logo,
+          role: workerData.role || "Employee",
+          isAdmin: workerData.isAdmin || false,
+          joinedAt: workerData.joinedAt || company.createdAt,
+        };
+      });
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "User employment status retrieved successfully",
+        {
+          isEmployed: true,
+          companies: employmentDetails,
+          companyCount: employmentDetails.length,
+        },
+        1
+      );
+    } catch (error) {
+      console.error("Error in getUserCompanyStatus function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async cancelCompanyJoinRequest(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { companyId } = req.params;
+
+      // Find company to ensure it exists
+      const company = await Company.findById(companyId);
+      if (!company) {
+        return handleResponse(res, 404, "error", "Company not found", null, 0);
+      }
+
+      // Find the pending request by the current user for this company
+      const existingRequest = await CompanyEmploymentReq.findOne({
+        requesterId: req.user.id,
+        companyId: companyId,
+        status: "pending", // Only pending requests can be canceled
+      });
+
+      if (!existingRequest) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "No pending request found for this company",
+          null,
+          0
+        );
+      }
+
+      // Delete the request
+      await CompanyEmploymentReq.findByIdAndDelete(existingRequest._id);
+
+      // Fetch all admins of the company for notifications
+      const adminWorkers = company.workers.filter((worker) => worker.isAdmin);
+      const adminUserIds = adminWorkers.map((worker) => worker.userId);
+
+      // Fetch all admin users and their device tokens
+      const adminUsers = await Users.find({ _id: { $in: adminUserIds } });
+      const adminDeviceTokens = adminUsers.flatMap(
+        (user) => user.mobileToken || []
+      );
+
+      // Send notifications to company admins
+      if (adminDeviceTokens.length > 0) {
+        const user = await Users.findById(req.user.id);
+        const notification = {
+          title: "Join Request Canceled",
+          body: `${user.fullName} has canceled their employment request.`,
+        };
+        const info = {
+          companyId: companyId,
+          requesterId: req.user.id,
+        };
+
+        await sendNotification(adminDeviceTokens, notification, info);
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Employment request canceled successfully",
+        null,
+        1
+      );
+    } catch (error) {
+      console.error("Error in cancelCompanyJoinRequest function:", error);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  // Add this method to your CompanyCTRL class
+  async leaveCompany(req, res) {
+    try {
+      if (!req.user) {
+        return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      }
+
+      const { companyId } = req.params;
+
+      // Find company to ensure it exists
+      const company = await Company.findById(companyId);
+      if (!company) {
+        return handleResponse(res, 404, "error", "Company not found", null, 0);
+      }
+
+      // Check if user is part of the company
+      const isEmployed = company.workers.some(
+        (worker) => worker.userId.toString() === req.user.id
+      );
+
+      if (!isEmployed) {
+        return handleResponse(
+          res,
+          404,
+          "error",
+          "You are not employed in this company",
+          null,
+          0
+        );
+      }
+
+      // Check if user is the only admin
+      const isAdmin = company.workers.some(
+        (worker) => worker.userId.toString() === req.user.id && worker.isAdmin
+      );
+
+      if (isAdmin) {
+        const adminCount = company.workers.filter(
+          (worker) => worker.isAdmin
+        ).length;
+        if (adminCount === 1) {
+          return handleResponse(
+            res,
+            400,
+            "error",
+            "You are the only admin of this company. Please appoint another admin before leaving.",
+            null,
+            0
+          );
+        }
+      }
+
+      // Remove user from company workers
+      company.workers = company.workers.filter(
+        (worker) => worker.userId.toString() !== req.user.id
+      );
+      await company.save();
+
+      // Notify company admins
+      const adminWorkers = company.workers.filter((worker) => worker.isAdmin);
+      const adminUserIds = adminWorkers.map((worker) => worker.userId);
+
+      // Fetch all admin users and their device tokens
+      const adminUsers = await Users.find({ _id: { $in: adminUserIds } });
+      const adminDeviceTokens = adminUsers.flatMap(
+        (user) => user.mobileToken || []
+      );
+
+      if (adminDeviceTokens.length > 0) {
+        const user = await Users.findById(req.user.id);
+        const notification = {
+          title: "Employee Left Company",
+          body: `${user.fullName} has left the company.`,
+        };
+        const info = {
+          companyId: companyId,
+          userId: req.user.id,
+        };
+
+        await sendNotification(adminDeviceTokens, notification, info);
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Successfully left the company",
+        null,
+        1
+      );
+    } catch (error) {
+      console.error("Error in leaveCompany function:", error);
       return handleResponse(
         res,
         500,
