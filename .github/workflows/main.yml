@@ -1,0 +1,48 @@
+name: Deploy Topish
+
+# Trigger the workflow on push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      # Install dependencies
+      #- name: Install dependencies
+      #  run: npm install
+
+      # Build the Nest.js app
+      #- name: Build the app
+      #  run: npm run build
+
+      # Deploy to VR machine via SSH
+      - name: Deploy to VR Machine
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VR_MACHINE_HOST }} # Server IP or domain
+          username: ${{ secrets.VR_MACHINE_USER }} # SSH username
+          key: ${{ secrets.VR_MACHINE_SSH_KEY }} # Private SSH key
+          password: ${{ secrets.VR_MACHINE_PASSWORD }} # SSH password
+          port: 22 # SSH port (default 22)
+          script: |
+            cd topish-digitalOcian             # Path on the server
+            git pull origin main  
+            # #npm install           # Install prod dependencies
+            # #npm run build                       # Build on server (optional)
+            pm2 restart Backend                 # Restart app with PM2
+
+          
