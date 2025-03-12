@@ -53,7 +53,14 @@ class AuthCTRL {
     try {
       // console.log("req.user: ", req.user);
       if (!req.user || req.user.role !== "Admin") {
-        return handleResponse(res, 403, "error", "Forbidden: Only admins can perform this action", null, 0);
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "Forbidden: Only admins can perform this action",
+          null,
+          0
+        );
       }
 
       const { phoneNumber, role } = req.body;
@@ -120,7 +127,6 @@ class AuthCTRL {
     }
   }
   async sendRegisterCode(req, res) {
-    // console.log("sendRegisterCode", req.body)
     try {
       const { error } = RegisterValidation(req.body);
       if (error) {
@@ -139,23 +145,16 @@ class AuthCTRL {
         phoneNumber: phoneNumberWithCountryCode,
       });
 
-      if (existingUser) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "User already exists with this phone number"
-        );
-      }
-
       const now = Date.now();
       let confirmationCode = null;
       let confirmationCodeExpires = null;
+
       if (process.env.NODE_ENV === "production") {
         if (
           phoneNumberWithCountryCode === "+998996730970" ||
           phoneNumberWithCountryCode === "+998507039990" ||
-          phoneNumberWithCountryCode === "+998954990501" || phoneNumberWithCountryCode === "+998951112233"
+          phoneNumberWithCountryCode === "+998954990501" ||
+          phoneNumberWithCountryCode === "+998951112233"
         ) {
           confirmationCode = 112233;
           confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
@@ -164,10 +163,12 @@ class AuthCTRL {
           confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
         }
       } else {
-        confirmationCode = 112233
+        confirmationCode = 112233;
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
+
       if (!existingUser) {
+        // Create new user if not exists
         existingUser = new Users({
           phoneNumber: phoneNumberWithCountryCode,
           confirmationCode,
@@ -177,8 +178,23 @@ class AuthCTRL {
           mobileToken: [mobileToken],
         });
       } else {
+        // Update existing user with new confirmation code
         existingUser.confirmationCode = confirmationCode;
         existingUser.confirmationCodeExpires = confirmationCodeExpires;
+
+        // Add mobile token if it doesn't exist
+        if (
+          mobileToken &&
+          (!existingUser.mobileToken ||
+            !existingUser.mobileToken.includes(mobileToken))
+        ) {
+          existingUser.mobileToken = existingUser.mobileToken || [];
+          existingUser.mobileToken.push(mobileToken);
+        }
+
+        // Record login attempt
+        existingUser.loginCodeAttempts = existingUser.loginCodeAttempts || [];
+        existingUser.loginCodeAttempts.push(now);
       }
 
       await existingUser.save();
@@ -186,7 +202,8 @@ class AuthCTRL {
       if (
         phoneNumberWithCountryCode === "+998996730970" ||
         phoneNumberWithCountryCode === "+998507039990" ||
-        phoneNumberWithCountryCode === "+998954990501" || phoneNumberWithCountryCode === "+998951112233"
+        phoneNumberWithCountryCode === "+998954990501" ||
+        phoneNumberWithCountryCode === "+998951112233"
       ) {
         return handleResponse(
           res,
@@ -207,10 +224,8 @@ class AuthCTRL {
               phoneNumberWithCountryCode,
               `Enter the code ${confirmationCode} to login to the Topish app.`
             );
-            // console.log(`Message SID: ${messageSid}`);
           }
         }
-
 
         return handleResponse(
           res,
@@ -305,9 +320,6 @@ class AuthCTRL {
       } = req.body;
       // console.log("phoneNumber: ", phoneNumber);
 
-
-
-
       if (!phoneNumber || !confirmationCode) {
         // console.log("phoneNumber: ", phoneNumber);
         // console.log("confirmationCode: ", confirmationCode);
@@ -351,15 +363,15 @@ class AuthCTRL {
       user.confirmationCode = null;
       user.confirmationCodeExpires = null;
       user.savedJobs = [];
-      user.searchJob = true,
-        user.employer = {
+      (user.searchJob = true),
+        (user.employer = {
           aboutCompany: "",
           industry: "",
           contactNumber: "",
           contactEmail: "",
           jobs: [],
-          profileVisibility: true
-        };
+          profileVisibility: true,
+        });
       user.service = {
         savedOffices: [],
       };
@@ -447,7 +459,8 @@ class AuthCTRL {
       if (
         phoneNumberWithCountryCode === "+998996730970" ||
         phoneNumberWithCountryCode === "+998507039990" ||
-        phoneNumberWithCountryCode === "+998954990501" || phoneNumberWithCountryCode === "+998951112233"
+        phoneNumberWithCountryCode === "+998954990501" ||
+        phoneNumberWithCountryCode === "+998951112233"
       ) {
         confirmationCode = 112233;
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
@@ -533,8 +546,13 @@ class AuthCTRL {
       let confirmationCodeExpires = null;
       // console.log("process.env.NODE_ENV: ", process.env.NODE_ENV)
       if (process.env.NODE_ENV === "production") {
-        if (phoneNumberWithCountryCode === "+998996730970" || phoneNumberWithCountryCode === "+998507039990" || phoneNumberWithCountryCode === "+998954990501" || phoneNumberWithCountryCode === "+998951112233") {
-          confirmationCode = 112233
+        if (
+          phoneNumberWithCountryCode === "+998996730970" ||
+          phoneNumberWithCountryCode === "+998507039990" ||
+          phoneNumberWithCountryCode === "+998954990501" ||
+          phoneNumberWithCountryCode === "+998951112233"
+        ) {
+          confirmationCode = 112233;
           confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
         } else {
           confirmationCode = Math.floor(100000 + Math.random() * 900000);
@@ -570,7 +588,10 @@ class AuthCTRL {
           if (phoneNumberWithCountryCode.startsWith("+998")) {
             await sendCustomSms(token, phoneNumberWithCountryCode, message);
           } else {
-            const messageSid = await sendGlobalSms(phoneNumberWithCountryCode, `Enter the code ${confirmationCode} to login to the Topish app.`);
+            const messageSid = await sendGlobalSms(
+              phoneNumberWithCountryCode,
+              `Enter the code ${confirmationCode} to login to the Topish app.`
+            );
             console.log(`Message SID: ${messageSid}`);
           }
         }
