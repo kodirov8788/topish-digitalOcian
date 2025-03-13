@@ -16,7 +16,9 @@ const {
   makeVoiceCall,
 } = require("../utils/smsService");
 const jwt = require("jsonwebtoken");
+const { sendOtpMessage } = require("../utils/engagelab_smsService");
 const { PromptCode } = require("../models/other_models");
+const PendingUsers = require("../models/pending_register_model");
 function createRandomFullname() {
   const firstName = "User";
   const randomNumber = Math.floor(Math.random() * 1000000);
@@ -141,9 +143,22 @@ class AuthCTRL {
       } else {
         phoneNumberWithCountryCode = phoneNumber;
       }
-      let existingUser = await Users.findOne({
+
+      // Check if there's an existing user with this phone number
+      const existingUser = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
       });
+
+      if (existingUser && existingUser.phoneConfirmed) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "An account already exists with this phone number. Please login instead.",
+          null,
+          0
+        );
+      }
 
       const now = Date.now();
       let confirmationCode = null;
@@ -167,44 +182,25 @@ class AuthCTRL {
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
 
-      if (!existingUser) {
-        // Create new user if not exists
-        existingUser = new Users({
-          phoneNumber: phoneNumberWithCountryCode,
-          confirmationCode,
-          confirmationCodeExpires,
-          loginCodeAttempts: [now],
-          role: "JobSeeker",
-          mobileToken: [mobileToken],
-        });
-      } else {
-        // Update existing user with new confirmation code
-        existingUser.confirmationCode = confirmationCode;
-        existingUser.confirmationCodeExpires = confirmationCodeExpires;
-
-        // Add mobile token if it doesn't exist
-        if (
-          mobileToken &&
-          (!existingUser.mobileToken ||
-            !existingUser.mobileToken.includes(mobileToken))
-        ) {
-          existingUser.mobileToken = existingUser.mobileToken || [];
-          existingUser.mobileToken.push(mobileToken);
-        }
-
-        // Record login attempt
-        existingUser.loginCodeAttempts = existingUser.loginCodeAttempts || [];
-        existingUser.loginCodeAttempts.push(now);
-      }
-
-      await existingUser.save();
-
+      // Test phone numbers don't need SMS
       if (
         phoneNumberWithCountryCode === "+998996730970" ||
         phoneNumberWithCountryCode === "+998507039990" ||
         phoneNumberWithCountryCode === "+998954990501" ||
         phoneNumberWithCountryCode === "+998951112233"
       ) {
+        // Store in pending users collection
+        await PendingUsers.findOneAndUpdate(
+          { phoneNumber: phoneNumberWithCountryCode },
+          {
+            phoneNumber: phoneNumberWithCountryCode,
+            confirmationCode,
+            confirmationCodeExpires,
+            mobileToken: [mobileToken],
+          },
+          { upsert: true, new: true }
+        );
+
         return handleResponse(
           res,
           200,
@@ -214,17 +210,79 @@ class AuthCTRL {
           1
         );
       } else {
-        const token = await getEskizAuthToken();
-        const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
         if (process.env.NODE_ENV === "production") {
-          if (phoneNumberWithCountryCode.startsWith("+998")) {
-            await sendCustomSms(token, phoneNumberWithCountryCode, message);
-          } else {
-            const messageSid = await sendGlobalSms(
-              phoneNumberWithCountryCode,
-              `Enter the code ${confirmationCode} to login to the Topish app.`
+          try {
+            // For Uzbekistan numbers, use Eskiz service
+            if (phoneNumberWithCountryCode.startsWith("+998")) {
+              const token = await getEskizAuthToken();
+              const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
+              await sendCustomSms(token, phoneNumberWithCountryCode, message);
+              console.log(
+                `OTP sent to ${phoneNumberWithCountryCode} using Eskiz service`
+              );
+            }
+            // For USA (+1) and China (+86) numbers, use Engagelab
+            else if (
+              phoneNumberWithCountryCode.startsWith("+1") ||
+              phoneNumberWithCountryCode.startsWith("+86")
+            ) {
+              await sendOtpMessage(
+                phoneNumberWithCountryCode,
+                confirmationCode
+              );
+              console.log(
+                `OTP sent to ${phoneNumberWithCountryCode} using Engagelab service`
+              );
+            }
+            // For other international numbers, show error
+            else {
+              console.error(
+                `Unsupported phone number format: ${phoneNumberWithCountryCode}`
+              );
+              return handleResponse(
+                res,
+                400,
+                "error",
+                "Unsupported phone number format. Please use a phone number from Uzbekistan, USA, or China.",
+                null,
+                0
+              );
+            }
+
+            // Store in pending users collection after successful SMS
+            await PendingUsers.findOneAndUpdate(
+              { phoneNumber: phoneNumberWithCountryCode },
+              {
+                phoneNumber: phoneNumberWithCountryCode,
+                confirmationCode,
+                confirmationCodeExpires,
+                mobileToken: [mobileToken],
+              },
+              { upsert: true, new: true }
+            );
+          } catch (smsError) {
+            console.error("Error sending SMS:", smsError);
+            return handleResponse(
+              res,
+              500,
+              "error",
+              "Failed to send SMS. Please try again later.",
+              null,
+              0
             );
           }
+        } else {
+          // In development, store without sending SMS
+          await PendingUsers.findOneAndUpdate(
+            { phoneNumber: phoneNumberWithCountryCode },
+            {
+              phoneNumber: phoneNumberWithCountryCode,
+              confirmationCode,
+              confirmationCodeExpires,
+              mobileToken: [mobileToken],
+            },
+            { upsert: true, new: true }
+          );
         }
 
         return handleResponse(
@@ -318,11 +376,8 @@ class AuthCTRL {
         browser,
         ip,
       } = req.body;
-      // console.log("phoneNumber: ", phoneNumber);
 
       if (!phoneNumber || !confirmationCode) {
-        // console.log("phoneNumber: ", phoneNumber);
-        // console.log("confirmationCode: ", confirmationCode);
         return handleResponse(
           res,
           400,
@@ -332,7 +387,6 @@ class AuthCTRL {
           0
         );
       }
-      let user = null;
 
       let phoneNumberWithCountryCode = null;
 
@@ -341,13 +395,14 @@ class AuthCTRL {
       } else {
         phoneNumberWithCountryCode = phoneNumber;
       }
-      user = await Users.findOne({
+
+      // First check in the pending users collection
+      const pendingUser = await PendingUsers.findOne({
         phoneNumber: phoneNumberWithCountryCode,
         confirmationCode,
       });
-      // console.log("user: ", user)
-      if (!user || new Date() > user.confirmationCodeExpires) {
-        // console.log("user: ", user);
+
+      if (!pendingUser || new Date() > pendingUser.confirmationCodeExpires) {
         return handleResponse(
           res,
           400,
@@ -357,54 +412,89 @@ class AuthCTRL {
           0
         );
       }
+
+      // Check if there's an existing user
+      let existingUser = await Users.findOne({
+        phoneNumber: phoneNumberWithCountryCode,
+      });
+
       let prompt = await PromptCode.find();
 
-      user.phoneConfirmed = true;
-      user.confirmationCode = null;
-      user.confirmationCodeExpires = null;
-      user.savedJobs = [];
-      (user.searchJob = true),
-        (user.employer = {
-          aboutCompany: "",
-          industry: "",
-          contactNumber: "",
-          contactEmail: "",
-          jobs: [],
-          profileVisibility: true,
+      // Create a new user or update the existing one
+      if (!existingUser) {
+        // Create a completely new user
+        existingUser = new Users({
+          phoneNumber: phoneNumberWithCountryCode,
+          phoneConfirmed: true,
+          savedJobs: [],
+          searchJob: true,
+          employer: {
+            aboutCompany: "",
+            industry: "",
+            contactNumber: "",
+            contactEmail: "",
+            jobs: [],
+            profileVisibility: true,
+          },
+          service: {
+            savedOffices: [],
+          },
+          resume: createDefaultResume(),
+          fullName: createRandomFullname(),
+          gptPrompt: prompt[0]?.code || "",
+          jobTitle: "",
+          profileVisibility: false,
+          mobileToken: pendingUser.mobileToken,
+          role: "JobSeeker",
         });
-      user.service = {
-        savedOffices: [],
-      };
+      } else {
+        // Update existing user
+        existingUser.phoneConfirmed = true;
+        existingUser.confirmationCode = null;
+        existingUser.confirmationCodeExpires = null;
 
-      user.resume = createDefaultResume();
-      user.fullName = createRandomFullname();
-      user.gptPrompt = prompt[0]?.code || "";
-      user.jobTitle = "";
-      user.profileVisibility = false;
-      await user.save();
+        // Add mobile token if it doesn't exist
+        if (pendingUser.mobileToken && pendingUser.mobileToken.length > 0) {
+          existingUser.mobileToken = existingUser.mobileToken || [];
+          for (const token of pendingUser.mobileToken) {
+            if (!existingUser.mobileToken.includes(token)) {
+              existingUser.mobileToken.push(token);
+            }
+          }
+        }
+      }
 
-      const tokenUser = createTokenUser(user);
+      await existingUser.save();
+
+      // Generate tokens for the user
+      const tokenUser = createTokenUser(existingUser);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
 
-      user.refreshTokens = [
+      existingUser.refreshTokens = [
         {
           token: refreshToken,
-          deviceId: deviceId || "unknown-device-id", // Use 'unknown-device-id' if deviceId is not provided
-          deviceName: deviceName || "unknown-device-name", // Use 'unknown-device-name' if deviceName is not provided
-          region: region || "unknown-region", // Use 'unknown-region' if region is not provided
-          os: os || "unknown-os", // Use 'unknown-os' if os is not provided
-          browser: browser || "unknown-browser", // Use 'unknown-browser' if browser is not provided
-          ip: ip || "unknown-ip", // Use 'unknown-ip' if ip is not provided
+          deviceId: deviceId || "unknown-device-id",
+          deviceName: deviceName || "unknown-device-name",
+          region: region || "unknown-region",
+          os: os || "unknown-os",
+          browser: browser || "unknown-browser",
+          ip: ip || "unknown-ip",
         },
       ];
-      await user.save();
+
+      await existingUser.save();
+
+      // Clean up - remove from pending users
+      await PendingUsers.findOneAndDelete({
+        phoneNumber: phoneNumberWithCountryCode,
+      });
 
       return handleResponse(
         res,
         201,
         "success",
         "User registered successfully.",
-        { accessToken, refreshToken, role: user.role }
+        { accessToken, refreshToken, role: existingUser.role }
       );
     } catch (error) {
       return handleResponse(
@@ -439,6 +529,7 @@ class AuthCTRL {
       } else {
         phoneNumberWithCountryCode = phoneNumber;
       }
+
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
       });
@@ -453,9 +544,11 @@ class AuthCTRL {
           0
         );
       }
+
       let now = Date.now();
       let confirmationCode = null;
       let confirmationCodeExpires = null;
+
       if (
         phoneNumberWithCountryCode === "+998996730970" ||
         phoneNumberWithCountryCode === "+998507039990" ||
@@ -473,7 +566,12 @@ class AuthCTRL {
       user.confirmationCodeExpires = confirmationCodeExpires;
       await user.save();
 
-      if (phoneNumberWithCountryCode === "+998996730970") {
+      if (
+        phoneNumberWithCountryCode === "+998996730970" ||
+        phoneNumberWithCountryCode === "+998507039990" ||
+        phoneNumberWithCountryCode === "+998954990501" ||
+        phoneNumberWithCountryCode === "+998951112233"
+      ) {
         return handleResponse(
           res,
           200,
@@ -483,9 +581,57 @@ class AuthCTRL {
           0
         );
       } else {
-        // const token = await getEskizAuthToken();
-        // const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
-        // await sendCustomSms(token, phoneNumberWithCountryCode, message);
+        if (process.env.NODE_ENV === "production") {
+          try {
+            // For Uzbekistan numbers, use Eskiz service
+            if (phoneNumberWithCountryCode.startsWith("+998")) {
+              const token = await getEskizAuthToken();
+              const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
+              await sendCustomSms(token, phoneNumberWithCountryCode, message);
+              console.log(
+                `OTP sent to ${phoneNumberWithCountryCode} using Eskiz service`
+              );
+            }
+            // For USA (+1) and China (+86) numbers, use Engagelab
+            else if (
+              phoneNumberWithCountryCode.startsWith("+1") ||
+              phoneNumberWithCountryCode.startsWith("+86")
+            ) {
+              await sendOtpMessage(
+                phoneNumberWithCountryCode,
+                confirmationCode
+              );
+              console.log(
+                `OTP sent to ${phoneNumberWithCountryCode} using Engagelab service`
+              );
+            }
+            // For other international numbers, show error
+            else {
+              console.error(
+                `Unsupported phone number format: ${phoneNumberWithCountryCode}`
+              );
+              return handleResponse(
+                res,
+                400,
+                "error",
+                "Unsupported phone number format. Please use a phone number from Uzbekistan, USA, or China.",
+                null,
+                0
+              );
+            }
+          } catch (smsError) {
+            console.error("Error sending SMS:", smsError);
+            return handleResponse(
+              res,
+              500,
+              "error",
+              "Failed to send SMS. Please try again later.",
+              null,
+              0
+            );
+          }
+        }
+
         return handleResponse(
           res,
           200,
@@ -507,7 +653,6 @@ class AuthCTRL {
     }
   }
   async sendLoginCode(req, res) {
-    // console.log("sendLoginCode", req.body)
     try {
       const { phoneNumber } = req.body;
 
@@ -529,6 +674,7 @@ class AuthCTRL {
       } else {
         phoneNumberWithCountryCode = phoneNumber;
       }
+
       let user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
       });
@@ -544,7 +690,7 @@ class AuthCTRL {
       const now = Date.now();
       let confirmationCode = null;
       let confirmationCodeExpires = null;
-      // console.log("process.env.NODE_ENV: ", process.env.NODE_ENV)
+
       if (process.env.NODE_ENV === "production") {
         if (
           phoneNumberWithCountryCode === "+998996730970" ||
@@ -559,14 +705,14 @@ class AuthCTRL {
           confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
         }
       } else {
-        // -----
         confirmationCode = 112233;
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
-      //-----
+
       user.confirmationCode = confirmationCode;
       user.confirmationCodeExpires = confirmationCodeExpires;
       await user.save();
+
       if (
         phoneNumberWithCountryCode === "+998996730970" ||
         phoneNumberWithCountryCode === "+998507039990" ||
@@ -582,19 +728,57 @@ class AuthCTRL {
           1
         );
       } else {
-        const token = await getEskizAuthToken();
-        const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
         if (process.env.NODE_ENV === "production") {
-          if (phoneNumberWithCountryCode.startsWith("+998")) {
-            await sendCustomSms(token, phoneNumberWithCountryCode, message);
-          } else {
-            const messageSid = await sendGlobalSms(
-              phoneNumberWithCountryCode,
-              `Enter the code ${confirmationCode} to login to the Topish app.`
+          try {
+            // For Uzbekistan numbers, use Eskiz service
+            if (phoneNumberWithCountryCode.startsWith("+998")) {
+              const token = await getEskizAuthToken();
+              const message = `topish Ilovasiga kirish uchun tasdiqlash kodingiz: ${confirmationCode} OJt59qMBmYJ`;
+              await sendCustomSms(token, phoneNumberWithCountryCode, message);
+              console.log(
+                `OTP sent to ${phoneNumberWithCountryCode} using Eskiz service`
+              );
+            }
+            // For USA (+1) and China (+86) numbers, use Engagelab
+            else if (
+              phoneNumberWithCountryCode.startsWith("+1") ||
+              phoneNumberWithCountryCode.startsWith("+86")
+            ) {
+              await sendOtpMessage(
+                phoneNumberWithCountryCode,
+                confirmationCode
+              );
+              console.log(
+                `OTP sent to ${phoneNumberWithCountryCode} using Engagelab service`
+              );
+            }
+            // For other international numbers, show error
+            else {
+              console.error(
+                `Unsupported phone number format: ${phoneNumberWithCountryCode}`
+              );
+              return handleResponse(
+                res,
+                400,
+                "error",
+                "Unsupported phone number format. Please use a phone number from Uzbekistan, USA, or China.",
+                null,
+                0
+              );
+            }
+          } catch (smsError) {
+            console.error("Error sending SMS:", smsError);
+            return handleResponse(
+              res,
+              500,
+              "error",
+              "Failed to send SMS. Please try again later.",
+              null,
+              0
             );
-            console.log(`Message SID: ${messageSid}`);
           }
         }
+
         return handleResponse(
           res,
           200,
