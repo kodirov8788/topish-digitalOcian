@@ -16,19 +16,19 @@ class QuickJobsCTRL {
       const coins = req.user.coins;
 
       // delete after testing
-      if (user.role !== "Employer") {
-        return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
-      }
+      // if (user.role !== "Employer") {
+      //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
+      // }
       //----------------------------------------------
       if (coins < 5) {
         return handleResponse(res, 400, "error", "Not enough coins.", null, 0);
       }
-  
+
       // Check if the user has a company
       const companies = await Company.find({
         "workers.userId": { $in: user._id },
       });
-  
+
       if (companies.length === 0) {
         return handleResponse(
           res,
@@ -39,7 +39,7 @@ class QuickJobsCTRL {
           0
         );
       }
-  
+
       console.log("companies: ", companies);
       const jobDetails = {
         ...req.body,
@@ -56,9 +56,23 @@ class QuickJobsCTRL {
       // Send message to Telegram channels
       // await sendTelegramChannels(user.telegram, telegramChannel, jobDetails);
 
-      return handleResponse(res, 201, "success", "Quick Job created successfully", job, 1);
+      return handleResponse(
+        res,
+        201,
+        "success",
+        "Quick Job created successfully",
+        job,
+        1
+      );
     } catch (error) {
-      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
     }
   }
   async deleteQuickJobs(req, res, next) {
@@ -67,9 +81,7 @@ class QuickJobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-    
 
-   
       const { id: jobID } = req.params;
       // Perform the deletion operation
       const deleteJob = await QuickJobs.findOneAndDelete({
@@ -237,8 +249,6 @@ class QuickJobsCTRL {
   }
   async getEmployerPosts(req, res) {
     try {
-
-
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -377,9 +387,7 @@ class QuickJobsCTRL {
       } else {
         NewSearchedJob = {
           ...singleJob.toObject(), // Convert Mongoose document to plain object
-          hr_name: NewUser.employer
-            ? NewUser.fullName
-            : "No employer name", // Check if employer exists
+          hr_name: NewUser.employer ? NewUser.fullName : "No employer name", // Check if employer exists
           hr_avatar: NewUser.avatar || "default_avatar.png", // Use default avatar if none is provided
           issuedBy: companyMap[singleJob.createdBy.toString()] || null, // Get company details if available
         };
@@ -410,8 +418,6 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-
-      
       const {
         params: { id: jobID },
       } = req;
@@ -465,15 +471,8 @@ class QuickJobsCTRL {
 
     const user = await Users.findById(req.user.id);
 
-    if ( user.role !== "Admin") {
-      return handleResponse(
-        res,
-        403,
-        "error",
-        "You are not allowed!",
-        null,
-        0
-      );
+    if (user.role !== "Admin") {
+      return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
     }
     try {
       const {
@@ -628,9 +627,6 @@ class QuickJobsCTRL {
         return handleResponse(res, 400, "error", "Invalid status", null, 0);
       }
 
-
-
-
       const updatedJob = await QuickJobs.findOneAndUpdate(
         { _id: jobID },
         { postingStatus: status },
@@ -638,19 +634,39 @@ class QuickJobsCTRL {
       );
 
       const jobMaker = await Users.findById(updatedJob.createdBy);
-      console.log("jobMaker", jobMaker)
+      console.log("jobMaker", jobMaker);
       // const telegramChannel = await TelegramChannel.find({ createdBy: jobMaker._id })
       if (updatedJob.postingStatus === "Approved") {
         // await sendTelegramChannels(jobMaker.telegram, telegramChannel, updatedJob);
       }
 
       if (!updatedJob) {
-        return handleResponse(res, 404, "error", `Job not found with ID: ${jobID}`, null, 0);
+        return handleResponse(
+          res,
+          404,
+          "error",
+          `Job not found with ID: ${jobID}`,
+          null,
+          0
+        );
       }
-      return handleResponse(res, 200, "success", `Job ${status} successfully`, updatedJob, 1);
-    }
-    catch (error) {
-      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+      return handleResponse(
+        res,
+        200,
+        "success",
+        `Job ${status} successfully`,
+        updatedJob,
+        1
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
     }
   }
   // make function to add Approved status to all jobs in the database
@@ -666,19 +682,35 @@ class QuickJobsCTRL {
       //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
       // }
 
-      const updatedJob = await QuickJobs.updateMany({}, { postingStatus: "Approved" });
+      const updatedJob = await QuickJobs.updateMany(
+        {},
+        { postingStatus: "Approved" }
+      );
 
       if (!updatedJob) {
         return handleResponse(res, 404, "error", "No jobs found", null, 0);
       }
-      return handleResponse(res, 200, "success", "All jobs Approved successfully", updatedJob, 1);
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "All jobs Approved successfully",
+        updatedJob,
+        1
+      );
     } catch (error) {
-      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
     }
   }
   async getRejectedJobs(req, res) {
     try {
-
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -695,14 +727,9 @@ class QuickJobsCTRL {
       //     0
       //   );
       // }
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
 
       let queryObject = {};
-
-
 
       // Pagination
       const skip = (page - 1) * parseInt(limit, 10);
@@ -711,7 +738,7 @@ class QuickJobsCTRL {
 
       let query = QuickJobs.find(queryObject)
         .skip(skip)
-        .limit(parseInt(limit, 10))
+        .limit(parseInt(limit, 10));
 
       const searchedJob = await query;
 
@@ -789,7 +816,6 @@ class QuickJobsCTRL {
 
   async getPendingJobs(req, res) {
     try {
-
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -806,14 +832,9 @@ class QuickJobsCTRL {
       //     0
       //   );
       // }
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
 
       let queryObject = {};
-
-
 
       // Pagination
       const skip = (page - 1) * parseInt(limit, 10);
@@ -822,7 +843,7 @@ class QuickJobsCTRL {
 
       let query = QuickJobs.find(queryObject)
         .skip(skip)
-        .limit(parseInt(limit, 10))
+        .limit(parseInt(limit, 10));
 
       const searchedJob = await query;
 
@@ -899,7 +920,6 @@ class QuickJobsCTRL {
   }
   async getApprovedJobs(req, res) {
     try {
-
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -916,14 +936,9 @@ class QuickJobsCTRL {
       //     0
       //   );
       // }
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
 
       let queryObject = {};
-
-
 
       // Pagination
       const skip = (page - 1) * parseInt(limit, 10);
@@ -932,7 +947,7 @@ class QuickJobsCTRL {
 
       let query = QuickJobs.find(queryObject)
         .skip(skip)
-        .limit(parseInt(limit, 10))
+        .limit(parseInt(limit, 10));
 
       const searchedJob = await query;
 

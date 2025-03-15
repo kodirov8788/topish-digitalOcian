@@ -182,7 +182,6 @@ class AuthCTRL {
         confirmationCodeExpires = new Date(now + 2 * 60 * 1000);
       }
 
-      // Test phone numbers don't need SMS
       if (
         phoneNumberWithCountryCode === "+998996730970" ||
         phoneNumberWithCountryCode === "+998507039990" ||
