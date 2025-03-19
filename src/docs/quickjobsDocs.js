@@ -28,6 +28,14 @@ const QuickjobsEndpoint = {
                   type: "string",
                   example: "Job description here",
                 },
+                regionalCode: {
+                  type: "string",
+                  example: "+998",
+                },
+                status: {
+                  type: "string",
+                  example: "active",
+                },
                 telegramUsername: {
                   type: "string",
                   example: "telegramUsername",
@@ -366,8 +374,7 @@ const QuickjobsEndpoint = {
           },
         },
         404: {
-          description:
-            "No job posts found for the authenticated employer.",
+          description: "No job posts found for the authenticated employer.",
           content: {
             "application/json": {
               schema: {
@@ -376,7 +383,8 @@ const QuickjobsEndpoint = {
                   result: { type: "string", example: "failure" },
                   msg: {
                     type: "string",
-                    example: "No job posts found for the authenticated employer.",
+                    example:
+                      "No job posts found for the authenticated employer.",
                   },
                   data: { type: "null", example: null },
                   totalCount: { type: "integer", example: 0 },
@@ -1102,7 +1110,8 @@ const QuickjobsEndpoint = {
           schema: {
             type: "string",
           },
-          description: "The unique identifier of the job post to approve or reject.",
+          description:
+            "The unique identifier of the job post to approve or reject.",
         },
       ],
       requestBody: {
@@ -1132,7 +1141,10 @@ const QuickjobsEndpoint = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Job status updated successfully." },
+                  msg: {
+                    type: "string",
+                    example: "Job status updated successfully.",
+                  },
                   data: { $ref: "#/components/schemas/Quickjob" },
                 },
               },
@@ -1244,7 +1256,6 @@ const QuickjobsEndpoint = {
           },
           description: "Number of items per page for pagination.",
         },
-
       ],
       responses: {
         200: {
@@ -1343,7 +1354,6 @@ const QuickjobsEndpoint = {
           },
           description: "Number of items per page for pagination.",
         },
-
       ],
       responses: {
         200: {
@@ -1442,7 +1452,6 @@ const QuickjobsEndpoint = {
           },
           description: "Number of items per page for pagination.",
         },
-
       ],
       responses: {
         200: {

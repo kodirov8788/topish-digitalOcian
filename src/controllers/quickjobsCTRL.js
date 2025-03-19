@@ -40,7 +40,7 @@ class QuickJobsCTRL {
         );
       }
 
-      console.log("companies: ", companies);
+      // console.log("companies: ", companies);
       const jobDetails = {
         ...req.body,
         createdBy: user._id,

@@ -29,6 +29,14 @@ const JobsEndpoint = {
                   example:
                     "We are looking for a Senior Software Developer to join our team.",
                 },
+                regionalCode: {
+                  type: "string",
+                  example: "+998",
+                },
+                status: {
+                  type: "string",
+                  example: "active",
+                },
                 jobStatus: {
                   type: "string",
                   enum: ["Open", "Closed", "Expired"],

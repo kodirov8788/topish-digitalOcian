@@ -17,6 +17,8 @@ const JobsSchema = new mongoose.Schema(
       type: String,
       default: "Full Time",
     },
+    regionalCode: { type: String, default: "" },
+    status: { type: String, default: "active", enum: ["active", "inactive"] },
     experience: { type: String, default: "" }, // e.g., "No experience", "1 year", "2 years", etc.
     educationLevel: { type: String, default: "" }, // e.g., "Bachelor's", "Master's", "Ph.D."
     benefits: { type: [String], default: [] }, // e.g., "Health insurance", "Paid time off"
@@ -50,7 +52,6 @@ const JobsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 
 JobsSchema.pre("save", function (next) {
   if (this.validUntil <= new Date()) {

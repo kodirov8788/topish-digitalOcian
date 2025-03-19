@@ -13,6 +13,8 @@ const QuickJob = new mongoose.Schema(
       default: "Open",
       enum: ["Open", "Closed", "Expired"],
     },
+    regionalCode: { type: String, default: "" },
+    status: { type: String, default: "active", enum: ["active", "inactive"] },
     phoneNumber: { type: String, default: "" },
     recommending: { type: Boolean, default: false },
     likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "Users" }],
