@@ -208,22 +208,15 @@ const handleRequestChatRooms = async (socket, { userId }) => {
         }
       })
     );
-    // const filteredChatRooms = chatRoomsWithInfo.filter(
-    //   (chatRoom) => chatRoom !== null
-    // );
-
-    // socket.emit("chatRoomsResponse", {
-    //   status: 200,
-    //   message: "Chat rooms retrieved successfully.",
-    //   data: filteredChatRooms,
-    //   count: filteredChatRooms.length,
-    // });
+    const filteredChatRooms = chatRoomsWithInfo.filter(
+      (chatRoom) => chatRoom !== null
+    );
 
     socket.emit("chatRoomsResponse", {
       status: 200,
       message: "Chat rooms retrieved successfully.",
-      data: chatRoomsWithInfo,
-      count: chatRoomsWithInfo.length,
+      data: filteredChatRooms,
+      count: filteredChatRooms.length,
     });
   } catch (error) {
     console.error(error);
@@ -522,15 +515,10 @@ const handleSingleChatRoom = async (
       { $set: { seen: true } }
     );
 
-    // const messageHistory = await Message.find({ chatRoom: chatRoomId })
-    // .sort({ timestamp: -1 }) // Sort by newest first
-    // .skip(skip)
-    // .limit(limit)
-    // .populate("senderId", "avatar")
-    // .exec();
     const messageHistory = await Message.find({ chatRoom: chatRoomId })
       .sort({ timestamp: -1 }) // Sort by newest first
       .skip(skip)
+      .limit(limit)
       .populate("senderId", "avatar")
       .exec();
 
