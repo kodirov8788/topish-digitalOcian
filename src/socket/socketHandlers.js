@@ -165,12 +165,25 @@ const handleRequestChatRooms = async (socket, { userId }) => {
           console.error(`User document not found for ID: ${otherUserId}`);
           return null;
         }
-        const lastMessage = await Message.findOne({
+
+        // First try to find the last non-deleted message
+        const lastNonDeletedMessage = await Message.findOne({
           chatRoom: chatRoom._id,
+          deleted: { $ne: true },
         })
           .sort({ timestamp: -1 })
           .populate("senderId")
           .exec();
+
+        // If no non-deleted message exists, get the last message regardless of status
+        const lastMessage =
+          lastNonDeletedMessage ||
+          (await Message.findOne({
+            chatRoom: chatRoom._id,
+          })
+            .sort({ timestamp: -1 })
+            .populate("senderId")
+            .exec());
 
         const unreadMessagesCount = await Message.countDocuments({
           chatRoom: chatRoom._id,
@@ -179,35 +192,37 @@ const handleRequestChatRooms = async (socket, { userId }) => {
         });
         const fullName =
           otherUser && otherUser.fullName ? otherUser.fullName : "Unknown User";
-        if (lastMessage !== null && lastMessage.deleted !== true) {
-          return {
-            _id: chatRoom._id,
-            otherUser: {
-              _id: otherUser._id,
-              fullName: fullName,
-              avatar: otherUser.avatar,
-              role: otherUser.role,
-            },
-            lastMessage: lastMessage
-              ? {
-                  _id: lastMessage._id,
-                  text: lastMessage.text,
-                  seen: lastMessage.seen,
-                  timestamp: lastMessage.timestamp,
-                  senderId: lastMessage.senderId._id,
-                  recipientId:
-                    lastMessage.senderId._id.toString() === userId.toString()
-                      ? otherUserId
-                      : userId,
-                }
-              : null,
-            unreadMessagesCount,
-          };
-        } else {
-          return null;
-        }
+
+        // Always return chat room info, regardless of message status
+        return {
+          _id: chatRoom._id,
+          otherUser: {
+            _id: otherUser._id,
+            fullName: fullName,
+            avatar: otherUser.avatar,
+            role: otherUser.role,
+          },
+          lastMessage: lastMessage
+            ? {
+                _id: lastMessage._id,
+                text: lastMessage.deleted
+                  ? "This message was deleted"
+                  : lastMessage.text,
+                seen: lastMessage.seen,
+                timestamp: lastMessage.timestamp,
+                senderId: lastMessage.senderId._id,
+                deleted: lastMessage.deleted,
+                recipientId:
+                  lastMessage.senderId._id.toString() === userId.toString()
+                    ? otherUserId
+                    : userId,
+              }
+            : null,
+          unreadMessagesCount,
+        };
       })
     );
+
     const filteredChatRooms = chatRoomsWithInfo.filter(
       (chatRoom) => chatRoom !== null
     );
