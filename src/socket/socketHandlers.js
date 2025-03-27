@@ -167,6 +167,7 @@ const handleRequestChatRooms = async (socket, { userId }) => {
         }
         const lastMessage = await Message.findOne({
           chatRoom: chatRoom._id,
+          deleted: { $ne: true },
         })
           .sort({ timestamp: -1 })
           .populate("senderId")
@@ -179,7 +180,7 @@ const handleRequestChatRooms = async (socket, { userId }) => {
         });
         const fullName =
           otherUser && otherUser.fullName ? otherUser.fullName : "Unknown User";
-        if (lastMessage !== null && lastMessage.deleted !== true) {
+        if (lastMessage !== null) {
           return {
             _id: chatRoom._id,
             otherUser: {
