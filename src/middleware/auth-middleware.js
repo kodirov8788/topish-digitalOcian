@@ -4,22 +4,21 @@ const { isTokenValid } = require("../utils/jwt");
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  // console.log(" req.headers.authorization: ", req.headers.authorization)
   const token = authHeader && authHeader.split(" ")[1];
-  // console.log("token: ", token)
+
   if (!token) {
     return handleResponse(
       res,
-      450,
+      401, // 401 Unauthorized is the correct status code for missing token
       "error",
-      "Authentication invalid: No token provided",
+      "Authentication required: No token provided",
       {},
       0
-    ); // Using 418 I'm a teapot
+    );
   }
+
   try {
     const payload = isTokenValid(token, process.env.JWT_SECRET);
-    // console.log("payload: ", payload);
     req.user = {
       phoneNumber: payload.phoneNumber,
       employer: payload.employer,
@@ -36,14 +35,23 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Error in authMiddleware:", error.message);
-    return handleResponse(
-      res,
-      451,
-      "error",
-      "Authentication invalid: Token verification failed",
-      {},
-      0
-    ); // Using 451 Unavailable For Legal Reasons
+
+    // Determine the appropriate status code based on the error
+    let statusCode = 401; // Default to 401 Unauthorized
+    let message = "Authentication failed: Invalid token";
+
+    if (error.name === "TokenExpiredError") {
+      statusCode = 401;
+      message = "Authentication failed: Token expired";
+    } else if (error.name === "JsonWebTokenError") {
+      statusCode = 401;
+      message = "Authentication failed: " + error.message;
+    } else if (error.name === "NotBeforeError") {
+      statusCode = 401;
+      message = "Authentication failed: Token not active";
+    }
+
+    return handleResponse(res, statusCode, "error", message, {}, 0);
   }
 };
 
