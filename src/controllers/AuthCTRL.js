@@ -989,12 +989,125 @@ class AuthCTRL {
       );
     }
   }
-  async renewAccessToken(req, res) {
-    // console.log("renewAccessToken called");
+  // async renewAccessToken(req, res) {
+  //   console.log("renewAccessToken called");
 
+  //   try {
+  //     const { refreshToken } = req.body;
+  //     // console.log("Received refreshToken: ", refreshToken);
+
+  //     if (!refreshToken) {
+  //       console.warn("No refresh token provided");
+  //       return handleResponse(
+  //         res,
+  //         400,
+  //         "error",
+  //         "Refresh token is required",
+  //         null,
+  //         0
+  //       );
+  //     }
+
+  //     jwt.verify(
+  //       refreshToken,
+  //       process.env.JWT_REFRESH_SECRET,
+  //       async (err, decoded) => {
+  //         if (err) {
+  //           console.error("JWT verification error:", err);
+  //           console.log("Auth error chiqdi....");
+  //           return handleResponse(
+  //             res,
+  //             451,
+  //             "error",
+  //             "Invalid refresh token",
+  //             null,
+  //             0
+  //           );
+  //         }
+
+  //         try {
+  //           const user = await Users.findOne({
+  //             "refreshTokens.token": refreshToken,
+  //           });
+
+  //           if (!user) {
+  //             console.warn("User not found for provided refresh token");
+  //             return handleResponse(
+  //               res,
+  //               471,
+  //               "error",
+  //               "User not found for provided refresh token",
+  //               null,
+  //               0
+  //             );
+  //           }
+
+  //           const tokenUser = createTokenUser(user);
+  //           const { accessToken, refreshToken: newRefreshToken } =
+  //             generateTokens(tokenUser);
+  //           let tokenUpdated = false;
+
+  //           user.refreshTokens = user.refreshTokens.map((tokenObj) => {
+  //             if (tokenObj.token === refreshToken) {
+  //               tokenObj.token = newRefreshToken;
+  //               tokenUpdated = true;
+  //             }
+  //             return tokenObj;
+  //           });
+  //           if (!tokenUpdated) {
+  //             console.error("Failed to find the refresh token in the database");
+  //             return handleResponse(
+  //               res,
+  //               472,
+  //               "error",
+  //               "Failed to find the refresh token in the database",
+  //               null,
+  //               0
+  //             );
+  //           }
+
+  //           await user.save();
+  //           console.info(
+  //             "Access token renewed successfully for user:",
+  //             user.phoneNumber
+  //           );
+  //           return handleResponse(
+  //             res,
+  //             208,
+  //             "success",
+  //             "Access token renewed successfully",
+  //             { accessToken, refreshToken: newRefreshToken }
+  //           );
+  //         } catch (dbError) {
+  //           console.error("Database error:", dbError);
+  //           return handleResponse(
+  //             res,
+  //             473,
+  //             "error",
+  //             "Database error occurred",
+  //             null,
+  //             0
+  //           );
+  //         }
+  //       }
+  //     );
+  //   } catch (error) {
+  //     console.error("Unexpected error:", error);
+  //     return handleResponse(
+  //       res,
+  //       500,
+  //       "error",
+  //       "Something went wrong: " + error.message,
+  //       null,
+  //       0
+  //     );
+  //   }
+  // }
+
+  async renewAccessToken(req, res) {
     try {
+      console.log("renewAccessToken called");
       const { refreshToken } = req.body;
-      // console.log("Received refreshToken: ", refreshToken);
 
       if (!refreshToken) {
         console.warn("No refresh token provided");
@@ -1008,89 +1121,96 @@ class AuthCTRL {
         );
       }
 
-      jwt.verify(
-        refreshToken,
-        process.env.JWT_REFRESH_SECRET,
-        async (err, decoded) => {
-          if (err) {
-            console.error("JWT verification error:", err);
-            console.log("Auth error chiqdi....");
-            return handleResponse(
-              res,
-              451,
-              "error",
-              "Invalid refresh token",
-              null,
-              0
-            );
-          }
-
-          try {
-            const user = await Users.findOne({
-              "refreshTokens.token": refreshToken,
-            });
-
-            if (!user) {
-              console.warn("User not found for provided refresh token");
-              return handleResponse(
-                res,
-                471,
-                "error",
-                "User not found for provided refresh token",
-                null,
-                0
-              );
+      // Using promisify to convert the callback-based jwt.verify to a promise
+      const verifyToken = (token, secret) => {
+        return new Promise((resolve, reject) => {
+          jwt.verify(token, secret, (err, decoded) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(decoded);
             }
+          });
+        });
+      };
 
-            const tokenUser = createTokenUser(user);
-            const { accessToken, refreshToken: newRefreshToken } =
-              generateTokens(tokenUser);
-            let tokenUpdated = false;
+      try {
+        // Verify the token
+        const decoded = await verifyToken(
+          refreshToken,
+          process.env.JWT_REFRESH_SECRET
+        );
 
-            user.refreshTokens = user.refreshTokens.map((tokenObj) => {
-              if (tokenObj.token === refreshToken) {
-                tokenObj.token = newRefreshToken;
-                tokenUpdated = true;
-              }
-              return tokenObj;
-            });
-            if (!tokenUpdated) {
-              console.error("Failed to find the refresh token in the database");
-              return handleResponse(
-                res,
-                472,
-                "error",
-                "Failed to find the refresh token in the database",
-                null,
-                0
-              );
-            }
+        // Find the user
+        const user = await Users.findOne({
+          "refreshTokens.token": refreshToken,
+        });
 
-            await user.save();
-            console.info(
-              "Access token renewed successfully for user:",
-              user.phoneNumber
-            );
-            return handleResponse(
-              res,
-              208,
-              "success",
-              "Access token renewed successfully",
-              { accessToken, refreshToken: newRefreshToken }
-            );
-          } catch (dbError) {
-            console.error("Database error:", dbError);
-            return handleResponse(
-              res,
-              473,
-              "error",
-              "Database error occurred",
-              null,
-              0
-            );
-          }
+        if (!user) {
+          console.warn("User not found for provided refresh token");
+          return handleResponse(
+            res,
+            404,
+            "error",
+            "User not found for provided refresh token",
+            null,
+            0
+          );
         }
-      );
+
+        // Generate new tokens
+        const tokenUser = createTokenUser(user);
+        const { accessToken, refreshToken: newRefreshToken } =
+          generateTokens(tokenUser);
+
+        // Update the refresh token in the database
+        let tokenUpdated = false;
+        user.refreshTokens = user.refreshTokens.map((tokenObj) => {
+          if (tokenObj.token === refreshToken) {
+            tokenObj.token = newRefreshToken;
+            tokenUpdated = true;
+          }
+          return tokenObj;
+        });
+
+        if (!tokenUpdated) {
+          console.error("Failed to find the refresh token in the database");
+          return handleResponse(
+            res,
+            400,
+            "error",
+            "Failed to find the refresh token in the database",
+            null,
+            0
+          );
+        }
+
+        // Save the updated user
+        await user.save();
+
+        console.info(
+          "Access token renewed successfully for user:",
+          user.phoneNumber
+        );
+
+        return handleResponse(
+          res,
+          200,
+          "success",
+          "Access token renewed successfully",
+          { accessToken, refreshToken: newRefreshToken }
+        );
+      } catch (tokenError) {
+        console.error("JWT verification error:", tokenError);
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "Invalid refresh token",
+          null,
+          0
+        );
+      }
     } catch (error) {
       console.error("Unexpected error:", error);
       return handleResponse(
