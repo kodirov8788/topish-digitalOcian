@@ -855,13 +855,13 @@ class AuthCTRL {
       user.confirmationCode = null;
       user.confirmationCodeExpires = null;
 
-      if (
-        mobileToken &&
-        (!user.mobileToken || !user.mobileToken.includes(mobileToken))
-      ) {
-        user.mobileToken = user.mobileToken || [];
-        user.mobileToken.push(mobileToken);
-      }
+      // if (
+      //   mobileToken &&
+      //   (!user.mobileToken || !user.mobileToken.includes(mobileToken))
+      // ) {
+      //   user.mobileToken = user.mobileToken || [];
+      //   user.mobileToken.push(mobileToken);
+      // }
 
       const tokenUser = createTokenUser(user);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
