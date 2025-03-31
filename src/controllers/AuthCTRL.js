@@ -918,31 +918,31 @@ class AuthCTRL {
       }
       // console.log("signOut: ", req.user)
       // console.log("req body: ", req.body)
-      const { error } = logOutValidation(req.body);
-      if (error) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          error.details[0].message,
-          null,
-          0
-        );
-      }
+      // const { error } = logOutValidation(req.body);
+      // if (error) {
+      //   return handleResponse(
+      //     res,
+      //     400,
+      //     "error",
+      //     error.details[0].message,
+      //     null,
+      //     0
+      //   );
+      // }
 
-      const user = await Users.findById(req.user.id);
-      if (!user) {
-        return handleResponse(res, 404, "error", "User not found", null, 0);
-      }
+      // const user = await Users.findById(req.user.id);
+      // if (!user) {
+      //   return handleResponse(res, 404, "error", "User not found", null, 0);
+      // }
 
-      user.mobileToken = user.mobileToken.filter(
-        (token) => token !== req.body.mobileToken
-      );
-      user.refreshTokens = user.refreshTokens.filter(
-        (tokenObj) => tokenObj.mobileToken !== req.body.mobileToken
-      );
+      // user.mobileToken = user.mobileToken.filter(
+      //   (token) => token !== req.body.mobileToken
+      // );
+      // user.refreshTokens = user.refreshTokens.filter(
+      //   (tokenObj) => tokenObj.token !== req.body.refreshToken
+      // );
 
-      await user.save();
+      // await user.save();
 
       return handleResponse(res, 200, "success", "User logged out!", null, 0);
     } catch (error) {
