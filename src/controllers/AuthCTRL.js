@@ -4,10 +4,7 @@ const { generateTokens, createTokenUser } = require("../utils/jwt");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteUserAvatar } = require("./avatarCTRL");
 const { deleteUserCv } = require("./resumeCTRL/CvCTRL");
-const {
-  RegisterValidation,
-  logOutValidation,
-} = require("../helpers/AuthValidation");
+const { RegisterValidation } = require("../helpers/AuthValidation");
 const {
   getEskizAuthToken,
   sendCustomSms,
@@ -989,120 +986,6 @@ class AuthCTRL {
       );
     }
   }
-  // async renewAccessToken(req, res) {
-  //   console.log("renewAccessToken called");
-
-  //   try {
-  //     const { refreshToken } = req.body;
-  //     // console.log("Received refreshToken: ", refreshToken);
-
-  //     if (!refreshToken) {
-  //       console.warn("No refresh token provided");
-  //       return handleResponse(
-  //         res,
-  //         400,
-  //         "error",
-  //         "Refresh token is required",
-  //         null,
-  //         0
-  //       );
-  //     }
-
-  //     jwt.verify(
-  //       refreshToken,
-  //       process.env.JWT_REFRESH_SECRET,
-  //       async (err, decoded) => {
-  //         if (err) {
-  //           console.error("JWT verification error:", err);
-  //           console.log("Auth error chiqdi....");
-  //           return handleResponse(
-  //             res,
-  //             451,
-  //             "error",
-  //             "Invalid refresh token",
-  //             null,
-  //             0
-  //           );
-  //         }
-
-  //         try {
-  //           const user = await Users.findOne({
-  //             "refreshTokens.token": refreshToken,
-  //           });
-
-  //           if (!user) {
-  //             console.warn("User not found for provided refresh token");
-  //             return handleResponse(
-  //               res,
-  //               471,
-  //               "error",
-  //               "User not found for provided refresh token",
-  //               null,
-  //               0
-  //             );
-  //           }
-
-  //           const tokenUser = createTokenUser(user);
-  //           const { accessToken, refreshToken: newRefreshToken } =
-  //             generateTokens(tokenUser);
-  //           let tokenUpdated = false;
-
-  //           user.refreshTokens = user.refreshTokens.map((tokenObj) => {
-  //             if (tokenObj.token === refreshToken) {
-  //               tokenObj.token = newRefreshToken;
-  //               tokenUpdated = true;
-  //             }
-  //             return tokenObj;
-  //           });
-  //           if (!tokenUpdated) {
-  //             console.error("Failed to find the refresh token in the database");
-  //             return handleResponse(
-  //               res,
-  //               472,
-  //               "error",
-  //               "Failed to find the refresh token in the database",
-  //               null,
-  //               0
-  //             );
-  //           }
-
-  //           await user.save();
-  //           console.info(
-  //             "Access token renewed successfully for user:",
-  //             user.phoneNumber
-  //           );
-  //           return handleResponse(
-  //             res,
-  //             208,
-  //             "success",
-  //             "Access token renewed successfully",
-  //             { accessToken, refreshToken: newRefreshToken }
-  //           );
-  //         } catch (dbError) {
-  //           console.error("Database error:", dbError);
-  //           return handleResponse(
-  //             res,
-  //             473,
-  //             "error",
-  //             "Database error occurred",
-  //             null,
-  //             0
-  //           );
-  //         }
-  //       }
-  //     );
-  //   } catch (error) {
-  //     console.error("Unexpected error:", error);
-  //     return handleResponse(
-  //       res,
-  //       500,
-  //       "error",
-  //       "Something went wrong: " + error.message,
-  //       null,
-  //       0
-  //     );
-  //   }
-  // }
 
   async renewAccessToken(req, res) {
     try {

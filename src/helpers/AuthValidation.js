@@ -45,6 +45,6 @@ const validateLogin = (body) => {
 module.exports = {
   RegisterValidation,
   validateLogin,
-  logOutValidation,
+  // logOutValidation,
   RegisterValidationConfirm,
 };
