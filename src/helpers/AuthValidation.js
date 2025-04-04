@@ -3,7 +3,7 @@ const Joi = require("joi");
 //  phoneNumber, confirmationCode, deviceId, deviceName, region, os, browser, ip
 const userValidationSchema = Joi.object({
   phoneNumber: Joi.string().required(),
-  mobileToken: Joi.string().min(1).required(),
+  mobileToken: Joi.string().allow("", null),
   deviceId: Joi.string().allow("", null),
   deviceName: Joi.string().allow("", null),
   region: Joi.string().allow("", null),

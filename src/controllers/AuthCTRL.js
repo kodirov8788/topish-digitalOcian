@@ -986,7 +986,6 @@ class AuthCTRL {
       );
     }
   }
-
   async renewAccessToken(req, res) {
     try {
       console.log("renewAccessToken called");
