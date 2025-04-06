@@ -186,17 +186,19 @@ class DiscoverCTRL {
       const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
       const limit = Math.max(parseInt(req.query.limit, 10) || 10, 1);
       const sort = req.query.sort || "-createdAt";
-      const insdustry = req.query.industry; // Extract the industry parameter from the request
-      const language = req.query.language; // Extract the language parameter from the request
-      const tags = req.query.tags; // Extract the tags parameter from the request
+      const industry = req.query.industry; // Fixed typo in variable name
+      const language = req.query.language;
+      const tags = req.query.tags;
+      const random = req.query.random === "true"; // New parameter to enable random sorting
 
       // Create a filter object to apply conditional filtering
       const filter = {};
       if (language) {
-        filter.language = language; // Add language filter if provided
+        filter.language = language;
       }
-      if (insdustry) {
-        filter.industry = insdustry; // Add industry filter if provided
+      if (industry) {
+        // Fixed typo in variable name
+        filter.industry = industry;
       }
       if (tags) {
         // Search for tag IDs matching the provided tag names or IDs
@@ -204,22 +206,49 @@ class DiscoverCTRL {
           keyText: { $regex: new RegExp(tags, "i") },
         }).distinct("_id");
         if (tagIds.length > 0) {
-          filter.tags = { $in: tagIds }; // Add tags filter if matching tag IDs are found
+          filter.tags = { $in: tagIds };
         }
       }
 
-      const discovers = await Discover.find(filter)
-        .populate("tags", "keyText")
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit);
-
+      // Count total documents for pagination
       const totalCount = await Discover.countDocuments(filter);
+
+      let discovers;
+
+      if (random) {
+        // Use aggregation to get random records
+        discovers = await Discover.aggregate([
+          { $match: filter },
+          { $sample: { size: limit } },
+          // Add a lookup to populate tags
+          {
+            $lookup: {
+              from: "discovertags", // The collection name is usually lowercase and plural
+              localField: "tags",
+              foreignField: "_id",
+              as: "tags",
+            },
+          },
+        ]);
+
+        // Since we're using aggregation, we need to manually handle pagination
+        // Note: with random sampling, pagination is less meaningful
+      } else {
+        // Use regular find with sorting for non-random queries
+        discovers = await Discover.find(filter)
+          .populate("tags", "keyText")
+          .sort(sort)
+          .skip((page - 1) * limit)
+          .limit(limit);
+      }
+
       return handleResponse(
         res,
         200,
         "success",
-        "Discover items fetched successfully.",
+        random
+          ? "Random discover items fetched successfully."
+          : "Discover items fetched successfully.",
         {
           discovers,
           totalCount,

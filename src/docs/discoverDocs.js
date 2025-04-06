@@ -192,7 +192,7 @@ const DiscoverEndpoint = {
       summary: "Retrieve all discover items",
       tags: ["Discover"],
       description:
-        "Fetches a list of all discover items with optional pagination, sorting, and filtering capabilities.",
+        "Fetches a list of all discover items with optional pagination, sorting, filtering, and random ordering capabilities.",
       parameters: [
         {
           name: "page",
@@ -221,10 +221,22 @@ const DiscoverEndpoint = {
           in: "query",
           required: false,
           description:
-            "Sort order for items. Use fields like 'createdAt' or '-createdAt' for ascending or descending order.",
+            "Sort order for items. Use fields like 'createdAt' or '-createdAt' for ascending or descending order. Ignored if random=true.",
           schema: {
             type: "string",
             example: "-createdAt",
+          },
+        },
+        {
+          name: "random",
+          in: "query",
+          required: false,
+          description:
+            "When set to 'true', returns items in random order instead of using the sort parameter.",
+          schema: {
+            type: "boolean",
+            default: false,
+            example: "true",
           },
         },
         {
