@@ -60,7 +60,14 @@ const UsersSchema = new Schema(
     role: {
       type: String,
       required: true,
-      enum: ["JobSeeker", "Employer", "Service", "Admin", "SubAdmin", "Manager"],
+      enum: [
+        "JobSeeker",
+        "Employer",
+        "Service",
+        "Admin",
+        "SubAdmin",
+        "Manager",
+      ],
     },
     roles: {
       type: [String],
@@ -69,7 +76,8 @@ const UsersSchema = new Schema(
       default: [],
     },
     refreshTokens: {
-      type: [refreshSchema],
+      type: String,
+      default: "",
     },
     password: { type: String, required: false, minlength: 8 },
     root: { type: Boolean, default: false },
@@ -110,19 +118,6 @@ const UsersSchema = new Schema(
         },
       },
       skills: { type: Array, default: [] },
-      // cv: {
-      //   type: String,
-      //   required: false,
-      //   validate: {
-      //     validator: function (v) {
-      //       // Validate file extension instead of mimetype
-      //       const allowedFileTypes = ["pdf", "docx"];
-      //       const fileExtension = v.split(".").pop();
-      //       return allowedFileTypes.includes(fileExtension);
-      //     },
-      //     message: (props) => `${props.value} is not a valid file type!`,
-      //   },
-      // },
       expectedSalary: { type: String, required: false, default: "" },
       profileVisibility: { type: Boolean, default: false },
     },

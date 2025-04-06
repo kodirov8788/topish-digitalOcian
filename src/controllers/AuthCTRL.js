@@ -466,17 +466,7 @@ class AuthCTRL {
       const tokenUser = createTokenUser(existingUser);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
 
-      existingUser.refreshTokens = [
-        {
-          token: refreshToken,
-          deviceId: deviceId || "unknown-device-id",
-          deviceName: deviceName || "unknown-device-name",
-          region: region || "unknown-region",
-          os: os || "unknown-os",
-          browser: browser || "unknown-browser",
-          ip: ip || "unknown-ip",
-        },
-      ];
+      existingUser.refreshTokens = refreshToken;
 
       await existingUser.save();
 
@@ -852,44 +842,11 @@ class AuthCTRL {
       user.confirmationCode = null;
       user.confirmationCodeExpires = null;
 
-      // if (
-      //   mobileToken &&
-      //   (!user.mobileToken || !user.mobileToken.includes(mobileToken))
-      // ) {
-      //   user.mobileToken = user.mobileToken || [];
-      //   user.mobileToken.push(mobileToken);
-      // }
-
       const tokenUser = createTokenUser(user);
       const { accessToken, refreshToken } = generateTokens(tokenUser);
 
-      user.refreshTokens = user.refreshTokens || [];
+      user.refreshTokens = refreshToken;
 
-      let tokenUpdated = false;
-      for (let tokenObj of user.refreshTokens) {
-        if (
-          tokenObj.mobileToken === mobileToken &&
-          tokenObj.browser === browser
-        ) {
-          tokenObj.token = refreshToken;
-          tokenUpdated = true;
-          break;
-        }
-      }
-      // console.log("tokenUpdated: ", tokenUpdated)
-      if (!tokenUpdated) {
-        user.refreshTokens.push({
-          token: refreshToken,
-          mobileToken: mobileToken,
-          deviceId: deviceId || "unknown-device-id",
-          deviceName: deviceName || "unknown-device-name",
-          region: region || "unknown-region",
-          os: os || "unknown-os",
-          browser: browser || "unknown-browser",
-          ip: ip || "unknown-ip",
-        });
-      }
-      // console.log(" user.refreshTokens: ", user.refreshTokens)
       await user.save();
 
       return handleResponse(res, 200, "success", "Login successful", {
@@ -1023,9 +980,10 @@ class AuthCTRL {
           process.env.JWT_REFRESH_SECRET
         );
 
-        // Find the user
+        // Find the user with the exactly matching refresh token
+        // Updated to match the new schema (string, not array)
         const user = await Users.findOne({
-          "refreshTokens.token": refreshToken,
+          refreshTokens: refreshToken,
         });
 
         if (!user) {
@@ -1046,26 +1004,7 @@ class AuthCTRL {
           generateTokens(tokenUser);
 
         // Update the refresh token in the database
-        let tokenUpdated = false;
-        user.refreshTokens = user.refreshTokens.map((tokenObj) => {
-          if (tokenObj.token === refreshToken) {
-            tokenObj.token = newRefreshToken;
-            tokenUpdated = true;
-          }
-          return tokenObj;
-        });
-
-        if (!tokenUpdated) {
-          console.error("Failed to find the refresh token in the database");
-          return handleResponse(
-            res,
-            400,
-            "error",
-            "Failed to find the refresh token in the database",
-            null,
-            0
-          );
-        }
+        user.refreshTokens = newRefreshToken;
 
         // Save the updated user
         await user.save();
@@ -1116,17 +1055,7 @@ class AuthCTRL {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const refreshTokens = user.refreshTokens.map((token) => ({
-        id: token._id,
-        token: token.token,
-        mobileToken: token.mobileToken,
-        deviceId: token.deviceId,
-        deviceName: token.deviceName,
-        region: token.region,
-        os: token.os,
-        browser: token.browser,
-        ip: token.ip,
-      }));
+      const refreshTokens = user.refreshTokens;
 
       return handleResponse(
         res,
