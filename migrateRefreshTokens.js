@@ -17,7 +17,7 @@ async function migrateRefreshTokens() {
     console.log("Starting refresh tokens migration...");
 
     // Find all users
-    const users = await Users.find({});
+    const users = await Users.find({}).select("phoneNumber refreshTokens");
     console.log(`Found ${users.length} users to migrate`);
 
     let migratedCount = 0;

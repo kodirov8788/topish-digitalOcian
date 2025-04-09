@@ -9,10 +9,14 @@ class FavoriteCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const currentUser = await Users.findById(req.user.id);
+      const currentUser = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
 
       const favoriteId = req.params.favoriteId;
-      const favoriteUser = await Users.findById(favoriteId);
+      const favoriteUser = await Users.findById(favoriteId).select(
+        "-password -refreshTokens"
+      );
 
       if (!favoriteUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
@@ -73,7 +77,9 @@ class FavoriteCTRL {
       // Directly query the favorite user within the favorites array of the current user
       const currentUser = await Users.findById(req.user.id, {
         favorites: { $elemMatch: { $eq: favoriteId } },
-      }).populate("favorites");
+      })
+        .select("-password -refreshTokens")
+        .populate("favorites");
 
       if (
         !currentUser ||
@@ -118,7 +124,9 @@ class FavoriteCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       // Assuming you want to restrict this action to a specific role, ensure this matches your application logic
-      const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id).select(
+      //   "-password -refreshTokens"
+      // );
       // if (user.role === "JobSeeker") {
       //   return handleResponse(
       //     res,
@@ -129,7 +137,9 @@ class FavoriteCTRL {
       //     0
       //   );
       // }
-      const currentUser = await Users.findById(req.user.id);
+      const currentUser = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const favoriteId = req.params.favoriteId;
       // Check if the user is in favorites using ObjectId comparison
       if (
@@ -186,7 +196,9 @@ class FavoriteCTRL {
       const skip = (page - 1) * limit;
 
       // Retrieve the user but don't populate yet to check favorites
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user || user.favorites.length === 0) {
         return handleResponse(
           res,
@@ -201,7 +213,7 @@ class FavoriteCTRL {
       // Retrieve and populate paginated favorites using find and $in with sliced IDs for pagination
       const favorites = await Users.find({
         _id: { $in: user.favorites.slice(skip, skip + limit) },
-      }).select("-password");
+      }).select("-password -refreshTokens");
 
       // Count for pagination
       const totalFavorites = user.favorites.length;

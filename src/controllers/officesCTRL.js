@@ -9,7 +9,9 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const coins = req.user.coins;
       // const allowedRoles = ["Service", "Employer"];
       // if (!allowedRoles.includes(user.role)) {
@@ -79,7 +81,9 @@ class OfficesCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       // Check if the user role is Employer
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       // const allowedRoles = ["Service", "Admin", "Employer"];
       // if (!allowedRoles.includes(user.role)) {
       //   return handleResponse(
@@ -156,11 +160,11 @@ class OfficesCTRL {
       if (recent) {
         recent === true
           ? (queryObject.createdAt = {
-            $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-          })
+              $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+            })
           : (queryObject.createdAt = {
-            $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-          });
+              $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+            });
       }
 
       if (title) {
@@ -234,7 +238,9 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       // const allowedRoles = ["Service", "Admin", "Employer"];
       // if (!allowedRoles.includes(user.role)) {
       //   return handleResponse(
@@ -345,7 +351,9 @@ class OfficesCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       // const allowedRoles = ["Service", "Admin", "Employer"];
       // if (!allowedRoles.includes(user.role)) {
       //   return handleResponse(
@@ -438,7 +446,9 @@ class OfficesCTRL {
       const userID = req.user.id;
 
       // Verify the user exists
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         // This message was originally about job seekers, which may not be appropriate if your app isn't job-related
         return handleResponse(res, 400, "error", "User not found", null, 0);
@@ -499,7 +509,9 @@ class OfficesCTRL {
       }
       const userID = req.user.id;
       // Ensure the user exists
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -547,7 +559,9 @@ class OfficesCTRL {
       const userID = req.user.id;
 
       // Verify the user exists (the check for user.jobSeeker is removed to generalize the function)
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -600,7 +614,9 @@ class OfficesCTRL {
         return handleResponse(res, 401, "error", "Unauthorized");
       }
 
-      const user = await Users.findById(req.user.id)
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["Admin", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -630,11 +646,11 @@ class OfficesCTRL {
       if (recent) {
         recent === true
           ? (queryObject.createdAt = {
-            $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-          })
+              $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+            })
           : (queryObject.createdAt = {
-            $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
-          });
+              $gte: new Date(new Date().setDate(new Date().getDate() - 30)),
+            });
       }
 
       if (title) {
@@ -709,7 +725,9 @@ class OfficesCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -787,14 +805,31 @@ class OfficesCTRL {
       //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
       // }
 
-      const updatedJob = await Offices.updateMany({}, { postingStatus: "Approved" });
+      const updatedJob = await Offices.updateMany(
+        {},
+        { postingStatus: "Approved" }
+      );
 
       if (!updatedJob) {
         return handleResponse(res, 404, "error", "No jobs found", null, 0);
       }
-      return handleResponse(res, 200, "success", "All jobs Approved successfully", updatedJob, 1);
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "All jobs Approved successfully",
+        updatedJob,
+        1
+      );
     } catch (error) {
-      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
     }
   }
   async getRejectedOffices(req, res) {
@@ -806,10 +841,7 @@ class OfficesCTRL {
       //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
       // }
 
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
       let queryObject = {};
 
       queryObject.postingStatus = "Rejected";
@@ -863,10 +895,7 @@ class OfficesCTRL {
       //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
       // }
 
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
       let queryObject = {};
 
       queryObject.postingStatus = "Pending";
@@ -919,10 +948,7 @@ class OfficesCTRL {
       // if (req.user.role !== "Admin" && req.user.role !== "Employer") {
       //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
       // }
-      const {
-        page = 1,
-        limit = 10,
-      } = req.query;
+      const { page = 1, limit = 10 } = req.query;
       let queryObject = {};
 
       queryObject.postingStatus = "Approved";
@@ -967,9 +993,6 @@ class OfficesCTRL {
       );
     }
   }
-
-
-
 }
 
 module.exports = new OfficesCTRL();

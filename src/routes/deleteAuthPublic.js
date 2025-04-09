@@ -20,7 +20,9 @@ router.delete("/deleteAccount", async (req, res) => {
   const newPhoneNumber = `+998${phoneNumber}`;
   try {
     // Find the user by phoneNumber
-    const user = await Users.findOne({ phoneNumber: newPhoneNumber });
+    const user = await Users.findOne({ phoneNumber: newPhoneNumber }).select(
+      "-refreshTokens"
+    );
     if (!user) {
       return res.status(404).send({ message: "User not found" });
     }

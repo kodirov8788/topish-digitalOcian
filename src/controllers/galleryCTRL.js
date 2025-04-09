@@ -45,7 +45,7 @@ const upload = multer({
   storage: multerS3({
     s3,
     bucket: process.env.AWS_BUCKET_NAME,
-    acl: 'public-read', // Added ACL setting here
+    acl: "public-read", // Added ACL setting here
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
@@ -54,7 +54,7 @@ const upload = multer({
       cb(null, "Users-gallery-post/" + `file-${Date.now()}.${fileExtension}`);
     },
     contentType: multerS3.AUTO_CONTENT_TYPE, // Ensure the content type is set correctly
-    contentDisposition: 'inline', // Set the content disposition to inline
+    contentDisposition: "inline", // Set the content disposition to inline
   }),
   fileFilter: fileFilter,
 }).array("gallery", 10); // Adjust the number of files as needed
@@ -65,7 +65,9 @@ class GalleryCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       // if (user.role !== "JobSeeker") {
       //   return handleResponse(
       //     res,
@@ -214,7 +216,9 @@ class GalleryCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       // if (user.role !== "JobSeeker") {
       //   return handleResponse(
       //     res,
@@ -305,7 +309,9 @@ class GalleryCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       // Check if the user is an Employer
       if (user.role !== "Employer") {
         return handleResponse(

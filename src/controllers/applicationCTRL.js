@@ -15,7 +15,9 @@ class ApplicationCTRL {
       } = req;
       const userID = req.user.id;
 
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
 
       // Check if the user or user's jobSeeker data exists
       if (!user || !user.jobSeeker) {
@@ -99,6 +101,7 @@ class ApplicationCTRL {
       // Assuming job.applicants is an array of ObjectId references to the Users collection
       const applicantsQuery = { _id: { $in: job.applicants } };
       const applicantsData = await Users.find(applicantsQuery)
+        .select("-password -refreshTokens")
         .skip(skip)
         .limit(limit);
 
@@ -155,7 +158,9 @@ class ApplicationCTRL {
       } = req;
       const userID = req.user.id;
 
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
 
       // Check if the user or user's jobSeeker data exists
       if (!user || !user.jobSeeker) {
@@ -242,6 +247,7 @@ class ApplicationCTRL {
       // Assuming job.applicants is an array of ObjectId references to the Users collection
       const applicantsQuery = { _id: { $in: job.applicants } };
       const applicantsData = await Users.find(applicantsQuery)
+        .select("-password -refreshTokens")
         .skip(skip)
         .limit(limit);
       console.log(applicantsData);

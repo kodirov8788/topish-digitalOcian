@@ -12,7 +12,9 @@ class Projects {
 
     try {
       // Find the user by ID
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
 
       if (!user) {
         return handleResponse(res, 404, "error", "User not found");
@@ -43,7 +45,9 @@ class Projects {
     }
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found");
       }
@@ -74,7 +78,9 @@ class Projects {
     const { id } = req.params;
     const updateData = req.body;
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found");
       }
@@ -117,7 +123,9 @@ class Projects {
     const { id } = req.params;
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found");
       }

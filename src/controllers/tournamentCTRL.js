@@ -1,20 +1,21 @@
 // src/controllers/tournamentCTRL.js
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 const Tournament = require("../models/tournament_model");
 const Users = require("../models/user_model");
 const { handleResponse } = require("../utils/handleResponse");
 const { deleteFiles } = require("../utils/imageUploads/TurnerImageUpload");
 
 class TournamentsCTRL {
-
   async createTournament(req, res) {
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
-      if (user.role !== 'Admin' && user.role !== "Employer") {
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
+      if (user.role !== "Admin" && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
@@ -50,12 +51,16 @@ class TournamentsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
-      if (user.role !== 'Admin' && user.role !== "Employer") {
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
+      if (user.role !== "Admin" && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const { params: { id: tournamentID } } = req;
+      const {
+        params: { id: tournamentID },
+      } = req;
 
       const tournament = await Tournament.findOneAndDelete({
         _id: tournamentID,
@@ -95,7 +100,14 @@ class TournamentsCTRL {
       const { id: tournamentID } = req.params;
 
       if (!tournamentID) {
-        return handleResponse(res, 400, "error", "Invalid tournament ID", null, 0);
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid tournament ID",
+          null,
+          0
+        );
       }
 
       const tournament = await Tournament.findById(tournamentID);
@@ -130,12 +142,16 @@ class TournamentsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
-      if (user.role !== 'Admin' && user.role !== "Employer") {
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
+      if (user.role !== "Admin" && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const { params: { id: tournamentID } } = req;
+      const {
+        params: { id: tournamentID },
+      } = req;
 
       const updateData = { ...req.body };
       if (req.files && req.files.length) {
@@ -242,7 +258,11 @@ class TournamentsCTRL {
         );
       }
 
-      if (tournament.participants.some((participant) => participant.userId === user)) {
+      if (
+        tournament.participants.some(
+          (participant) => participant.userId === user
+        )
+      ) {
         return handleResponse(
           res,
           400,
@@ -254,7 +274,9 @@ class TournamentsCTRL {
       }
 
       const playerId = `topish${Math.floor(1000 + Math.random() * 9000)}`;
-      const specialCode = `topish-${tournament.tournament_id.slice(-4)}${user.slice(-4)}`;
+      const specialCode = `topish-${tournament.tournament_id.slice(
+        -4
+      )}${user.slice(-4)}`;
 
       tournament.participants.push({
         userId: user,
@@ -335,18 +357,29 @@ class TournamentsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
-      if (user.role !== 'Admin' && user.role !== 'Employer') {
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
+      if (user.role !== "Admin" && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const { params: { id: tournamentID } } = req;
+      const {
+        params: { id: tournamentID },
+      } = req;
       const { status } = req.body;
 
       if (status) {
         const validStatuses = ["open", "closed", "expired"];
         if (!validStatuses.includes(status)) {
-          return handleResponse(res, 400, "error", "Invalid status value", null, 0);
+          return handleResponse(
+            res,
+            400,
+            "error",
+            "Invalid status value",
+            null,
+            0
+          );
         }
       }
 
@@ -443,8 +476,12 @@ class TournamentsCTRL {
         );
       }
 
-      const userIds = tournament.participants.map((participant) => participant.userId);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const userIds = tournament.participants.map(
+        (participant) => participant.userId
+      );
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
 
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = {
@@ -485,18 +522,16 @@ class TournamentsCTRL {
     }
   }
 
-
-
-
-
   async addUserToTournament(req, res) {
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
-      if (user.role !== 'Admin' && user.role !== 'Employer') {
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
+      if (user.role !== "Admin" && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
@@ -515,7 +550,11 @@ class TournamentsCTRL {
         );
       }
 
-      if (tournament.participants.some((participant) => participant.userId === userId)) {
+      if (
+        tournament.participants.some(
+          (participant) => participant.userId === userId
+        )
+      ) {
         return handleResponse(
           res,
           400,
@@ -527,7 +566,9 @@ class TournamentsCTRL {
       }
 
       const playerId = `topish${Math.floor(1000 + Math.random() * 9000)}`;
-      const specialCode = `topish-${tournament.tournament_id.slice(-4)}${userId.slice(-4)}`;
+      const specialCode = `topish-${tournament.tournament_id.slice(
+        -4
+      )}${userId.slice(-4)}`;
 
       tournament.participants.push({
         userId,
@@ -556,8 +597,10 @@ class TournamentsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
-      if (user.role !== 'Admin' && user.role !== 'Employer') {
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
+      if (user.role !== "Admin" && user.role !== "Employer") {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 

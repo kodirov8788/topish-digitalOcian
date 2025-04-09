@@ -1,6 +1,6 @@
 // src/controllers/AdminCTRL.js
 const public_notification_model = require("../models/notifications/public_notification_model");
-const save_notification = require("../models/notifications/save_notification");
+const save_notźfication = require("../models/notifications/save_notification");
 const Users = require("../models/user_model");
 const sendNotification = require("../utils/Notification");
 const { handleResponse } = require("../utils/handleResponse");
@@ -36,6 +36,7 @@ class AdminCTRL {
 
       // Fetch users with pagination
       const users = await Users.find()
+        .select("-password -refreshTokens")
         .skip(skip) // Skip the documents for the current page
         .limit(limit) // Limit the number of documents returned
         .exec(); // Execute the query
@@ -105,6 +106,7 @@ class AdminCTRL {
 
       // Fetch only users with the "Admin" role
       const admins = await Users.find({ role: "Admin" })
+        .select("-password -refreshTokens")
         .skip(skip) // Skip the documents for the current page
         .limit(limit) // Limit the number of documents returned
         .exec(); // Execute the query
@@ -172,6 +174,7 @@ class AdminCTRL {
 
       // Modify the query to include pagination
       const resultUsers = await Users.find({ jobSeeker: { $exists: true } })
+        .select("-password -refreshTokens")
         .skip(skip) // Skip the documents for the current page
         .limit(limit) // Limit the number of documents returned
         .exec(); // Execute the query
@@ -240,7 +243,10 @@ class AdminCTRL {
         role: { $in: ["Employer"] },
       };
 
-      const searchedUsers = await Users.find(query).skip(skip).limit(limit);
+      const searchedUsers = await Users.find(query)
+        .skip(skip)
+        .limit(limit)
+        .select("-password -refreshTokens");
 
       const totalUsers = await Users.countDocuments(query);
 
@@ -383,7 +389,9 @@ class AdminCTRL {
 
       // Fetch user details for createdBy in bulk to minimize database queries
       const userIds = resultJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -590,7 +598,9 @@ class AdminCTRL {
         return handleResponse(res, 200, "success", "No jobs found", [], 0);
       }
       const userIds = searchedJob.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -641,7 +651,9 @@ class AdminCTRL {
       // }
 
       const { id: userId } = req.params;
-      const user = await Users.findById(userId);
+      const user = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
 
       if (!user) {
         return handleResponse(res, 404, "error", "User not found");
@@ -700,7 +712,9 @@ class AdminCTRL {
       // }
 
       const { id: userId } = req.params;
-      const user = await Users.findById(userId);
+      const user = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
 
       if (!user) {
         return handleResponse(res, 404, "error", "User not found");
@@ -768,7 +782,7 @@ class AdminCTRL {
         );
       }
 
-      const users = await Users.find();
+      const users = await Users.find().select("-password -refreshTokens");
 
       if (users.length === 0) {
         return handleResponse(res, 200, "success", "No users found", [], 0);

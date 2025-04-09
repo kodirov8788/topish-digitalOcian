@@ -52,7 +52,7 @@ const uploadFileToS3 = async (buffer, name, type) => {
 };
 
 const deleteUserAvatar = async (userId) => {
-  const user = await Users.findById(userId);
+  const user = await Users.findById(userId).select("-password -refreshTokens");
 
   if (!user || !user.avatar) {
     throw new Error("Avatar not found or user does not exist.");
@@ -75,7 +75,9 @@ const deleteUserAvatar = async (userId) => {
 };
 class AvatarCTRL {
   async deleteUserAvatar(userId) {
-    const user = await Users.findById(userId);
+    const user = await Users.findById(userId).select(
+      "-password -refreshTokens"
+    );
 
     // Check if the user exists and if the avatar is either not set or an empty string
     // if (!user || !user.avatar || user.avatar.trim() === "") {
@@ -166,7 +168,9 @@ class AvatarCTRL {
 
       // Get the user's current avatar location
       const userId = req.user.id;
-      const user = await Users.findById(userId);
+      const user = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
 
       if (user && user.avatar) {
         // Delete the old avatar from S3
@@ -210,7 +214,9 @@ class AvatarCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const userId = req.user.id;
-      const user = await Users.findById(userId);
+      const user = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
 
       if (!user || !user.avatar) {
         return handleResponse(res, 404, "error", "Avatar not found", null, 0);

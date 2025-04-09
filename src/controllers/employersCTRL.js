@@ -15,7 +15,10 @@ class EmployersCTRL {
       const limit = parseInt(req.query.limit) || 10; // Default limit to 10 items if not specified
       const skip = (page - 1) * limit;
 
-      const searchedUsers = await Users.find().skip(skip).limit(limit);
+      const searchedUsers = await Users.find()
+        .select("-password -refreshTokens")
+        .skip(skip)
+        .limit(limit);
 
       const totalUsers = await Users.countDocuments();
 
@@ -61,7 +64,9 @@ class EmployersCTRL {
       const userId = req.params.id;
 
       // Find the user by ID
-      const user = await Users.findById(userId);
+      const user = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
 
       // Check if the user was found
       if (!user) {
@@ -72,7 +77,9 @@ class EmployersCTRL {
       if (company) {
         const newWorkers = await Promise.all(
           company.workers.map(async (workerData) => {
-            const worker = await Users.findById(workerData.userId);
+            const worker = await Users.findById(workerData.userId).select(
+              "-password -refreshTokens"
+            );
             if (worker) {
               return {
                 avatar: worker.avatar,
@@ -86,9 +93,7 @@ class EmployersCTRL {
           })
         );
 
-        const filteredWorkers = newWorkers.filter(
-          (worker) => worker !== null
-        ); // Filter out any null values
+        const filteredWorkers = newWorkers.filter((worker) => worker !== null); // Filter out any null values
 
         const newUser = {
           ...user.toObject(),
@@ -121,7 +126,6 @@ class EmployersCTRL {
         newUser,
         1
       );
-
     } catch (error) {
       console.error("Error in getEmployer function:", error);
       return handleResponse(
@@ -198,6 +202,7 @@ class EmployersCTRL {
         searchCriteria.fullName = { $regex: regex };
       }
       const searchedUsers = await Users.find(searchCriteria)
+        .select("-password -refreshTokens")
         .skip(skip)
         .limit(parseInt(limit));
 

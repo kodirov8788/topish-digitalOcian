@@ -12,7 +12,9 @@ class QuickJobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       const coins = req.user.coins;
 
       // delete after testing
@@ -181,7 +183,9 @@ class QuickJobsCTRL {
       }
 
       const userIds = searchedJob.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -360,7 +364,9 @@ class QuickJobsCTRL {
         );
       }
 
-      let NewUser = await Users.findOne({ _id: singleJob.createdBy });
+      let NewUser = await Users.findOne({ _id: singleJob.createdBy }).select(
+        "-password -refreshTokens"
+      );
       const companies = await Company.find({
         "workers.userId": { $in: singleJob.createdBy },
       });
@@ -469,7 +475,9 @@ class QuickJobsCTRL {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
 
-    const user = await Users.findById(req.user.id);
+    const user = await Users.findById(req.user.id).select(
+      "-password -refreshTokens"
+    );
 
     if (user.role !== "Admin") {
       return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
@@ -531,7 +539,9 @@ class QuickJobsCTRL {
       }
 
       const userIds = searchedJob.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -603,7 +613,9 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
 
       if (user.role !== "Admin") {
         return handleResponse(
@@ -715,7 +727,7 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      // const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id).select( "-password -refreshTokens");
 
       // if (user.role !== "Employer" && user.role !== "Admin") {
       //   return handleResponse(
@@ -747,7 +759,9 @@ class QuickJobsCTRL {
       }
 
       const userIds = searchedJob.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -820,7 +834,9 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      // const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id).select(
+      // "-password -refreshTokens"
+      // );
 
       // if (user.role !== "Employer" && user.role !== "Admin") {
       //   return handleResponse(
@@ -852,7 +868,9 @@ class QuickJobsCTRL {
       }
 
       const userIds = searchedJob.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -924,7 +942,9 @@ class QuickJobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      // const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id).select(
+      // "-password -refreshTokens"
+      // );
 
       // if (user.role !== "Employer" && user.role !== "Admin") {
       //   return handleResponse(
@@ -956,7 +976,9 @@ class QuickJobsCTRL {
       }
 
       const userIds = searchedJob.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;

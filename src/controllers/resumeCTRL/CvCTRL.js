@@ -54,7 +54,9 @@ const upload = multer({
 
 class Cv {
   deleteUserCv = async (userId) => {
-    const user = await Users.findById(userId);
+    const user = await Users.findById(userId).select(
+      "-password -refreshTokens"
+    );
 
     if (!user) {
       throw new Error("User not found");
@@ -96,7 +98,9 @@ class Cv {
 
       try {
         const userId = req.user.id;
-        const user = await Users.findById(userId);
+        const user = await Users.findById(userId).select(
+          "-password -refreshTokens"
+        );
         if (!user) {
           return handleResponse(res, 404, "error", "User not found", null, 0);
         }
@@ -160,7 +164,9 @@ class Cv {
     }
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }

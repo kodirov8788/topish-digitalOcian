@@ -11,7 +11,9 @@ class BusinessServicesTagsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
 
       if (!user) {
         return handleResponse(res, 404, "error", "User not found.", null, 0);
@@ -20,7 +22,14 @@ class BusinessServicesTagsCTRL {
       const { keyText, countryCode, languages } = req.body;
 
       if (!languages || !Array.isArray(languages) || languages.length === 0) {
-        return handleResponse(res, 400, "error", "Languages are required.", null, 0);
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Languages are required.",
+          null,
+          0
+        );
       }
 
       // Validate `keyText` for all specified languages
@@ -30,7 +39,9 @@ class BusinessServicesTagsCTRL {
             res,
             400,
             "error",
-            `KeyText must include all specified languages: ${languages.join(", ")}.`,
+            `KeyText must include all specified languages: ${languages.join(
+              ", "
+            )}.`,
             null,
             0
           );
@@ -47,7 +58,14 @@ class BusinessServicesTagsCTRL {
 
       const tag = await Business_servicesTags.create(tagData);
 
-      return handleResponse(res, 201, "success", "Tag created successfully.", tag, 1);
+      return handleResponse(
+        res,
+        201,
+        "success",
+        "Tag created successfully.",
+        tag,
+        1
+      );
     } catch (error) {
       console.error("Error in createTag function:", error);
       return handleResponse(
@@ -101,7 +119,14 @@ class BusinessServicesTagsCTRL {
         return handleResponse(res, 404, "error", "Tag not found.", null, 0);
       }
 
-      return handleResponse(res, 200, "success", "Tag retrieved successfully.", tag, 1);
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Tag retrieved successfully.",
+        tag,
+        1
+      );
     } catch (error) {
       console.error("Error in getTagById function:", error);
       return handleResponse(
@@ -145,7 +170,9 @@ class BusinessServicesTagsCTRL {
               res,
               400,
               "error",
-              `KeyText must include all specified languages: ${updatedLanguages.join(", ")}.`,
+              `KeyText must include all specified languages: ${updatedLanguages.join(
+                ", "
+              )}.`,
               null,
               0
             );
@@ -233,7 +260,14 @@ class BusinessServicesTagsCTRL {
       const { query, page = 1, limit = 10 } = req.query;
 
       if (!query) {
-        return handleResponse(res, 400, "error", "Search query is required.", null, 0);
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Search query is required.",
+          null,
+          0
+        );
       }
 
       const searchQuery = {
@@ -244,7 +278,9 @@ class BusinessServicesTagsCTRL {
         .skip((page - 1) * parseInt(limit))
         .limit(parseInt(limit));
 
-      const totalCount = await Business_servicesTags.countDocuments(searchQuery);
+      const totalCount = await Business_servicesTags.countDocuments(
+        searchQuery
+      );
 
       return handleResponse(
         res,

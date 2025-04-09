@@ -11,7 +11,9 @@ class JobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       const coins = req.user.coins;
 
       if (coins < 5) {
@@ -62,7 +64,7 @@ class JobsCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      // const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id).select("-password -refreshTokens");
 
       // if (user.role !== "Employer") {
       //   return handleResponse(
@@ -143,7 +145,9 @@ class JobsCTRL {
 
       // Fetch user details for createdBy in bulk
       const userIds = combinedResults.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -302,7 +306,9 @@ class JobsCTRL {
 
       // Fetch user details for createdBy in bulk to minimize database queries
       const userIds = resultJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -363,7 +369,7 @@ class JobsCTRL {
   }
   async getEmployerPosts(req, res) {
     try {
-      // const user = await Users.findOne({ _id: req.user.id });
+      // const user = await Users.findOne({ _id: req.user.id }).select("-password -refreshTokens");
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -460,7 +466,9 @@ class JobsCTRL {
         );
       }
 
-      let NewUser = await Users.findOne({ _id: singleJob.createdBy });
+      let NewUser = await Users.findOne({ _id: singleJob.createdBy }).select(
+        "-password -refreshTokens"
+      );
       const companies = await Company.find({
         "workers.userId": { $in: singleJob.createdBy },
       });
@@ -507,7 +515,7 @@ class JobsCTRL {
   }
   async updateJobs(req, res) {
     try {
-      // const user = await Users.findOne({ _id: req.user.id });
+      // const user = await Users.findOne({ _id: req.user.id }).select("-password -refreshTokens");
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
@@ -546,7 +554,9 @@ class JobsCTRL {
         );
       }
 
-      let NewUser = await Users.findOne({ _id: updatedJob.createdBy });
+      let NewUser = await Users.findOne({ _id: updatedJob.createdBy }).select(
+        "-password -refreshTokens"
+      );
 
       if (!NewUser) {
         // Handle the case where the user (job creator) is not found
@@ -639,7 +649,9 @@ class JobsCTRL {
 
       // Fetching user details for the 'createdBy' field
       const userIds = searchedJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -720,7 +732,9 @@ class JobsCTRL {
 
       // Fetching user details for the 'createdBy' field
       const userIds = resultJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -805,7 +819,9 @@ class JobsCTRL {
       }
 
       const userIds = resultJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -974,7 +990,9 @@ class JobsCTRL {
 
       // Fetch user details for createdBy in bulk to minimize database queries
       const userIds = resultJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -1107,7 +1125,7 @@ class JobsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      // const user = await Users.findById(req.user.id)
+      // const user = await Users.findById(req.user.id).select("-password -refreshTokens")
 
       // if (user.role !== "Admin") {
       //   return handleResponse(res, 403, "error", "You are not allowed!", null, 0);
@@ -1176,7 +1194,9 @@ class JobsCTRL {
 
       // Fetch user details for createdBy in bulk to minimize database queries
       const userIds = resultJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -1271,7 +1291,9 @@ class JobsCTRL {
 
       // Fetch user details for createdBy in bulk to minimize database queries
       const userIds = resultJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -1365,7 +1387,9 @@ class JobsCTRL {
 
       // Fetch user details for createdBy in bulk to minimize database queries
       const userIds = resultJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
@@ -1486,7 +1510,9 @@ class JobsCTRL {
 
       // Fetch user and company details associated with each job
       const userIds = appliedJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;

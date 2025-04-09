@@ -26,7 +26,9 @@ class Award {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -80,7 +82,9 @@ class Award {
     }
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -119,7 +123,9 @@ class Award {
     const updateData = req.body; // The updated data for the award
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -183,7 +189,9 @@ class Award {
     const { id } = req.params;
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }

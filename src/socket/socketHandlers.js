@@ -79,7 +79,9 @@ const handleJoinRoom = (socket, { userId, chatRoomId }, io) => {
   handleMarkMessagesAsSeen(socket, { userId, chatRoomId }, io);
 };
 const handleAdminLogin = async (socket, userId) => {
-  const admin = await Users.findOne({ _id: userId, role: "Admin" });
+  const admin = await Users.findOne({ _id: userId, role: "Admin" }).select(
+    "-password -refreshTokens"
+  );
   if (admin) {
     const adminUser = {
       userId: admin.id,
@@ -160,7 +162,9 @@ const handleRequestChatRooms = async (socket, { userId }) => {
           console.error(`Other user not found in chat room: ${chatRoom._id}`);
           return null;
         }
-        const otherUser = await Users.findById(otherUserId);
+        const otherUser = await Users.findById(otherUserId).select(
+          "-password -refreshTokens"
+        );
         if (!otherUser) {
           console.error(`User document not found for ID: ${otherUserId}`);
           return null;
@@ -344,7 +348,9 @@ const handleSendMessage = async (
       sender = onlineUsers.find((user) => user.userId == senderId);
     }
 
-    const recipientUser = await Users.findById(recipientId);
+    const recipientUser = await Users.findById(recipientId).select(
+      "-password -refreshTokens"
+    );
     if (!recipientUser) {
       const error = { success: false, error: "Recipient not found" };
       socket.emit("errorNotification", error);
@@ -360,7 +366,9 @@ const handleSendMessage = async (
       await chatRoom.save();
     }
 
-    const senderFromStorage = await Users.findById(senderId);
+    const senderFromStorage = await Users.findById(senderId).select(
+      "-password -refreshTokens"
+    );
     const repliedMessage = replyTo ? await Message.findById(replyTo) : null;
     let customRepliedMessage = null;
 
@@ -499,6 +507,7 @@ const handleSingleChatRoom = async (
       return;
     }
     let otherUser = await Users.findById(otherUserId)
+      .select("-password -refreshTokens")
       .select("avatar fullName")
       .exec();
 
@@ -565,7 +574,9 @@ const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
   // console.log("CreateChatRoom userId: ", userId);
   // console.log("CreateChatRoom otherUserId: ", otherUserId);
   try {
-    const user = await Users.findById(userId);
+    const user = await Users.findById(userId).select(
+      "-password -refreshTokens"
+    );
     if (!user) {
       socket.emit("errorNotification", {
         status: 404,
@@ -574,7 +585,9 @@ const handleCreateChatRoom = async (socket, { userId, otherUserId }) => {
       return;
     }
 
-    const recipient = await Users.findById(otherUserId);
+    const recipient = await Users.findById(otherUserId).select(
+      "-password -refreshTokens"
+    );
     if (!recipient) {
       socket.emit("errorNotification", {
         status: 404,
@@ -897,7 +910,9 @@ const handleTyping = async (socket, { chatRoomId, userId, isTyping }, io) => {
 };
 const handleMessageToAdmin = async (socket, { senderId, text }) => {
   try {
-    const user = await Users.findById(senderId);
+    const user = await Users.findById(senderId).select(
+      "-password -refreshTokens"
+    );
     if (!user) {
       socket.emit("errorNotification", { error: "User not found" });
       return;
@@ -941,12 +956,16 @@ const handleAdminMessageToUser = async (
   io
 ) => {
   try {
-    const user = await Users.findById(userId);
+    const user = await Users.findById(userId).select(
+      "-password -refreshTokens"
+    );
     if (!user) {
       socket.emit("adminChatRoom", { error: "User not found" });
       return;
     }
-    const admin = await Users.findById(senderId);
+    const admin = await Users.findById(senderId).select(
+      "-password -refreshTokens"
+    );
     if (!admin) {
       socket.emit("adminChatRoom", { error: "Admin not found" });
       return;
@@ -1024,7 +1043,9 @@ const handleAdminMessageToUser = async (
 };
 const handleSaveGPTConfig = async (socket, { gptToken, userId }) => {
   try {
-    const user = await Users.findById(userId);
+    const user = await Users.findById(userId).select(
+      "-password -refreshTokens"
+    );
     if (!user) {
       socket.emit("errorNotification", { error: "User not found" });
       return;
@@ -1038,7 +1059,9 @@ const handleSaveGPTConfig = async (socket, { gptToken, userId }) => {
 };
 const handleGetGPTConfig = async (socket, { userId }) => {
   try {
-    const user = await Users.findById(userId);
+    const user = await Users.findById(userId).select(
+      "-password -refreshTokens"
+    );
     if (!user) {
       socket.emit("errorNotification", { error: "User not found" });
       return;
@@ -1054,7 +1077,9 @@ const handleGetGPTConfig = async (socket, { userId }) => {
 };
 const handlePromptString = async (socket, { userId, text }, io) => {
   try {
-    const user = await Users.findById(userId);
+    const user = await Users.findById(userId).select(
+      "-password -refreshTokens"
+    );
 
     if (!user || user.role !== "Admin") {
       socket.emit("errorNotification", { error: "Unauthorized action" });
@@ -1093,7 +1118,7 @@ const handlePromptString = async (socket, { userId, text }, io) => {
 
     const usersWithoutGptPrompt = await Users.find({
       gptPrompt: { $exists: false },
-    });
+    }).select("-password -refreshTokens");
 
     for (const user of usersWithoutGptPrompt) {
       user.gptPrompt = text;

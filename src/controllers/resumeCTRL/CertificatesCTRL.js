@@ -40,7 +40,9 @@ class Certificates {
     }
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -82,7 +84,9 @@ class Certificates {
     }
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -141,7 +145,9 @@ class Certificates {
     }
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -206,7 +212,9 @@ class Certificates {
     const { id } = req.params;
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }

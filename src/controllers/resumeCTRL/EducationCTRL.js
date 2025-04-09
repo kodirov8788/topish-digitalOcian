@@ -37,7 +37,9 @@ class Education {
         );
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -79,7 +81,9 @@ class Education {
     }
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -139,7 +143,9 @@ class Education {
         );
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -205,7 +211,9 @@ class Education {
     const { id } = req.params; // Assuming you pass the UUID of the education experience as a URL parameter
 
     try {
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }

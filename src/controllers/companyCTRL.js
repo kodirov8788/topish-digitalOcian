@@ -25,7 +25,9 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 400, "error", "User not found.", null, 0);
       }
@@ -95,7 +97,9 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found.", null, 0);
       }
@@ -344,7 +348,9 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       const { page = 1, limit = 10 } = req.query; // Default pagination values
       const skip = (page - 1) * limit;
 
@@ -398,7 +404,9 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       // Check if the user role is Employer
       const allowedRoles = ["Admin", "Employer"];
       if (!allowedRoles.includes(user.role)) {
@@ -505,7 +513,9 @@ class CompanyCTRL {
         searchedCompanies.map(async (company) => {
           const newWorkers = await Promise.all(
             company.workers.map(async (workerData) => {
-              const worker = await Users.findById(workerData.userId);
+              const worker = await Users.findById(workerData.userId).select(
+                "-password -refreshTokens"
+              );
               if (worker) {
                 return {
                   avatar: worker.avatar,
@@ -574,7 +584,9 @@ class CompanyCTRL {
       const updatedCompany = await (async (company) => {
         const newWorkers = await Promise.all(
           company.workers.map(async (workerData) => {
-            const worker = await Users.findById(workerData.userId);
+            const worker = await Users.findById(workerData.userId).select(
+              "-password -refreshTokens"
+            );
             if (worker) {
               return {
                 avatar: worker.avatar,
@@ -619,7 +631,9 @@ class CompanyCTRL {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       const {
         params: { id: companyId },
         body,
@@ -730,7 +744,9 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["Admin", "Employer"];
       // console.log("user: ", user);
       if (!allowedRoles.includes(user.role)) {
@@ -839,7 +855,9 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Admin", "Employer"];
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
@@ -856,7 +874,9 @@ class CompanyCTRL {
         return handleResponse(res, 404, "error", "Company not found", null, 0);
       }
       // console.log("userId: ", userId);
-      const newUser = await Users.findById(userId);
+      const newUser = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -922,7 +942,9 @@ class CompanyCTRL {
 
       const { id: companyId } = req.params;
       const { userId } = req.body;
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["Admin", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -940,7 +962,9 @@ class CompanyCTRL {
         return handleResponse(res, 404, "error", "Company not found", null, 0);
       }
 
-      const newUser = await Users.findById(userId);
+      const newUser = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -1011,7 +1035,9 @@ class CompanyCTRL {
 
       const { id: companyId } = req.params;
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       // Check if the user is already employed in any company
       const isEmployed = await Company.findOne({ "workers.userId": user._id });
@@ -1076,7 +1102,9 @@ class CompanyCTRL {
       const adminUserIds = adminWorkers.map((worker) => worker.userId);
 
       // Fetch all admin users and their device tokens
-      const adminUsers = await Users.find({ _id: { $in: adminUserIds } });
+      const adminUsers = await Users.find({
+        _id: { $in: adminUserIds },
+      }).select("-password -refreshTokens");
       const adminDeviceTokens = adminUsers.flatMap(
         (user) => user.mobileToken || []
       );
@@ -1133,7 +1161,7 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-      // const user = await Users.findById(req.user.id);
+      // const user = await Users.findById(req.user.id).select("-password -refreshTokens");
       // if (!allowedRoles.includes(user.role)) {
       //   return handleResponse(
       //     res,
@@ -1163,7 +1191,9 @@ class CompanyCTRL {
         );
       }
 
-      const newUser = await Users.findById(userId);
+      const newUser = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -1255,7 +1285,9 @@ class CompanyCTRL {
         );
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       // if (!allowedRoles.includes(user.role)) {
       //   return handleResponse(
       //     res,
@@ -1286,7 +1318,9 @@ class CompanyCTRL {
         );
       }
 
-      const newUser = await Users.findById(userId);
+      const newUser = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -1414,7 +1448,7 @@ class CompanyCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const { id: companyId } = req.params;
-      // const user = await Users.findOne({ _id: req.user.id });
+      // const user = await Users.findOne({ _id: req.user.id }).select("-password -refreshTokens");
       // if ( user.role !== "Admin") {
       //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       // }
@@ -1536,7 +1570,9 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
           res,
@@ -1567,7 +1603,9 @@ class CompanyCTRL {
         );
       }
 
-      const newUser = await Users.findById(userId);
+      const newUser = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -1634,7 +1672,9 @@ class CompanyCTRL {
       const { id: companyId } = req.params;
       const { userId } = req.body;
       const allowedRoles = ["Employer", "Admin"];
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -1666,7 +1706,9 @@ class CompanyCTRL {
         );
       }
 
-      const newUser = await Users.findById(userId);
+      const newUser = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!newUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -1767,7 +1809,9 @@ class CompanyCTRL {
       const allJobs = [...CompanyJobs, ...CompanyQuickJobs];
 
       const userIds = allJobs.map((job) => job.createdBy);
-      const users = await Users.find({ _id: { $in: userIds } });
+      const users = await Users.find({ _id: { $in: userIds } }).select(
+        "-password -refreshTokens"
+      );
 
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
@@ -1921,7 +1965,9 @@ class CompanyCTRL {
         );
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       // if (!allowedRoles.includes(user.role)) {
       //   return handleResponse(
       //     res,
@@ -1955,7 +2001,9 @@ class CompanyCTRL {
         );
       }
 
-      const targetUser = await Users.findById(userId);
+      const targetUser = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!targetUser) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -2044,7 +2092,9 @@ class CompanyCTRL {
       }
 
       // Check if the user has the "Manager" role within the company
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const isManager = company.workers.some(
         (worker) =>
           worker.userId.toString() === user._id.toString() &&
@@ -2221,14 +2271,18 @@ class CompanyCTRL {
       const adminUserIds = adminWorkers.map((worker) => worker.userId);
 
       // Fetch all admin users and their device tokens
-      const adminUsers = await Users.find({ _id: { $in: adminUserIds } });
+      const adminUsers = await Users.find({
+        _id: { $in: adminUserIds },
+      }).select("-password -refreshTokens");
       const adminDeviceTokens = adminUsers.flatMap(
         (user) => user.mobileToken || []
       );
 
       // Send notifications to company admins
       if (adminDeviceTokens.length > 0) {
-        const user = await Users.findById(req.user.id);
+        const user = await Users.findById(req.user.id).select(
+          "-password -refreshTokens"
+        );
         const notification = {
           title: "Join Request Canceled",
           body: `${user.fullName} has canceled their employment request.`,
@@ -2324,13 +2378,17 @@ class CompanyCTRL {
       const adminUserIds = adminWorkers.map((worker) => worker.userId);
 
       // Fetch all admin users and their device tokens
-      const adminUsers = await Users.find({ _id: { $in: adminUserIds } });
+      const adminUsers = await Users.find({
+        _id: { $in: adminUserIds },
+      }).select("-password -refreshTokens");
       const adminDeviceTokens = adminUsers.flatMap(
         (user) => user.mobileToken || []
       );
 
       if (adminDeviceTokens.length > 0) {
-        const user = await Users.findById(req.user.id);
+        const user = await Users.findById(req.user.id).select(
+          "-password -refreshTokens"
+        );
         const notification = {
           title: "Employee Left Company",
           body: `${user.fullName} has left the company.`,

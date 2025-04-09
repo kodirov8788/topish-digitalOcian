@@ -17,7 +17,9 @@ class MakeFriendsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["JobSeeker", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -31,7 +33,9 @@ class MakeFriendsCTRL {
       }
 
       const { receiverId } = req.body;
-      const receiver = await Users.findById(receiverId);
+      const receiver = await Users.findById(receiverId).select(
+        "-password -refreshTokens"
+      );
 
       if (!receiver) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
@@ -89,7 +93,9 @@ class MakeFriendsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["JobSeeker", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -151,7 +157,9 @@ class MakeFriendsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["JobSeeker", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -212,7 +220,9 @@ class MakeFriendsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["JobSeeker", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -246,7 +256,9 @@ class MakeFriendsCTRL {
             friendship.sender.toString() === req.user.id
               ? friendship.receiver
               : friendship.sender;
-          return await Users.findById(friendId);
+          return await Users.findById(friendId).select(
+            "-password -refreshTokens"
+          );
         })
       );
 
@@ -276,7 +288,9 @@ class MakeFriendsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["JobSeeker", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -296,7 +310,10 @@ class MakeFriendsCTRL {
 
       const requests = await Promise.all(
         friendRequests.map(
-          async (request) => await Users.findById(request.sender)
+          async (request) =>
+            await Users.findById(request.sender).select(
+              "-password -refreshTokens"
+            )
         )
       );
 
@@ -326,7 +343,9 @@ class MakeFriendsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["JobSeeker", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -350,7 +369,9 @@ class MakeFriendsCTRL {
             friendship.sender.toString() === req.user.id
               ? friendship.receiver
               : friendship.sender;
-          return await Users.findById(friendId);
+          return await Users.findById(friendId).select(
+            "-password -refreshTokens"
+          );
         })
       );
 
@@ -380,7 +401,9 @@ class MakeFriendsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["JobSeeker", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -441,7 +464,9 @@ class MakeFriendsCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       const allowedRoles = ["JobSeeker", "Employer"];
       if (!allowedRoles.includes(user.role)) {
         return handleResponse(
@@ -514,7 +539,9 @@ class MakeFriendsCTRL {
 
       const followerDetails = await Promise.all(
         followers.map(async (follower) => {
-          return await Users.findById(follower.sender); // Get details of the follower
+          return await Users.findById(follower.sender).select(
+            "-password -refreshTokens"
+          ); // Get details of the follower
         })
       );
 
@@ -566,7 +593,9 @@ class MakeFriendsCTRL {
 
       const followingDetails = await Promise.all(
         followings.map(async (following) => {
-          return await Users.findById(following.receiver); // Get details of the following user
+          return await Users.findById(following.receiver).select(
+            "-password -refreshTokens"
+          ); // Get details of the following user
         })
       );
 

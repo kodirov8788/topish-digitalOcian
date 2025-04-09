@@ -184,8 +184,12 @@ class ProfileCTRL {
       if (request.status === "pending") {
         // Find both users involved in the request
         const [requestUser, targetUser] = await Promise.all([
-          Users.findById(request.requesterId),
-          Users.findById(request.targetUserId),
+          Users.findById(request.requesterId).select(
+            "-password -refreshTokens"
+          ),
+          Users.findById(request.targetUserId).select(
+            "-password -refreshTokens"
+          ),
         ]);
 
         if (!requestUser || !targetUser) {
@@ -259,8 +263,12 @@ class ProfileCTRL {
       if (request.status === "pending") {
         // Find both users involved in the request
         const [requestUser, targetUser] = await Promise.all([
-          Users.findById(request.requesterId),
-          Users.findById(request.targetUserId),
+          Users.findById(request.requesterId).select(
+            "-password -refreshTokens"
+          ),
+          Users.findById(request.targetUserId).select(
+            "-password -refreshTokens"
+          ),
         ]);
 
         if (!requestUser || !targetUser) {
@@ -334,8 +342,12 @@ class ProfileCTRL {
       if (request.status === "accepted") {
         // Find both users involved in the request
         const [requestUser, targetUser] = await Promise.all([
-          Users.findById(request.requesterId),
-          Users.findById(request.targetUserId),
+          Users.findById(request.requesterId).select(
+            "-password -refreshTokens"
+          ),
+          Users.findById(request.targetUserId).select(
+            "-password -refreshTokens"
+          ),
         ]);
 
         if (!requestUser || !targetUser) {

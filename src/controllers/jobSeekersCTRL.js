@@ -26,6 +26,7 @@ class JobSeekerCTRL {
       }
 
       const resultUsers = await Users.find(query)
+        .select("-password -refreshTokens")
         .skip(skip)
         .limit(limit)
         .exec();
@@ -75,7 +76,11 @@ class JobSeekerCTRL {
           jobSeeker: { $exists: true },
           recommending: true,
         };
-        resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+        resultUsers = await Users.find(query)
+          .select("-password -refreshTokens")
+          .skip(skip)
+          .limit(limit)
+          .exec();
         total = await Users.countDocuments(query);
       } else {
         // Fetch users with matching job title
@@ -84,7 +89,11 @@ class JobSeekerCTRL {
           recommending: true,
           "jobSeeker.jobTitle": { $regex: jobTitle, $options: "i" },
         };
-        resultUsers = await Users.find(query).skip(skip).limit(limit).exec();
+        resultUsers = await Users.find(query)
+          .select("-password -refreshTokens")
+          .skip(skip)
+          .limit(limit)
+          .exec();
         total = await Users.countDocuments(query);
       }
 
@@ -137,6 +146,7 @@ class JobSeekerCTRL {
       }
 
       const experiencedUsers = await Users.find(experiencedQuery)
+        .select("-password -refreshTokens")
         .sort({ "jobSeeker.workingExperience": -1 })
         .exec();
 
@@ -153,7 +163,9 @@ class JobSeekerCTRL {
         otherQuery["jobSeeker.jobTitle"] = { $regex: jobTitle, $options: "i" };
       }
 
-      const otherUsers = await Users.find(otherQuery).exec();
+      const otherUsers = await Users.find(otherQuery)
+        .select("-password -refreshTokens")
+        .exec();
 
       // Combine results in the desired order
       const allUsers = [...experiencedUsers, ...otherUsers];
@@ -204,7 +216,9 @@ class JobSeekerCTRL {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
-    const user = await Users.findOne({ _id: req.user.id });
+    const user = await Users.findOne({ _id: req.user.id }).select(
+      "-password -refreshTokens"
+    );
     if (!user.role == "JobSeeker") {
       return handleResponse(res, 401, "error", "Job Seeker only", null, 0);
     }
@@ -268,7 +282,9 @@ class JobSeekerCTRL {
     }
   }
   async deleteSavedJob(req, res) {
-    const user = await Users.findOne({ _id: req.user.id });
+    const user = await Users.findOne({ _id: req.user.id }).select(
+      "-password -refreshTokens"
+    );
 
     if (!req.user) {
       return handleResponse(
@@ -351,7 +367,9 @@ class JobSeekerCTRL {
       const { id: jobID } = req.params; // Assuming the job ID is passed in req.params directly
       const userID = req.user.id;
 
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
 
       // Check if the user or user's jobSeeker data exists
 
@@ -420,7 +438,9 @@ class JobSeekerCTRL {
       const { id: jobID } = req.params; // Assuming the job ID is passed in req.params
       const userID = req.user.id;
 
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
       // console.log("user: ", user.id)
       // Check if the user or user's jobSeeker data exists
       if (!user) {
@@ -489,7 +509,9 @@ class JobSeekerCTRL {
 
       const userID = req.user.id;
 
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
 
       // Check if the user or user's jobSeeker data exists
       if (!user) {
@@ -543,7 +565,9 @@ class JobSeekerCTRL {
       const { id: jobID } = req.params; // Extract jobID from params
       const userID = req.user.id;
 
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
 
       if (!user) {
         return handleResponse(
@@ -637,6 +661,7 @@ class JobSeekerCTRL {
 
       // Find matching job seekers and apply pagination
       const resultUsers = await Users.find(query)
+        .select("-password -refreshTokens")
         .skip(parseInt(skip))
         .limit(parseInt(limit));
 
@@ -721,6 +746,7 @@ class JobSeekerCTRL {
           { "jobSeeker.fullName": { $regex: regex } }, // Search by fullName in jobSeeker subdocument
         ],
       })
+        .select("-password -refreshTokens")
         .skip(parseInt(skip))
         .limit(parseInt(limit));
 
@@ -832,6 +858,7 @@ class JobSeekerCTRL {
 
       const skip = (page - 1) * limit;
       const matchedUsers = await Users.find(userQueryObject)
+        .select("-password -refreshTokens")
         .skip(parseInt(skip))
         .limit(parseInt(limit))
         .exec();

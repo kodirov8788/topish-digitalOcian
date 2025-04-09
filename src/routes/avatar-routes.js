@@ -72,7 +72,9 @@ const updateUserAvatarUrl = async (userId, url) => {
 
 router.get("/", async (req, res) => {
   try {
-    const user = await Users.findById(req.user.id);
+    const user = await Users.findById(req.user.id).select(
+      "-password -refreshTokens"
+    );
     if (!user) throw new Error("User not found.");
 
     if (user.avatar) {
@@ -114,7 +116,9 @@ router.patch("/", upload.single("avatar"), async (req, res) => {
     if (!req.file) throw new Error("Please upload a file.");
 
     // Retrieve the user's current avatar URL from the database
-    const user = await Users.findById(req.user.id);
+    const user = await Users.findById(req.user.id).select(
+      "-password -refreshTokens"
+    );
     if (!user) throw new Error("User not found.");
 
     if (user.avatar) {
@@ -150,7 +154,9 @@ router.patch("/", upload.single("avatar"), async (req, res) => {
 router.delete("/", async (req, res) => {
   try {
     // Retrieve the user's current avatar URL from the database
-    const user = await Users.findById(req.user.id);
+    const user = await Users.findById(req.user.id).select(
+      "-password -refreshTokens"
+    );
     if (!user) throw new Error("User not found.");
 
     if (user.avatar) {

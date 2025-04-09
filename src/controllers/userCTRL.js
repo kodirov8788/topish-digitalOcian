@@ -6,129 +6,129 @@ const { handleResponse } = require("../utils/handleResponse");
 
 class UserCTRL {
   //   GET ALL USERS
-async getAllUsers(req, res) {
-  try {
-    // if (!req.user) {
-    //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
-    // }
+  async getAllUsers(req, res) {
+    try {
+      // if (!req.user) {
+      //   return handleResponse(res, 401, "error", "Unauthorized", null, 0);
+      // }
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
 
-    // Get total count for pagination
-    const total = await Users.countDocuments();
+      // Get total count for pagination
+      const total = await Users.countDocuments();
 
-    // Calculate skip based on page and limit
-    const skip = (page - 1) * limit;
+      // Calculate skip based on page and limit
+      const skip = (page - 1) * limit;
 
-    // Fetch users, applying skip, limit, and sort by _id
-    let resultUsers = await Users.aggregate([
-      { $sample: { size: total } }, // Shuffle all documents
-      { $skip: skip }, // Apply skip
-      { $limit: limit } // Apply limit
-    ]);
+      // Fetch users, applying skip, limit, and sort by _id
+      let resultUsers = await Users.aggregate([
+        { $sample: { size: total } }, // Shuffle all documents
+        { $project: { refreshTokens: 0 } },
+        { $skip: skip }, // Apply skip
+        { $limit: limit }, // Apply limit
+      ]);
 
-    if (resultUsers.length === 0) {
-      return handleResponse(res, 404, "info", "No users found", [], 0);
-    }
+      if (resultUsers.length === 0) {
+        return handleResponse(res, 404, "info", "No users found", [], 0);
+      }
 
-    const pagination = {
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      limit: limit,
-      totalDocuments: total,
-    };
+      const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        limit: limit,
+        totalDocuments: total,
+      };
 
-    return handleResponse(
-      res,
-      200,
-      "success",
-      "Users retrieved successfully",
-      resultUsers,
-      total,
-      pagination
-    );
-  } catch (error) {
-    return handleResponse(
-      res,
-      500,
-      "error",
-      "Something went wrong: " + error.message,
-      null,
-      0
-    );
-  }
-}
-async searchUsers(req, res) {
-  try {
-  
-
-    const { searchTerm } = req.query;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    if (!searchTerm) {
       return handleResponse(
         res,
-        400,
+        200,
+        "success",
+        "Users retrieved successfully",
+        resultUsers,
+        total,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
         "error",
-        "Please provide a search term",
+        "Something went wrong: " + error.message,
         null,
         0
       );
     }
-
-    // Create a case-insensitive regex for the search term
-    const regex = new RegExp(searchTerm, "i");
-
-    // Search across multiple fields: fullName, phoneNumber, and jobTitle
-    const query = {
-      $or: [
-        { fullName: { $regex: regex } },
-        { phoneNumber: { $regex: regex } },
-        { jobTitle: { $regex: regex } },
-      ],
-    };
-
-    const users = await Users.find(query)
-      .skip(skip)
-      .limit(limit)
-      .exec();
-
-    const total = await Users.countDocuments(query);
-
-    if (users.length === 0) {
-      return handleResponse(res, 404, "info", "No users found", [], 0);
-    }
-
-    const pagination = {
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      limit: limit,
-      totalDocuments: total,
-    };
-
-    return handleResponse(
-      res,
-      200,
-      "success",
-      "Users retrieved successfully",
-      users,
-      users.length,
-      pagination
-    );
-  } catch (error) {
-    return handleResponse(
-      res,
-      500,
-      "error",
-      "Something went wrong: " + error.message,
-      null,
-      0
-    );
   }
-}
+  async searchUsers(req, res) {
+    try {
+      const { searchTerm } = req.query;
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      if (!searchTerm) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Please provide a search term",
+          null,
+          0
+        );
+      }
+
+      // Create a case-insensitive regex for the search term
+      const regex = new RegExp(searchTerm, "i");
+
+      // Search across multiple fields: fullName, phoneNumber, and jobTitle
+      const query = {
+        $or: [
+          { fullName: { $regex: regex } },
+          { phoneNumber: { $regex: regex } },
+          { jobTitle: { $regex: regex } },
+        ],
+      };
+
+      const users = await Users.find(query)
+        .select("-password -refreshTokens")
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      const total = await Users.countDocuments(query);
+
+      if (users.length === 0) {
+        return handleResponse(res, 404, "info", "No users found", [], 0);
+      }
+
+      const pagination = {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        limit: limit,
+        totalDocuments: total,
+      };
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Users retrieved successfully",
+        users,
+        users.length,
+        pagination
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
+    }
+  }
   //  GET CURRENT USER
   async showCurrentUser(req, res) {
     try {
@@ -137,7 +137,9 @@ async searchUsers(req, res) {
       }
 
       const userId = req.user.id;
-      const user = await Users.findById(userId);
+      const user = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -146,7 +148,9 @@ async searchUsers(req, res) {
       if (company) {
         const newWorkers = await Promise.all(
           company.workers.map(async (workerData) => {
-            const worker = await Users.findById(workerData.userId);
+            const worker = await Users.findById(workerData.userId).select(
+              "-password -refreshTokens"
+            );
             if (worker) {
               return {
                 avatar: worker.avatar,
@@ -216,7 +220,7 @@ async searchUsers(req, res) {
       // Query for a user with the target role and the specified ID
       const user = await Users.findOne({
         _id: userId,
-      }).select("-password");
+      }).select("-password -refreshTokens");
 
       if (!user) {
         return handleResponse(
@@ -254,7 +258,9 @@ async searchUsers(req, res) {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
 
       // if (user.role !== "Employer") {
       //   // Fixed the role check logic
@@ -348,7 +354,9 @@ async searchUsers(req, res) {
         );
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       user.phoneNumber = phoneNumber;
 
@@ -393,7 +401,9 @@ async searchUsers(req, res) {
         );
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       user.email = email;
 
@@ -427,7 +437,9 @@ async searchUsers(req, res) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const { purpose } = req.body;
-      let user = await Users.findOne({ _id: req.user.id });
+      let user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
@@ -480,7 +492,9 @@ async searchUsers(req, res) {
         );
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       const isPasswordCorrect = await user.comparePassword(oldPassword);
 
@@ -516,7 +530,9 @@ async searchUsers(req, res) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       // Extract the fields from the request body
       const {
@@ -810,7 +826,7 @@ async searchUsers(req, res) {
 
       const userId = req.params.id; // Extract user ID from the request
       const { role } = req.body; // Extract the role from the request body
-      console.log("role:", role)
+      console.log("role:", role);
       // Validate that the role is provided
       if (!role) {
         return handleResponse(
@@ -845,7 +861,9 @@ async searchUsers(req, res) {
       }
 
       // Find the user by ID
-      const user = await Users.findOne({ _id: userId });
+      const user = await Users.findOne({ _id: userId }).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -855,7 +873,7 @@ async searchUsers(req, res) {
 
       // Save the updated user
       const savedUser = await user.save();
-      console.log("savedUser:", savedUser)
+      console.log("savedUser:", savedUser);
       // Respond with success
       return handleResponse(
         res,
@@ -903,7 +921,9 @@ async searchUsers(req, res) {
       username = username.replace(/[^a-zA-Z0-9]/g, "");
 
       // Check if the username already exists
-      const existingUser = await Users.findOne({ username });
+      const existingUser = await Users.findOne({ username }).select(
+        "-password -refreshTokens"
+      );
       if (existingUser) {
         return handleResponse(
           res,
@@ -915,7 +935,9 @@ async searchUsers(req, res) {
         );
       }
 
-      const user = await Users.findOne({ _id: userId });
+      const user = await Users.findOne({ _id: userId }).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -950,7 +972,9 @@ async searchUsers(req, res) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
       // console.log(role);
       if (user.role !== "Admin") {
         return handleResponse(
@@ -1005,7 +1029,9 @@ async searchUsers(req, res) {
         return handleResponse(res, 400, "error", "Invalid coin value", null, 0);
       }
 
-      const user = await Users.findById(userId);
+      const user = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
 
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
@@ -1043,7 +1069,9 @@ async searchUsers(req, res) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       const { visible } = req.body;
       // Validate the 'visible' field
@@ -1108,7 +1136,9 @@ async searchUsers(req, res) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      const user = await Users.findOne({ _id: req.user.id });
+      const user = await Users.findOne({ _id: req.user.id }).select(
+        "-password -refreshTokens"
+      );
 
       const { visible } = req.body;
       // Validate the 'visible' field
@@ -1164,7 +1194,9 @@ async searchUsers(req, res) {
       }
 
       // Must be Admin
-      const adminUser = await Users.findById(req.user.id);
+      const adminUser = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!adminUser || adminUser.role !== "Admin") {
         return handleResponse(
           res,
@@ -1178,7 +1210,9 @@ async searchUsers(req, res) {
 
       // Retrieve the target user
       const { targetUserId } = req.params;
-      const user = await Users.findById(targetUserId);
+      const user = await Users.findById(targetUserId).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -1310,7 +1344,9 @@ async searchUsers(req, res) {
       }
 
       // Must be Admin
-      const adminUser = await Users.findById(req.user.id);
+      const adminUser = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!adminUser || adminUser.role !== "Admin") {
         return handleResponse(
           res,
@@ -1325,7 +1361,7 @@ async searchUsers(req, res) {
       // Find all users who have a jobSeeker field
       const usersWithJobSeeker = await Users.find({
         jobSeeker: { $exists: true },
-      });
+      }).select("-password -refreshTokens");
 
       if (!usersWithJobSeeker.length) {
         return handleResponse(
@@ -1470,11 +1506,13 @@ async searchUsers(req, res) {
       }
 
       // 3) Find the user in the database
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
-      console.log("jobTitle:", jobTitle)
+      console.log("jobTitle:", jobTitle);
       // 4) Update the jobTitle on the user document
       user.jobTitle = jobTitle;
 
@@ -1503,7 +1541,7 @@ async searchUsers(req, res) {
     }
   }
   async addRolesToUser(req, res) {
-    console.log("addRolesToUser")
+    console.log("addRolesToUser");
     try {
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
@@ -1511,17 +1549,33 @@ async searchUsers(req, res) {
       // console.log("req.user:", req.user)
 
       if (!req.user.admin) {
-        return handleResponse(res, 401, "error", "user does not have admin role", null, 0);
+        return handleResponse(
+          res,
+          401,
+          "error",
+          "user does not have admin role",
+          null,
+          0
+        );
       }
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
       const { userId, roles } = req.body;
-      console.log("roles:", roles)
+      console.log("roles:", roles);
       if (!userId) {
-        return handleResponse(res, 400, "error", "Please provide valid userId and roles", null, 0);
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Please provide valid userId and roles",
+          null,
+          0
+        );
       }
-      const user = await Users.findById(userId);
+      const user = await Users.findById(userId).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -1530,20 +1584,34 @@ async searchUsers(req, res) {
       // "Admin", "Supervisor", "Consultant", "Copywriter"
 
       const validRoles = ["Admin", "Supervisor", "Consultant", "Copywriter"];
-      const newRoles = roles.filter(role => validRoles.includes(role));
+      const newRoles = roles.filter((role) => validRoles.includes(role));
 
       // if (newRoles.length === 0) {
       //   return handleResponse(res, 400, "error", "No valid roles provided", null, 0);
       // }
-      console.log("newRoles:", newRoles)
+      console.log("newRoles:", newRoles);
       // Add new roles to the user's existing roles
       user.roles = newRoles;
 
       await user.save();
 
-      return handleResponse(res, 200, "success", "Roles updated successfully", user, 1);
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "Roles updated successfully",
+        user,
+        1
+      );
     } catch (error) {
-      return handleResponse(res, 500, "error", "Something went wrong: " + error.message, null, 0);
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Something went wrong: " + error.message,
+        null,
+        0
+      );
     }
   }
 }

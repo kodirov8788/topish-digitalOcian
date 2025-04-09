@@ -8,7 +8,9 @@ class ReportUserCTRL {
     if (!req.user) {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
-    const user = await Users.findById(req.user.id);
+    const user = await Users.findById(req.user.id).select(
+      "-password -refreshTokens"
+    );
     if (
       !user.role === "Employer" ||
       !user.role === "JobSeeker" ||
@@ -53,8 +55,10 @@ class ReportUserCTRL {
         jobPostId: reportData.jobPostId ? reportData.jobPostId : null,
       });
       // create a new report
-      const user = await Users.findById(reportedUserId);
-      console.log("user: ", user)
+      const user = await Users.findById(reportedUserId).select(
+        "-password -refreshTokens"
+      );
+      console.log("user: ", user);
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -81,7 +85,7 @@ class ReportUserCTRL {
   }
   // write get request to get all reports and add filter open and resolved
   async getReports(req, res) {
-    console.log(req.query, "query")
+    console.log(req.query, "query");
     try {
       const { status } = req.query;
       // if (req.user.role !== 'admin') {

@@ -21,7 +21,9 @@ class Professions {
 
     try {
       // Find the user by ID
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found");
       }

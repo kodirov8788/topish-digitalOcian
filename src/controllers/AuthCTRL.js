@@ -85,7 +85,7 @@ class AuthCTRL {
 
       let existingUser = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
-      });
+      }).select("-password -refreshTokens");
 
       if (existingUser) {
         return handleResponse(
@@ -144,7 +144,7 @@ class AuthCTRL {
       // Check if there's an existing user with this phone number
       const existingUser = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
-      });
+      }).select("-password -refreshTokens");
 
       if (existingUser && existingUser.phoneConfirmed) {
         return handleResponse(
@@ -316,7 +316,9 @@ class AuthCTRL {
         );
       }
 
-      const user = await Users.findOne({ phoneNumber });
+      const user = await Users.findOne({ phoneNumber }).select(
+        "-password -refreshTokens"
+      );
 
       if (!user) {
         return handleResponse(
@@ -412,7 +414,7 @@ class AuthCTRL {
       // Check if there's an existing user
       let existingUser = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
-      });
+      }).select("-password -refreshTokens");
 
       let prompt = await PromptCode.find();
 
@@ -518,7 +520,7 @@ class AuthCTRL {
 
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
-      });
+      }).select("-password -refreshTokens");
 
       if (!user) {
         return handleResponse(
@@ -663,7 +665,7 @@ class AuthCTRL {
 
       let user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
-      });
+      }).select("-password -refreshTokens");
 
       if (!user) {
         return handleResponse(res, 400, "error", "User not found", null, 0);
@@ -824,7 +826,7 @@ class AuthCTRL {
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
         confirmationCode,
-      });
+      }).select("-password");
       // console.log("user: ", user)
       if (!user || new Date() > user.confirmationCodeExpires) {
         console.log("user: ", user);
@@ -884,7 +886,7 @@ class AuthCTRL {
       //   );
       // }
 
-      // const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select("-password");
       // if (!user) {
       //   return handleResponse(res, 404, "error", "User not found", null, 0);
       // }
@@ -892,11 +894,9 @@ class AuthCTRL {
       // user.mobileToken = user.mobileToken.filter(
       //   (token) => token !== req.body.mobileToken
       // );
-      // user.refreshTokens = user.refreshTokens.filter(
-      //   (tokenObj) => tokenObj.token !== req.body.refreshToken
-      // );
+      user.refreshTokens = "";
 
-      // await user.save();
+      await user.save();
 
       return handleResponse(res, 200, "success", "User logged out!", null, 0);
     } catch (error) {
@@ -918,7 +918,9 @@ class AuthCTRL {
       }
 
       const userID = req.user.id;
-      const user = await Users.findById(userID);
+      const user = await Users.findById(userID).select(
+        "-password -refreshTokens"
+      );
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -945,7 +947,7 @@ class AuthCTRL {
   }
   async renewAccessToken(req, res) {
     try {
-      console.log("renewAccessToken called");
+      // console.log("renewAccessToken called");
       const { refreshToken } = req.body;
 
       if (!refreshToken) {
@@ -984,7 +986,7 @@ class AuthCTRL {
         // Updated to match the new schema (string, not array)
         const user = await Users.findOne({
           refreshTokens: refreshToken,
-        });
+        }).select("-password");
 
         if (!user) {
           console.warn("User not found for provided refresh token");
@@ -1009,10 +1011,10 @@ class AuthCTRL {
         // Save the updated user
         await user.save();
 
-        console.info(
-          "Access token renewed successfully for user:",
-          user.phoneNumber
-        );
+        // console.info(
+        //   "Access token renewed successfully for user:",
+        //   user.phoneNumber
+        // );
 
         return handleResponse(
           res,
@@ -1050,7 +1052,7 @@ class AuthCTRL {
         return handleResponse(res, 401, "error", "Unauthorized!", null, 0);
       }
 
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select("-password");
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
@@ -1091,14 +1093,12 @@ class AuthCTRL {
           0
         );
       }
-      const user = await Users.findById(req.user.id);
+      const user = await Users.findById(req.user.id).select("-password");
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
       // Ensure the provided id is a string for comparison
-      user.refreshTokens = user.refreshTokens.filter(
-        (token) => token._id.toString() !== id
-      );
+      user.refreshTokens = "";
 
       await user.save();
 
@@ -1139,7 +1139,7 @@ class AuthCTRL {
       const phoneNumberWithCountryCode = phoneNumber;
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
-      });
+      }).select("-password -refreshTokens");
 
       if (!user) {
         return handleResponse(
@@ -1220,7 +1220,7 @@ class AuthCTRL {
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
         confirmationCode,
-      });
+      }).select("-password -refreshTokens");
 
       if (!user || new Date() > user.confirmationCodeExpires) {
         return handleResponse(
@@ -1287,7 +1287,7 @@ class AuthCTRL {
       }
 
       // Find all users
-      const users = await Users.find();
+      const users = await Users.find().select("-password -refreshTokens");
 
       // Iterate over each user
       for (let user of users) {
