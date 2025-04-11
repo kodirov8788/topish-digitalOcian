@@ -138,6 +138,7 @@ class CompanyCTRL {
       );
     }
   }
+
   async getCompanyByUserId(req, res) {
     try {
       if (!req.user) {
@@ -175,6 +176,7 @@ class CompanyCTRL {
       );
     }
   }
+
   async approveCompany(req, res) {
     try {
       const companyId = req.params.companyId;
@@ -2147,9 +2149,6 @@ class CompanyCTRL {
     }
   }
 
-  //// filepath: /Users/Kodirovdev/Desktop/TOPISH project/topish-digitalOcian/src/controllers/companyCTRL.js
-  // Add this method to your CompanyCTRL class
-  // Add this method to your CompanyCTRL class
   async getUserCompanyStatus(req, res) {
     try {
       if (!req.user) {
@@ -2167,7 +2166,6 @@ class CompanyCTRL {
         // Check if the user has any pending employment requests
         const pendingRequests = await CompanyEmploymentReq.find({
           requesterId: userId,
-          status: "pending",
         }).populate("companyId", "name logo");
 
         // Return status information with pending requests
@@ -2178,12 +2176,12 @@ class CompanyCTRL {
           "User is not employed in any company",
           {
             isEmployed: false,
-            status: "pending",
             pendingRequests: pendingRequests.map((req) => ({
               companyId: req.companyId._id,
               companyName: req.companyId.name,
               companyLogo: req.companyId.logo,
               requestDate: req.createdAt,
+              status: req.status, // Include the status with each request
             })),
             pendingRequestCount: pendingRequests.length,
           },
