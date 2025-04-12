@@ -110,11 +110,6 @@ const companySchema = new mongoose.Schema(
       required: true,
       default: "",
     },
-    telegramName: {
-      type: String,
-      required: true,
-      default: "",
-    },
     licenseFiles: {
       type: Array,
       required: false,

@@ -73,11 +73,6 @@ const CompanyEndpoint = {
                   description: "Contact phone number of the company.",
                   example: "+1 234 567 8900",
                 },
-                telegramName: {
-                  type: "string",
-                  description: "Telegram username of the company.",
-                  example: "@InnovativeTech",
-                },
                 licenseFile: {
                   type: "array",
                   items: {
