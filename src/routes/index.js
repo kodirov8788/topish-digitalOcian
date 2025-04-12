@@ -25,6 +25,7 @@ const discoverRouter = require("./discover-route");
 const businessServicesRouter = require("./business_services_route");
 const discoverTagsRoutes = require("./discoverTags-route");
 const businessServicessTagsRoutes = require("./business_servicesTags-route");
+const appVersionRoutes = require("./app-version-routes");
 const authMiddleware = require("../middleware/auth-middleware");
 
 router.use("/api/v1/auth", authRouter);
@@ -51,6 +52,7 @@ router.use("/api/v1/stories", storyRouter);
 router.use("/api/v1/business-services", businessServicesRouter);
 router.use("/api/v1/discoverTags", discoverTagsRoutes);
 router.use("/api/v1/business-servicesTags", businessServicessTagsRoutes);
+router.use("/api/v1/app-version", authMiddleware, appVersionRoutes);
 
 //routes
 router.get("/", (req, res) => {

@@ -41,8 +41,6 @@ jobs:
           script: |
             cd topish-digitalOcian             # Path on the server
             git pull origin main  
-            # #npm install           # Install prod dependencies
+            npm install           # Install prod dependencies
             # #npm run build                       # Build on server (optional)
             pm2 restart Backend                 # Restart app with PM2
-
-          

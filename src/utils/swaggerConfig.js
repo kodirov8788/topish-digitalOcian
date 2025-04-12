@@ -44,11 +44,12 @@ const { MakeFriendsEndpoints } = require("../docs/makeFiendsDocs");
 const { StoryEndpoints } = require("../docs/storyDocs");
 const { DiscoverEndpoint } = require("../docs/discoverDocs");
 const { DiscoverTagsEndpoint } = require("../docs/discoverTagsDocs");
-const { Business_servicesTagsEndpoint } = require("../docs/business_servicesTagsDocs");
+const {
+  Business_servicesTagsEndpoint,
+} = require("../docs/business_servicesTagsDocs");
 const { SearchJobEndpoints } = require("../docs/SearchJobDocs");
 const { IndustryEndpoints } = require("../docs/IndustryDocs");
-
-
+const { AppVersionDocs } = require("../docs/appVersionDocs");
 
 const SecuritySchemes = {
   bearerAuth: {
@@ -132,7 +133,8 @@ const swaggerOptions = {
       ...Business_servicesTagsEndpoint,
       ...SearchJobEndpoints,
       ...IndustryEndpoints,
-      ...ExpectedSalaryEndpoints
+      ...ExpectedSalaryEndpoints,
+      ...AppVersionDocs,
     },
   },
   apis: ["./routes/*.js"],
