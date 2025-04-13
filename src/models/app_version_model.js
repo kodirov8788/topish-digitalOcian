@@ -9,7 +9,7 @@ const VersionHistoryEntrySchema = new mongoose.Schema(
     },
     minRequiredVersion: {
       type: String,
-      required: true,
+      required: false,
     },
     updateMessage: String,
     updateUrl: String,
@@ -39,7 +39,7 @@ const AppVersionSchema = new mongoose.Schema(
     },
     minRequiredVersion: {
       type: String,
-      required: true,
+      required: false,
     },
     updateMessage: {
       type: String,
@@ -48,7 +48,7 @@ const AppVersionSchema = new mongoose.Schema(
     },
     updateUrl: {
       type: String,
-      required: true,
+      required: false,
     },
     updateRequired: {
       type: Boolean,

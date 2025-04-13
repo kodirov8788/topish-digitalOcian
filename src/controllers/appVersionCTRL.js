@@ -110,7 +110,7 @@ class AppVersionCTRL {
       } = req.body;
 
       // Validate input
-      if (!platform || !latestVersion || !minRequiredVersion || !updateUrl) {
+      if (!platform || !latestVersion) {
         return handleResponse(
           res,
           400,
@@ -132,29 +132,29 @@ class AppVersionCTRL {
         );
       }
 
-      // Validate version format using semver
-      if (!semver.valid(latestVersion) || !semver.valid(minRequiredVersion)) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "Invalid version format. Use semantic versioning (e.g., 1.0.0)",
-          null,
-          0
-        );
-      }
+      // // Validate version format using semver
+      // if (!semver.valid(latestVersion) || !semver.valid(minRequiredVersion)) {
+      //   return handleResponse(
+      //     res,
+      //     400,
+      //     "error",
+      //     "Invalid version format. Use semantic versioning (e.g., 1.0.0)",
+      //     null,
+      //     0
+      //   );
+      // }
 
       // Check if minimum version is not greater than latest version
-      if (semver.gt(minRequiredVersion, latestVersion)) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "Minimum required version cannot be greater than latest version",
-          null,
-          0
-        );
-      }
+      // if (semver.gt(minRequiredVersion, latestVersion)) {
+      //   return handleResponse(
+      //     res,
+      //     400,
+      //     "error",
+      //     "Minimum required version cannot be greater than latest version",
+      //     null,
+      //     0
+      //   );
+      // }
 
       // Find the current version record first
       const currentVersion = await AppVersion.findOne({

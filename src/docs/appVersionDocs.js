@@ -304,12 +304,7 @@ const AppVersionDocs = {
                   example: false,
                 },
               },
-              required: [
-                "platform",
-                "latestVersion",
-                "minRequiredVersion",
-                "updateUrl",
-              ],
+              required: ["platform", "latestVersion"],
             },
           },
         },
