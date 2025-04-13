@@ -1057,6 +1057,88 @@ const handleSaveGPTConfig = async (socket, { gptToken, userId }) => {
     socket.emit("errorNotification", { error: "Failed to save GPT config" });
   }
 };
+// const handleGetGPTConfig = async (socket, { userId }) => {
+//   try {
+//     const user = await Users.findById(userId).select(
+//       "-password -refreshTokens"
+//     );
+//     if (!user) {
+//       socket.emit("errorNotification", { error: "User not found" });
+//       return;
+//     }
+//     const { gptToken } = user;
+
+//     socket.emit("gptConfigReceive", { success: true, config: { gptToken } });
+//   } catch (error) {
+//     socket.emit("errorNotification", {
+//       error: "Failed to retrieve GPT config",
+//     });
+//   }
+// };
+// const handlePromptString = async (socket, { userId, text }, io) => {
+//   try {
+//     const user = await Users.findById(userId).select(
+//       "-password -refreshTokens"
+//     );
+
+//     if (!user || user.role !== "Admin") {
+//       socket.emit("errorNotification", { error: "Unauthorized action" });
+//       return;
+//     }
+
+//     const promptMessage = {
+//       text,
+//       senderId: userId,
+//       timestamp: new Date(),
+//     };
+
+//     onlineUsers.forEach((onlineUser) => {
+//       io.to(onlineUser.socketId).emit("receivePrompt", promptMessage);
+//     });
+
+//     const chatRoom = await ChatRoom.findOne({ isForAdmin: true });
+
+//     if (chatRoom) {
+//       const message = new Message({
+//         text,
+//         senderId: userId,
+//         chatRoom: chatRoom._id,
+//         recipientId: "all",
+//       });
+//       await message.save();
+//     }
+
+//     let prompt = await PromptCode.find();
+//     if (prompt.length > 0) {
+//       await PromptCode.updateOne({ _id: prompt[0]._id }, { code: text });
+//     } else {
+//       const promptCode = new PromptCode({ code: text });
+//       await promptCode.save();
+//     }
+
+//     const usersWithoutGptPrompt = await Users.find({
+//       gptPrompt: { $exists: false },
+//     }).select("-password -refreshTokens");
+
+//     for (const user of usersWithoutGptPrompt) {
+//       user.gptPrompt = text;
+//       await user.save();
+//     }
+
+//     await Users.updateMany({}, { gptPrompt: text });
+
+//     socket.emit("promptSentConfirmation", {
+//       success: true,
+//       message: "Prompt message sent and gptPrompt updated for all users",
+//     });
+//   } catch (error) {
+//     console.error("Error sending prompt message:", error);
+//     socket.emit("errorNotification", {
+//       error: "Failed to send prompt message",
+//     });
+//   }
+// };
+
 const handleGetGPTConfig = async (socket, { userId }) => {
   try {
     const user = await Users.findById(userId).select(
@@ -1066,15 +1148,37 @@ const handleGetGPTConfig = async (socket, { userId }) => {
       socket.emit("errorNotification", { error: "User not found" });
       return;
     }
-    const { gptToken } = user;
 
-    socket.emit("gptConfigReceive", { success: true, config: { gptToken } });
+    // Get today's usage information
+    const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+
+    let usageInfo = await require("../models/gpt_usage_model").findOne({
+      userId,
+      date: today,
+    });
+
+    // Default daily limit if not set for the user
+    const dailyLimit = user.gptDailyLimit || 5;
+
+    socket.emit("gptConfigReceive", {
+      success: true,
+      config: {
+        gptPrompt: user.gptPrompt || "You are a helpful assistant.",
+        gptToken: user.gptToken || "",
+        gptDailyLimit: dailyLimit,
+        usageToday: usageInfo ? usageInfo.count : 0,
+        remaining: dailyLimit - (usageInfo ? usageInfo.count : 0),
+        lastUsed: usageInfo ? usageInfo.lastUsed : null,
+      },
+    });
   } catch (error) {
+    console.error("Error in handleGetGPTConfig:", error);
     socket.emit("errorNotification", {
       error: "Failed to retrieve GPT config",
     });
   }
 };
+
 const handlePromptString = async (socket, { userId, text }, io) => {
   try {
     const user = await Users.findById(userId).select(
@@ -1092,12 +1196,13 @@ const handlePromptString = async (socket, { userId, text }, io) => {
       timestamp: new Date(),
     };
 
+    // Broadcast the prompt to all online users
     onlineUsers.forEach((onlineUser) => {
       io.to(onlineUser.socketId).emit("receivePrompt", promptMessage);
     });
 
+    // Save prompt to admin chat room if exists
     const chatRoom = await ChatRoom.findOne({ isForAdmin: true });
-
     if (chatRoom) {
       const message = new Message({
         text,
@@ -1108,6 +1213,7 @@ const handlePromptString = async (socket, { userId, text }, io) => {
       await message.save();
     }
 
+    // Save or update the global prompt code
     let prompt = await PromptCode.find();
     if (prompt.length > 0) {
       await PromptCode.updateOne({ _id: prompt[0]._id }, { code: text });
@@ -1116,20 +1222,31 @@ const handlePromptString = async (socket, { userId, text }, io) => {
       await promptCode.save();
     }
 
+    // Update all users' GPT prompts
+    // First handle users who don't have a gptPrompt field yet
     const usersWithoutGptPrompt = await Users.find({
       gptPrompt: { $exists: false },
     }).select("-password -refreshTokens");
 
     for (const user of usersWithoutGptPrompt) {
       user.gptPrompt = text;
+
+      // Ensure users have the daily limit field
+      if (!user.gptDailyLimit) {
+        user.gptDailyLimit = 5; // Default value
+      }
+
       await user.save();
     }
 
+    // Then update all users at once
     await Users.updateMany({}, { gptPrompt: text });
 
+    // Send confirmation back to admin
     socket.emit("promptSentConfirmation", {
       success: true,
       message: "Prompt message sent and gptPrompt updated for all users",
+      timestamp: new Date(),
     });
   } catch (error) {
     console.error("Error sending prompt message:", error);
@@ -1138,6 +1255,7 @@ const handlePromptString = async (socket, { userId, text }, io) => {
     });
   }
 };
+
 const handleDisconnect = (socket, io) => {
   const userId = socketUserMap[socket.id];
   const chatRoomId = userChatRoomMap[userId];

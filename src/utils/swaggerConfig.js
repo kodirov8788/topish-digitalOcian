@@ -50,7 +50,7 @@ const {
 const { SearchJobEndpoints } = require("../docs/SearchJobDocs");
 const { IndustryEndpoints } = require("../docs/IndustryDocs");
 const { AppVersionDocs } = require("../docs/appVersionDocs");
-
+const { GPTDocs } = require("../docs/gptDocs");
 const SecuritySchemes = {
   bearerAuth: {
     type: "http",
@@ -135,6 +135,7 @@ const swaggerOptions = {
       ...IndustryEndpoints,
       ...ExpectedSalaryEndpoints,
       ...AppVersionDocs,
+      ...GPTDocs,
     },
   },
   apis: ["./routes/*.js"],
