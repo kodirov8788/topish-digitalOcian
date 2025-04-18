@@ -52,7 +52,7 @@ const AppVersionSchema = new mongoose.Schema(
     },
     updateRequired: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

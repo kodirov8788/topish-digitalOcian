@@ -641,6 +641,7 @@ class AuthCTRL {
     }
   }
   async sendLoginCode(req, res) {
+    console.log("sendLoginCode called");
     try {
       const { phoneNumber } = req.body;
 

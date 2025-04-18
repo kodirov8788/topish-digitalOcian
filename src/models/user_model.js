@@ -3,29 +3,8 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const Schema = mongoose.Schema;
 
-const refreshSchema = new Schema(
-  {
-    token: { type: String, required: true },
-    deviceId: { type: String, required: false },
-    deviceName: { type: String, required: false },
-    region: { type: String, required: false },
-    os: { type: String, required: false },
-    browser: { type: String, required: false },
-    ip: { type: String, required: false },
-    mobileToken: { type: String, required: false },
-  },
-  (_id = false)
-);
-
 const UsersSchema = new Schema(
   {
-    service: {
-      savedOffices: {
-        type: [{ type: Schema.Types.ObjectId, ref: "Office" }],
-        default: [],
-      },
-      profileVisibility: { type: Boolean, default: false },
-    },
     loginCodeAttempts: {
       type: Array,
       default: [],
@@ -35,15 +14,7 @@ const UsersSchema = new Schema(
     phoneConfirmed: { type: Boolean, default: false },
     confirmationCode: { type: String, default: null },
     confirmationCodeExpires: { type: Date, default: null },
-    employer: {
-      companyName: { type: String, default: "" },
-      aboutCompany: { type: String, default: "" },
-      industry: { type: String, default: "" },
-      contactNumber: { type: String, default: "" },
-      contactEmail: { type: String, default: "" },
-      jobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
-      profileVisibility: { type: Boolean, default: false },
-    },
+
     jobTitle: { type: String, default: "" },
     fullName: { type: String, default: "" },
     username: { type: String, unique: false, required: false },
@@ -57,19 +28,7 @@ const UsersSchema = new Schema(
     friends: [{ type: Schema.Types.ObjectId, ref: "Users" }],
     lastSeen: { type: Date, default: Date.now },
     blocked: { type: Boolean, default: false },
-    role: {
-      type: String,
-      required: true,
-      enum: [
-        "JobSeeker",
-        "Employer",
-        "Service",
-        "Admin",
-        "SubAdmin",
-        "Manager",
-      ],
-    },
-    roles: {
+    serverRole: {
       type: [String],
       required: false,
       enum: ["Admin", "Supervisor", "Consultant", "Copywriter"],
@@ -81,9 +40,10 @@ const UsersSchema = new Schema(
     },
     password: { type: String, required: false, minlength: 8 },
     root: { type: Boolean, default: false },
-    admin: { type: Boolean, default: false },
-    subAdmin: { type: Boolean, default: false },
-    mobileToken: { type: Array, default: [] },
+    mobileToken: {
+      type: String,
+      default: "",
+    },
     resume: {
       summary: {
         type: String,
@@ -133,33 +93,7 @@ const UsersSchema = new Schema(
     location: { type: String, default: "Tashkent", required: false },
     coins: { type: Number, default: 1000 },
     favorites: [{ type: Schema.Types.ObjectId, ref: "Users" }],
-    avatar: {
-      type: String,
-      default:
-        "https://upload.wikimedia.org/wikipedia/commons/1/1e/Default-avatar.jpg",
-    },
-    telegram: {
-      id: { type: String, required: false },
-      channels: [
-        {
-          name: { type: String, required: false },
-          id: { type: String, required: false },
-          link: { type: String, required: false },
-          available: { type: Boolean, default: true },
-        },
-      ],
-      post: {
-        selectedImage: { type: Number, default: 0 },
-        images: { type: Array, default: [] },
-        selectedPost: { type: Number, default: 0 },
-      },
-
-      contactNumber: { type: String, default: "" },
-      companyName: { type: String, default: "" },
-      telegram: { type: String, default: "" },
-      link: { type: String, default: "" },
-      additionalInfo: { type: String, default: "" },
-    },
+    avatar: { type: String, default: "" },
     gptToken: { type: String, default: "" },
     gptPrompt: { type: String, default: "" },
     lastActivity: { type: Date, default: null },

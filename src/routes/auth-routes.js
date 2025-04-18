@@ -1,47 +1,97 @@
 // src/routes/auth-routes.js
-const {
-  confirmRegisterCode,
-  sendRegisterCode,
-  sendLoginCode,
-  signOut,
-  deleteAccount,
-  resendConfirmationCode,
-  confirmLogin,
-  renewAccessToken,
-  getRefreshTokens,
-  deleteRefreshToken,
-  sendDeleteAccountCode,
-  confirmDeleteAccount,
-  checkSmsStatus,
-  addUsernamesToAllUsers,
-  sendVoiceCall,
-  registerUserByAdmin
-} = require("../controllers/AuthCTRL");
+
+// Import the controllers from the new modular structure
+const authRegistrationController = require("../controllers/auth/authRegistrationController");
+const authLoginController = require("../controllers/auth/authLoginController");
+const authAccountController = require("../controllers/auth/authAccountController");
+const authTokenController = require("../controllers/auth/authTokenController");
+
+// Or alternatively, import everything from the index file
+// const {
+//   authRegistrationController,
+//   authLoginController,
+//   authAccountController,
+//   authTokenController
+// } = require("../controllers/auth");
+
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/auth-middleware");
-router.get("/getRefreshTokens", authMiddleware, getRefreshTokens);
-router.delete("/deleteRefreshToken", authMiddleware, deleteRefreshToken);
-router.post("/create-user", sendRegisterCode);
-router.post("/registerbyadmin", authMiddleware, registerUserByAdmin);
-router.post("/create-user/confirmCode", confirmRegisterCode);
-router.post("/create-user/resendCode", resendConfirmationCode);
-router.post("/sign-in", sendLoginCode);
-router.post("/sign-in/confirm", confirmLogin);
-router.post("/sign-out", authMiddleware, signOut);
-router.delete("/deleteAccount", authMiddleware, deleteAccount);
-router.post("/renewAccessToken", renewAccessToken);
-router.post("/sendDeleteAccountCode", sendDeleteAccountCode);
-router.post("/confirmDeleteAccount", confirmDeleteAccount);
-router.post("/checkSmsStatus", checkSmsStatus);
-router.post("/addUsernamesToAllUsers", authMiddleware, addUsernamesToAllUsers);
-router.post("/sendVoiceCall", sendVoiceCall);
 
+// Token management routes
+router.get(
+  "/getRefreshTokens",
+  authMiddleware,
+  authTokenController.getRefreshTokens
+);
+router.delete(
+  "/deleteRefreshToken",
+  authMiddleware,
+  authTokenController.deleteRefreshToken
+);
+router.post("/renewAccessToken", authTokenController.renewAccessToken);
+router.post(
+  "/validate-token",
+  authMiddleware,
+  authTokenController.validateAccessToken
+);
+router.post(
+  "/revoke-all-tokens",
+  authMiddleware,
+  authTokenController.revokeAllTokens
+);
 
+// Registration routes
+router.post("/create-user", authRegistrationController.sendRegisterCode);
+router.post(
+  "/registerbyadmin",
+  authMiddleware,
+  authRegistrationController.registerUserByAdmin
+);
+router.post(
+  "/create-user/confirmCode",
+  authRegistrationController.confirmRegisterCode
+);
+router.post(
+  "/create-user/resendCode",
+  authRegistrationController.resendConfirmationCode
+);
+router.post(
+  "/addUsernamesToAllUsers",
+  authMiddleware,
+  authRegistrationController.addUsernamesToAllUsers
+);
+router.post("/sendVoiceCall", authRegistrationController.sendVoiceCall);
 
+// Login routes
+router.post("/sign-in", authLoginController.sendLoginCode);
+router.post("/sign-in/confirm", authLoginController.confirmLogin);
+router.post("/sign-out", authMiddleware, authLoginController.signOut);
+
+// Account management routes
+router.delete(
+  "/deleteAccount",
+  authMiddleware,
+  authAccountController.deleteAccount
+);
+router.post(
+  "/sendDeleteAccountCode",
+  authAccountController.sendDeleteAccountCode
+);
+router.post(
+  "/confirmDeleteAccount",
+  authAccountController.confirmDeleteAccount
+);
+router.post("/checkSmsStatus", authAccountController.checkSmsStatus);
+router.post(
+  "/update-profile",
+  authMiddleware,
+  authAccountController.updateProfileInfo
+);
+router.post(
+  "/update-privacy",
+  authMiddleware,
+  authAccountController.updatePrivacySettings
+);
 
 module.exports = router;
-
-
-
-

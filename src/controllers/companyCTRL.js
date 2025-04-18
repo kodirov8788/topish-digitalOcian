@@ -522,7 +522,7 @@ class CompanyCTRL {
                 return {
                   avatar: worker.avatar,
                   phoneNumber: worker.phoneNumber,
-                  fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
+                  fullName: worker.fullName, // Adjust based on your schema
                   isAdmin: workerData.isAdmin,
                   userId: worker.id,
                   role: workerData.role,
@@ -593,7 +593,7 @@ class CompanyCTRL {
               return {
                 avatar: worker.avatar,
                 phoneNumber: worker.phoneNumber,
-                fullName: worker.employer?.fullName || worker.fullName, // Adjust based on your schema
+                fullName: worker.fullName, // Adjust based on your schema
                 isAdmin: workerData.isAdmin,
                 userId: worker.id,
                 role: workerData.role,
