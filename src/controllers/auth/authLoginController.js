@@ -78,6 +78,16 @@ class AuthLoginController extends BaseAuthController {
         user.loginCodeAttempts = user.loginCodeAttempts.slice(-10);
       }
 
+      // FIXED: Handle mobileToken properly - ensure it's always a string
+      if (Array.isArray(user.mobileToken)) {
+        // If it's an array, just use an empty string to avoid schema validation issues
+        user.mobileToken = "";
+      } else if (user.mobileToken === null || user.mobileToken === undefined) {
+        // Ensure null/undefined values are converted to empty string
+        user.mobileToken = "";
+      }
+      // If it's already a string, no action needed
+
       await user.save();
 
       // For test numbers, don't send SMS
@@ -162,7 +172,6 @@ class AuthLoginController extends BaseAuthController {
       );
     }
   }
-
   /**
    * Confirm login with verification code
    * @param {Object} req - Express request object
@@ -209,11 +218,21 @@ class AuthLoginController extends BaseAuthController {
       user.confirmationCode = null;
       user.confirmationCodeExpires = null;
 
-      // Add mobile token if provided - handle as a string per schema
+      // FIXED: Add mobile token if provided - always store as string
       if (mobileToken) {
-        user.mobileToken = mobileToken;
+        // Always ensure mobileToken is a string
+        if (Array.isArray(mobileToken)) {
+          // If an array is provided, store as empty string to avoid validation issues
+          user.mobileToken = "";
+        } else if (typeof mobileToken === "string") {
+          // If it's already a string, use it directly
+          user.mobileToken = mobileToken;
+        } else {
+          // For any other type, use empty string
+          user.mobileToken = "";
+        }
       }
-      console.log("mobileToken", user.mobileToken);
+
       // Record login activity
       user.lastSeen = new Date();
       user.lastActivity = new Date();
@@ -263,10 +282,8 @@ class AuthLoginController extends BaseAuthController {
       // Clear refresh tokens - as string per schema
       user.refreshTokens = "";
 
-      // Clear mobile token if needed
-      if (req.body.mobileToken) {
-        user.mobileToken = "";
-      }
+      // FIXED: Clear mobile token - ensure it's a string
+      user.mobileToken = "";
 
       await user.save();
 
