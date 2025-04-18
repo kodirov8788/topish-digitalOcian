@@ -13,7 +13,10 @@ const VersionHistoryEntrySchema = new mongoose.Schema(
     },
     updateMessage: String,
     updateUrl: String,
-    updateRequired: Boolean,
+    updateRequired: {
+      type: Boolean,
+      default: false,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
@@ -32,6 +35,7 @@ const AppVersionSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: ["ios", "android"],
+      index: true, // Add index for faster queries by platform
     },
     latestVersion: {
       type: String,
@@ -52,6 +56,10 @@ const AppVersionSchema = new mongoose.Schema(
     },
     updateRequired: {
       type: Boolean,
+      default: false,
+    },
+    hasUpdate: {
+      type: Boolean,
       default: true,
     },
     createdBy: {
@@ -63,5 +71,8 @@ const AppVersionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Create a compound index to ensure uniqueness of platform
+AppVersionSchema.index({ platform: 1 }, { unique: true });
 
 module.exports = mongoose.model("AppVersion", AppVersionSchema);
