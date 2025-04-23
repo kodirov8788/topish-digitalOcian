@@ -13,6 +13,11 @@ const companyServicesSchema = new mongoose.Schema(
       ref: "Service",
       required: false,
     },
+    location: {
+      type: String,
+      default: "",
+      required: false,
+    },
     title: {
       type: String,
       required: true,
