@@ -37,8 +37,8 @@ const QuickJob = new mongoose.Schema(
     },
     applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "JobSeeker" }],
     callOnly: { type: Boolean, default: false },
-    telegramOnly: { type: Boolean, default: false },
-    telegramUsername: { type: String, default: "" },
+    wechatOnly: { type: Boolean, default: false },
+    wechatUsername: { type: String, default: "" },
     postingStatus: {
       type: String,
       default: "Pending",

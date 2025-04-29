@@ -121,9 +121,9 @@ const JobsEndpoint = {
                   type: "string",
                   example: "994567890",
                 },
-                telegramUsername: {
+                wechatUsername: {
                   type: "string",
-                  example: "telegramUsername",
+                  example: "wechatUsername",
                 },
                 requirements: {
                   type: "string",

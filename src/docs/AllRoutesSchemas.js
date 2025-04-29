@@ -325,7 +325,7 @@ const QuickjobsSchema = {
         default: false,
         example: false,
       },
-      telegramOnly: {
+      wechatOnly: {
         type: "boolean",
         default: false,
         example: false,

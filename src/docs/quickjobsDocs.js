@@ -36,9 +36,9 @@ const QuickjobsEndpoint = {
                   type: "string",
                   example: "active",
                 },
-                telegramUsername: {
+                wechatUsername: {
                   type: "string",
-                  example: "telegramUsername",
+                  example: "wechatUsername",
                 },
                 jobStatus: {
                   type: "string",
@@ -74,7 +74,7 @@ const QuickjobsEndpoint = {
                   default: false,
                   example: false,
                 },
-                telegramOnly: {
+                wechatOnly: {
                   type: "boolean",
                   default: false,
                   example: false,
