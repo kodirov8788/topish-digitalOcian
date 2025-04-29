@@ -27,6 +27,20 @@ class AuthLoginController extends BaseAuthController {
   }
 
   /**
+   * Normalize mobileToken to ensure it's always a string
+   * @param {*} mobileToken - Token value that could be array, string or undefined
+   * @returns {string} - Normalized token as string
+   */
+  _normalizeMobileToken(mobileToken) {
+    if (Array.isArray(mobileToken)) {
+      return mobileToken.length > 0 ? String(mobileToken[0]) : "";
+    }
+    return mobileToken === null || mobileToken === undefined
+      ? ""
+      : String(mobileToken);
+  }
+
+  /**
    * Send login verification code to user's phone
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
@@ -78,15 +92,8 @@ class AuthLoginController extends BaseAuthController {
         user.loginCodeAttempts = user.loginCodeAttempts.slice(-10);
       }
 
-      // FIXED: Handle mobileToken properly - ensure it's always a string
-      if (Array.isArray(user.mobileToken)) {
-        // If it's an array, just use an empty string to avoid schema validation issues
-        user.mobileToken = "";
-      } else if (user.mobileToken === null || user.mobileToken === undefined) {
-        // Ensure null/undefined values are converted to empty string
-        user.mobileToken = "";
-      }
-      // If it's already a string, no action needed
+      // Normalize mobileToken to ensure it's a string
+      user.mobileToken = this._normalizeMobileToken(user.mobileToken);
 
       await user.save();
 
@@ -172,6 +179,7 @@ class AuthLoginController extends BaseAuthController {
       );
     }
   }
+
   /**
    * Confirm login with verification code
    * @param {Object} req - Express request object
@@ -218,19 +226,9 @@ class AuthLoginController extends BaseAuthController {
       user.confirmationCode = null;
       user.confirmationCodeExpires = null;
 
-      // FIXED: Add mobile token if provided - always store as string
+      // Add mobile token if provided - normalize to ensure it's a string
       if (mobileToken) {
-        // Always ensure mobileToken is a string
-        if (Array.isArray(mobileToken)) {
-          // If an array is provided, store as empty string to avoid validation issues
-          user.mobileToken = "";
-        } else if (typeof mobileToken === "string") {
-          // If it's already a string, use it directly
-          user.mobileToken = mobileToken;
-        } else {
-          // For any other type, use empty string
-          user.mobileToken = "";
-        }
+        user.mobileToken = this._normalizeMobileToken(mobileToken);
       }
 
       // Record login activity
@@ -282,7 +280,7 @@ class AuthLoginController extends BaseAuthController {
       // Clear refresh tokens - as string per schema
       user.refreshTokens = "";
 
-      // FIXED: Clear mobile token - ensure it's a string
+      // Clear mobile token - ensure it's a string
       user.mobileToken = "";
 
       await user.save();
@@ -301,11 +299,6 @@ class AuthLoginController extends BaseAuthController {
     }
   }
 
-  /**
-   * Renew access token using refresh token
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   */
   /**
    * Renew access token using refresh token
    * @param {Object} req - Express request object
@@ -348,9 +341,7 @@ class AuthLoginController extends BaseAuthController {
         );
 
         // Find the user with the matching refresh token
-        const query = Array.isArray(Users.schema.paths.refreshTokens)
-          ? { refreshTokens: { $in: [refreshToken] } }
-          : { refreshTokens: refreshToken };
+        const query = { refreshTokens: refreshToken };
 
         const user = await Users.findOne(query).select("-password");
 
@@ -366,35 +357,16 @@ class AuthLoginController extends BaseAuthController {
           );
         }
 
-        // IMPORTANT: Fix mobileToken if it's an array
-        if (Array.isArray(user.mobileToken)) {
-          // If it's an array, store the first token or use empty string
-          user.mobileToken =
-            user.mobileToken.length > 0 ? user.mobileToken[0] : "";
-        } else if (
-          user.mobileToken === null ||
-          user.mobileToken === undefined
-        ) {
-          // Ensure null/undefined values are converted to empty string
-          user.mobileToken = "";
-        }
+        // Normalize mobileToken to ensure it's a string
+        user.mobileToken = this._normalizeMobileToken(user.mobileToken);
 
         // Generate new tokens
         const tokenUser = createTokenUser(user);
         const { accessToken, refreshToken: newRefreshToken } =
           generateTokens(tokenUser);
 
-        // Update refresh tokens
-        if (Array.isArray(user.refreshTokens)) {
-          // Remove the old token
-          user.refreshTokens = user.refreshTokens.filter(
-            (token) => token !== refreshToken
-          );
-          // Add the new token
-          user.refreshTokens.push(newRefreshToken);
-        } else {
-          user.refreshTokens = newRefreshToken;
-        }
+        // Update refresh token - as string per schema
+        user.refreshTokens = newRefreshToken;
 
         // Update last activity
         user.lastActivity = new Date();
@@ -431,6 +403,7 @@ class AuthLoginController extends BaseAuthController {
       );
     }
   }
+
   /**
    * Get list of active refresh tokens
    * @param {Object} req - Express request object
@@ -446,6 +419,10 @@ class AuthLoginController extends BaseAuthController {
       if (!user) {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
+
+      // Ensure mobileToken is normalized before save
+      user.mobileToken = this._normalizeMobileToken(user.mobileToken);
+      await user.save();
 
       // Since refreshTokens is a string in the schema, return as single token
       const refreshToken = user.refreshTokens || "";
@@ -487,6 +464,9 @@ class AuthLoginController extends BaseAuthController {
 
       // Clear refresh token (string in schema)
       user.refreshTokens = "";
+
+      // Ensure mobileToken is normalized
+      user.mobileToken = this._normalizeMobileToken(user.mobileToken);
 
       await user.save();
 
