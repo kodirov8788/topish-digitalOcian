@@ -306,6 +306,11 @@ class AuthLoginController extends BaseAuthController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
+  /**
+   * Renew access token using refresh token
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
   async renewAccessToken(req, res) {
     try {
       const { refreshToken } = req.body;
@@ -342,10 +347,12 @@ class AuthLoginController extends BaseAuthController {
           process.env.JWT_REFRESH_SECRET
         );
 
-        // Find the user with the matching refresh token (exact match since it's a string)
-        const user = await Users.findOne({
-          refreshTokens: refreshToken,
-        }).select("-password");
+        // Find the user with the matching refresh token
+        const query = Array.isArray(Users.schema.paths.refreshTokens)
+          ? { refreshTokens: { $in: [refreshToken] } }
+          : { refreshTokens: refreshToken };
+
+        const user = await Users.findOne(query).select("-password");
 
         if (!user) {
           console.warn("User not found for provided refresh token");
@@ -359,13 +366,35 @@ class AuthLoginController extends BaseAuthController {
           );
         }
 
+        // IMPORTANT: Fix mobileToken if it's an array
+        if (Array.isArray(user.mobileToken)) {
+          // If it's an array, store the first token or use empty string
+          user.mobileToken =
+            user.mobileToken.length > 0 ? user.mobileToken[0] : "";
+        } else if (
+          user.mobileToken === null ||
+          user.mobileToken === undefined
+        ) {
+          // Ensure null/undefined values are converted to empty string
+          user.mobileToken = "";
+        }
+
         // Generate new tokens
         const tokenUser = createTokenUser(user);
         const { accessToken, refreshToken: newRefreshToken } =
           generateTokens(tokenUser);
 
-        // Update refresh token - as string per schema
-        user.refreshTokens = newRefreshToken;
+        // Update refresh tokens
+        if (Array.isArray(user.refreshTokens)) {
+          // Remove the old token
+          user.refreshTokens = user.refreshTokens.filter(
+            (token) => token !== refreshToken
+          );
+          // Add the new token
+          user.refreshTokens.push(newRefreshToken);
+        } else {
+          user.refreshTokens = newRefreshToken;
+        }
 
         // Update last activity
         user.lastActivity = new Date();
@@ -402,7 +431,6 @@ class AuthLoginController extends BaseAuthController {
       );
     }
   }
-
   /**
    * Get list of active refresh tokens
    * @param {Object} req - Express request object
