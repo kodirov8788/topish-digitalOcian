@@ -32,7 +32,7 @@ class UserQueryController extends BaseController {
   async getAllUsers(req, res) {
     try {
       // Admin authorization check
-      if ((await this._checkAdminAuth(req, res)) !== true) return;
+      if (this._checkAuth(req, res) !== true) return;
 
       // Parse pagination parameters
       const page = parseInt(req.query.page) || 1;
@@ -42,7 +42,6 @@ class UserQueryController extends BaseController {
       // Parse filter parameters
       const role = req.query.role;
       const query = {};
-
       if (role) {
         query.role = role;
       }

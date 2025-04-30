@@ -82,9 +82,9 @@ const updateLastActivity = require("../middleware/last-active");
 const router = require("express").Router();
 
 // User Query Routes
-router.route("/allUsers").get(getAllUsers);
-router.route("/searchUsers").get(searchUsers);
-router.route("/allUsers/:id").get(getUser);
+router.route("/allUsers").get(authMiddleware, getAllUsers);
+router.route("/searchUsers").get(authMiddleware, searchUsers);
+router.route("/allUsers/:id").get(authMiddleware, getUser);
 router
   .route("/currentUser")
   .get(authMiddleware, updateLastActivity, showCurrentUser);
