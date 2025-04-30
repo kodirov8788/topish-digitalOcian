@@ -226,20 +226,20 @@ class UserQueryController extends BaseController {
   async getUser(req, res) {
     try {
       if (this._checkAuth(req, res) !== true) return;
-
-      const { userId } = req.params;
-
+      console.log("req.params:", req.params);
+      const { id: userId } = req.params;
+      console.log("userId:", userId);
       // Validate userId
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "Invalid user ID format",
-          null,
-          0
-        );
-      }
+      // if (!mongoose.Types.ObjectId.isValid(userId)) {
+      //   return handleResponse(
+      //     res,
+      //     400,
+      //     "error",
+      //     "Invalid user ID format",
+      //     null,
+      //     0
+      //   );
+      // }
 
       const user = await this._getUser(userId);
 
