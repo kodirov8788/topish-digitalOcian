@@ -299,7 +299,6 @@ class AuthRegistrationController extends BaseAuthController {
           fullName: this._createRandomFullname(),
           gptPrompt: prompt[0]?.code || "",
           jobTitle: "",
-          mobileToken: pendingUser.mobileToken || "",
         });
       } else {
         // Update existing user

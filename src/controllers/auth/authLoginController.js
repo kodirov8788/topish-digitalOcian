@@ -93,7 +93,7 @@ class AuthLoginController extends BaseAuthController {
       }
 
       // Normalize mobileToken to ensure it's a string
-      user.mobileToken = this._normalizeMobileToken(user.mobileToken);
+      // user.mobileToken = this._normalizeMobileToken(user.mobileToken);
 
       await user.save();
 
@@ -227,9 +227,9 @@ class AuthLoginController extends BaseAuthController {
       user.confirmationCodeExpires = null;
 
       // Add mobile token if provided - normalize to ensure it's a string
-      if (mobileToken) {
-        user.mobileToken = this._normalizeMobileToken(mobileToken);
-      }
+      // if (mobileToken) {
+      //   user.mobileToken = this._normalizeMobileToken(mobileToken);
+      // }
 
       // Record login activity
       user.lastSeen = new Date();
@@ -358,7 +358,7 @@ class AuthLoginController extends BaseAuthController {
         }
 
         // Normalize mobileToken to ensure it's a string
-        user.mobileToken = this._normalizeMobileToken(user.mobileToken);
+        // user.mobileToken = this._normalizeMobileToken(user.mobileToken);
 
         // Generate new tokens
         const tokenUser = createTokenUser(user);
@@ -421,7 +421,7 @@ class AuthLoginController extends BaseAuthController {
       }
 
       // Ensure mobileToken is normalized before save
-      user.mobileToken = this._normalizeMobileToken(user.mobileToken);
+      // user.mobileToken = this._normalizeMobileToken(user.mobileToken);
       await user.save();
 
       // Since refreshTokens is a string in the schema, return as single token
@@ -466,7 +466,7 @@ class AuthLoginController extends BaseAuthController {
       user.refreshTokens = "";
 
       // Ensure mobileToken is normalized
-      user.mobileToken = this._normalizeMobileToken(user.mobileToken);
+      // user.mobileToken = this._normalizeMobileToken(user.mobileToken);
 
       await user.save();
 
