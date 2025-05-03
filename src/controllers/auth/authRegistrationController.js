@@ -44,7 +44,7 @@ class AuthRegistrationController extends BaseAuthController {
 
       const { phoneNumber, role } = req.body;
 
-      if (!phoneNumber || !role) {
+      if (!phoneNumber) {
         return handleResponse(
           res,
           400,
@@ -74,7 +74,6 @@ class AuthRegistrationController extends BaseAuthController {
 
       const newUser = new Users({
         phoneNumber: phoneNumberWithCountryCode,
-        role,
         phoneConfirmed: true,
         fullName: this._createRandomFullname(),
         resume: this._createDefaultResume(),
@@ -249,16 +248,7 @@ class AuthRegistrationController extends BaseAuthController {
    */
   async confirmRegisterCode(req, res) {
     try {
-      const {
-        phoneNumber,
-        confirmationCode,
-        deviceId,
-        deviceName,
-        region,
-        os,
-        browser,
-        ip,
-      } = req.body;
+      const { phoneNumber, confirmationCode } = req.body;
 
       if (!phoneNumber || !confirmationCode) {
         return handleResponse(
@@ -310,7 +300,6 @@ class AuthRegistrationController extends BaseAuthController {
           gptPrompt: prompt[0]?.code || "",
           jobTitle: "",
           mobileToken: pendingUser.mobileToken || "",
-          role: "JobSeeker",
         });
       } else {
         // Update existing user
@@ -345,7 +334,7 @@ class AuthRegistrationController extends BaseAuthController {
         201,
         "success",
         "User registered successfully.",
-        { accessToken, refreshToken, role: existingUser.role }
+        { accessToken, refreshToken, role: existingUser.serverRole }
       );
     } catch (error) {
       return handleResponse(

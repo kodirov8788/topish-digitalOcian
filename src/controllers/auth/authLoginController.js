@@ -247,7 +247,7 @@ class AuthLoginController extends BaseAuthController {
       return handleResponse(res, 200, "success", "Login successful", {
         accessToken,
         refreshToken,
-        role: user.role,
+        role: user.serverRole,
       });
     } catch (error) {
       return handleResponse(
