@@ -223,7 +223,7 @@ function PrivatePolicy(req, res) {
     <body>
       <div id="language-selector">
         <div class="language-icon"></div>
-        <select id="language-switch" onchange="console.log(this.value)">
+        <select id="language-switch">
           <option value="eng">English</option>
           <option value="rus">Русский</option>
           <option value="uzb">O'zbek</option>
@@ -646,27 +646,75 @@ function PrivatePolicy(req, res) {
         </p>
       </div>
 
-      <script nonce="${res.locals.nonce}">
-        document.addEventListener('DOMContentLoaded', () => {
-          document.getElementById('language-switch').addEventListener('change', function() {
-            switchLanguage(this.value);
-          });
+ // Replace the existing script section in the PrivatePolicy function with this:
 
-          function switchLanguage(lang) {
-            document.querySelectorAll('[data-eng]').forEach(el => {
-              el.innerText = el.getAttribute(\`data-\${lang}\`);
-              
-              // Special handling for elements that contain links
-              if (el.innerHTML.includes('globanceapp@gmail.com')) {
-                const emailText = el.getAttribute(\`data-\${lang}\`);
-                if (emailText.includes('globanceapp@gmail.com')) {
-                  el.innerHTML = emailText.replace('globanceapp@gmail.com', '<a href="mailto:globanceapp@gmail.com">globanceapp@gmail.com</a>');
-                }
-              }
-            });
+<script nonce="${res.locals.nonce}">
+  console.log('Privacy Policy Script loaded');
+
+  // Make sure the DOM is fully loaded before trying to access elements
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded');
+    
+    // Get the language switch element
+    const languageSwitch = document.getElementById('language-switch');
+    console.log('Language switch element:', languageSwitch);
+    
+    if (!languageSwitch) {
+      console.error('Language switch not found');
+      return;
+    }
+    
+    // Function to switch language
+    function switchLanguage(lang) {
+      console.log('Switching to language:', lang);
+      
+      // Find all elements with data attributes for the selected language
+      const elements = document.querySelectorAll('[data-' + lang + ']');
+      console.log('Found ' + elements.length + ' translatable elements');
+      
+      // Update each element's content
+      elements.forEach(function(el) {
+        const translatedText = el.getAttribute('data-' + lang);
+        if (translatedText) {
+          console.log('Translating element:', el.tagName);
+          
+          // Handle email links specially
+          if (translatedText.includes('globanceapp@gmail.com')) {
+            el.innerHTML = translatedText.replace(
+              'globanceapp@gmail.com',
+              '<a href="mailto:globanceapp@gmail.com">globanceapp@gmail.com</a>'
+            );
+          } else {
+            el.innerHTML = translatedText;
           }
-        });
-      </script>
+        }
+      });
+      
+      // Save the selected language preference to localStorage
+      localStorage.setItem('preferredLanguage', lang);
+      console.log('Language switched to:', lang);
+    }
+    
+    // Add change event listener to the language selector
+    languageSwitch.addEventListener('change', function() {
+      const selectedLanguage = this.value;
+      console.log('Language selection changed to:', selectedLanguage);
+      switchLanguage(selectedLanguage);
+    });
+    
+    // Initialize with either saved preference or default language
+    const savedLanguage = localStorage.getItem('preferredLanguage');
+    if (savedLanguage) {
+      languageSwitch.value = savedLanguage;
+      console.log('Restoring saved language preference:', savedLanguage);
+    }
+    
+    // Apply the initial language (with a small delay to ensure DOM is ready)
+    setTimeout(() => {
+      switchLanguage(languageSwitch.value);
+    }, 300);
+  });
+</script>
     </body>
     </html>
   `);

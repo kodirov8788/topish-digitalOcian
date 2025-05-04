@@ -63,6 +63,59 @@ router.get("/api/v1/privatePolicy", async (req, res) => {
   await googlePlayRoute.PrivatePolicy(req, res);
 });
 
+// Add this before the module.exports = router; line
+router.get("/language-test", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Language Test</title>
+    </head>
+    <body>
+        <select id="language-switch">
+            <option value="eng">English</option>
+            <option value="rus">Русский</option>
+            <option value="uzb">O'zbek</option>
+            <option value="zh">中文</option>
+        </select>
+        
+        <h1 data-eng="Hello" data-rus="Привет" data-uzb="Salom" data-zh="你好">Hello</h1>
+        
+        <script>
+            // At the top of your script 
+            console.log('Script loaded');
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // When trying to get the language switch element
+                console.log('Looking for language switch');
+                const languageSwitch = document.getElementById('language-switch');
+                console.log('Found language switch:', languageSwitch);
+                
+                function switchLanguage(lang) {
+                    console.log('Switching to: ' + lang);
+                    
+                    // When fetching elements to translate
+                    console.log('Looking for elements with data-' + lang + ' attributes');
+                    const elements = document.querySelectorAll('[data-' + lang + ']');
+                    console.log('Elements found:', elements.length);
+                    elements.forEach((el, i) => console.log(\`Element \${i}:\`, el.tagName, el.getAttribute('data-' + lang)));
+                    
+                    elements.forEach(function(el) {
+                        const text = el.getAttribute('data-' + lang);
+                        if (text) el.innerHTML = text;
+                    });
+                }
+                
+                languageSwitch.addEventListener('change', function() {
+                    switchLanguage(this.value);
+                });
+            });
+        </script>
+    </body>
+    </html>
+  `);
+});
+
 router.get("/api/v1/deleteAccount", async (req, res) => {
   await googlePlayRoute.DeleteAccount(req, res);
 });
