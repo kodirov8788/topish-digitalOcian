@@ -28,6 +28,7 @@ const UsersSchema = new Schema(
     friends: [{ type: Schema.Types.ObjectId, ref: "Users" }],
     lastSeen: { type: Date, default: Date.now },
     blocked: { type: Boolean, default: false },
+    policyAgreed: { type: Boolean, default: true },
     serverRole: {
       type: [String],
       required: false,
@@ -90,7 +91,7 @@ const UsersSchema = new Schema(
     isVerified: { type: Boolean, default: false },
     birthday: { type: String, default: "" },
     active: { type: Boolean, default: true },
-    location: { type: String, default: "Tashkent", required: false },
+    location: { type: String, default: "", required: false },
     coins: { type: Number, default: 1000 },
     favorites: [{ type: Schema.Types.ObjectId, ref: "Users" }],
     avatar: { type: String, default: "" },
