@@ -14,7 +14,6 @@ const UsersSchema = new Schema(
     phoneConfirmed: { type: Boolean, default: false },
     confirmationCode: { type: String, default: null },
     confirmationCodeExpires: { type: Date, default: null },
-
     jobTitle: { type: String, default: "" },
     fullName: { type: String, default: "" },
     username: { type: String, unique: false, required: false },
@@ -80,7 +79,6 @@ const UsersSchema = new Schema(
       },
       skills: { type: Array, default: [] },
       expectedSalary: { type: String, required: false, default: "" },
-      profileVisibility: { type: Boolean, default: false },
     },
     savedJobs: {
       type: [{ type: Schema.Types.ObjectId, ref: "Jobs" }],

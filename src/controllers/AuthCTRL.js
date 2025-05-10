@@ -426,17 +426,6 @@ class AuthCTRL {
           phoneConfirmed: true,
           savedJobs: [],
           searchJob: true,
-          employer: {
-            aboutCompany: "",
-            industry: "",
-            contactNumber: "",
-            contactEmail: "",
-            jobs: [],
-            profileVisibility: true,
-          },
-          service: {
-            savedOffices: [],
-          },
           resume: createDefaultResume(),
           fullName: createRandomFullname(),
           gptPrompt: prompt[0]?.code || "",

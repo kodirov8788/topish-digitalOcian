@@ -10,7 +10,8 @@ const AuthEndpoints = {
     post: {
       summary: "Send registration code",
       tags: ["Auth"],
-      description: "Send a confirmation code to the user's phone number for registration.",
+      description:
+        "Send a confirmation code to the user's phone number for registration.",
       requestBody: {
         required: true,
         content: {
@@ -23,7 +24,6 @@ const AuthEndpoints = {
                   type: "string",
                   description: "User's phone number",
                   example: "996730970",
-
                 },
                 mobileToken: {
                   type: "string",
@@ -57,7 +57,8 @@ const AuthEndpoints = {
           },
         },
         400: {
-          description: "User already exists with this phone number or validation error",
+          description:
+            "User already exists with this phone number or validation error",
           content: {
             "application/json": {
               schema: {
@@ -69,7 +70,8 @@ const AuthEndpoints = {
                   },
                   msg: {
                     type: "string",
-                    example: "User already exists with this phone number or validation error.",
+                    example:
+                      "User already exists with this phone number or validation error.",
                   },
                 },
               },
@@ -103,7 +105,8 @@ const AuthEndpoints = {
     post: {
       summary: "Confirm phone number with code",
       tags: ["Auth"],
-      description: "Confirm the phone number using the confirmation code sent to the user's phone.",
+      description:
+        "Confirm the phone number using the confirmation code sent to the user's phone.",
       requestBody: {
         required: true,
         content: {
@@ -175,8 +178,14 @@ const AuthEndpoints = {
                   data: {
                     type: "object",
                     properties: {
-                      accessToken: { type: "string", example: "access_token_example" },
-                      refreshToken: { type: "string", example: "refresh_token_example" },
+                      accessToken: {
+                        type: "string",
+                        example: "access_token_example",
+                      },
+                      refreshToken: {
+                        type: "string",
+                        example: "refresh_token_example",
+                      },
                     },
                   },
                 },
@@ -185,7 +194,8 @@ const AuthEndpoints = {
           },
         },
         400: {
-          description: "Invalid or expired confirmation code or validation error",
+          description:
+            "Invalid or expired confirmation code or validation error",
           content: {
             "application/json": {
               schema: {
@@ -197,7 +207,8 @@ const AuthEndpoints = {
                   },
                   msg: {
                     type: "string",
-                    example: "Invalid or expired confirmation code or validation error.",
+                    example:
+                      "Invalid or expired confirmation code or validation error.",
                   },
                 },
               },
@@ -317,7 +328,8 @@ const AuthEndpoints = {
     post: {
       summary: "Send login code",
       tags: ["Auth"],
-      description: "Send a confirmation code to the user's phone number for login.",
+      description:
+        "Send a confirmation code to the user's phone number for login.",
       requestBody: {
         required: true,
         content: {
@@ -403,7 +415,8 @@ const AuthEndpoints = {
     post: {
       summary: "Confirm login",
       tags: ["Auth"],
-      description: "Confirm the user's login using the confirmation code sent to their phone.",
+      description:
+        "Confirm the user's login using the confirmation code sent to their phone.",
       requestBody: {
         required: true,
         content: {
@@ -420,41 +433,6 @@ const AuthEndpoints = {
                   type: "string",
                   description: "The confirmation code sent to the user's phone",
                   example: "112233",
-                },
-                mobileToken: {
-                  type: "string",
-                  description: "The mobile token of the user",
-                  example: "fcmToken",
-                },
-                deviceId: {
-                  type: "string",
-                  description: "The device ID of the user",
-                  example: "deviceId",
-                },
-                deviceName: {
-                  type: "string",
-                  description: "The device name of the user",
-                  example: "deviceName",
-                },
-                region: {
-                  type: "string",
-                  description: "The region of the user",
-                  example: "region",
-                },
-                os: {
-                  type: "string",
-                  description: "The operating system of the user",
-                  example: "os",
-                },
-                browser: {
-                  type: "string",
-                  description: "The browser of the user",
-                  example: "browser",
-                },
-                ip: {
-                  type: "string",
-                  description: "The IP address of the user",
-                  example: "ip",
                 },
               },
             },
@@ -480,8 +458,14 @@ const AuthEndpoints = {
                   data: {
                     type: "object",
                     properties: {
-                      accessToken: { type: "string", example: "access_token_example" },
-                      refreshToken: { type: "string", example: "refresh_token_example" },
+                      accessToken: {
+                        type: "string",
+                        example: "access_token_example",
+                      },
+                      refreshToken: {
+                        type: "string",
+                        example: "refresh_token_example",
+                      },
                     },
                   },
                 },
@@ -536,7 +520,8 @@ const AuthEndpoints = {
     post: {
       summary: "Send login code",
       tags: ["Auth"],
-      description: "Send a confirmation code to the user's phone number for login.",
+      description:
+        "Send a confirmation code to the user's phone number for login.",
       requestBody: {
         required: true,
         content: {
@@ -622,7 +607,8 @@ const AuthEndpoints = {
     post: {
       summary: "Sign out the current user",
       tags: ["Auth"],
-      description: "Endpoint for signing out the current user. This clears the user's auth token.",
+      description:
+        "Endpoint for signing out the current user. This clears the user's auth token.",
       requestBody: {
         required: true,
         content: {
@@ -661,7 +647,8 @@ const AuthEndpoints = {
           },
         },
         401: {
-          description: "Unauthorized. User is not authenticated or token is invalid.",
+          description:
+            "Unauthorized. User is not authenticated or token is invalid.",
           content: {
             "application/json": {
               schema: {
@@ -677,14 +664,19 @@ const AuthEndpoints = {
           },
         },
         500: {
-          description: "Internal server error. Something went wrong during the sign out process.",
+          description:
+            "Internal server error. Something went wrong during the sign out process.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Something went wrong during the sign out process." },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Something went wrong during the sign out process.",
+                  },
                   data: { type: "object", example: {} },
                   totalCount: { type: "number", example: 0 },
                 },
@@ -699,7 +691,8 @@ const AuthEndpoints = {
     delete: {
       summary: "Delete a user account",
       tags: ["Auth"],
-      description: "This endpoint deletes a user's account. It requires the user to be authenticated.",
+      description:
+        "This endpoint deletes a user's account. It requires the user to be authenticated.",
       responses: {
         200: {
           description: "Account deleted successfully.",
@@ -709,7 +702,10 @@ const AuthEndpoints = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Account deleted successfully" },
+                  msg: {
+                    type: "string",
+                    example: "Account deleted successfully",
+                  },
                   data: {
                     type: "null",
                     example: null,
@@ -721,7 +717,8 @@ const AuthEndpoints = {
           },
         },
         401: {
-          description: "Unauthorized. User is not authenticated or token is invalid.",
+          description:
+            "Unauthorized. User is not authenticated or token is invalid.",
           content: {
             "application/json": {
               schema: {
@@ -740,14 +737,18 @@ const AuthEndpoints = {
           },
         },
         500: {
-          description: "Internal server error. An error occurred while deleting the account.",
+          description:
+            "Internal server error. An error occurred while deleting the account.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "An error occurred while deleting the account." },
+                  msg: {
+                    type: "string",
+                    example: "An error occurred while deleting the account.",
+                  },
                   data: {
                     type: "null",
                     example: null,
@@ -765,7 +766,8 @@ const AuthEndpoints = {
     post: {
       summary: "Renew access token",
       tags: ["Auth"],
-      description: "Endpoint for renewing the access token using a refresh token.",
+      description:
+        "Endpoint for renewing the access token using a refresh token.",
       requestBody: {
         required: true,
         content: {
@@ -802,8 +804,14 @@ const AuthEndpoints = {
                   data: {
                     type: "object",
                     properties: {
-                      accessToken: { type: "string", example: "access_token_example" },
-                      refreshToken: { type: "string", example: "refresh_token_example" },
+                      accessToken: {
+                        type: "string",
+                        example: "access_token_example",
+                      },
+                      refreshToken: {
+                        type: "string",
+                        example: "refresh_token_example",
+                      },
                     },
                   },
                 },
@@ -878,7 +886,8 @@ const AuthEndpoints = {
     get: {
       summary: "Get refresh tokens",
       tags: ["Auth"],
-      description: "Retrieve all refresh tokens associated with the authenticated user.",
+      description:
+        "Retrieve all refresh tokens associated with the authenticated user.",
       responses: {
         200: {
           description: "Refresh tokens retrieved successfully",
@@ -888,13 +897,19 @@ const AuthEndpoints = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Refresh tokens retrieved successfully" },
+                  msg: {
+                    type: "string",
+                    example: "Refresh tokens retrieved successfully",
+                  },
                   data: {
                     type: "array",
                     items: {
                       type: "object",
                       properties: {
-                        token: { type: "string", example: "refresh_token_example" },
+                        token: {
+                          type: "string",
+                          example: "refresh_token_example",
+                        },
                         deviceId: { type: "string", example: "deviceId" },
                         deviceName: { type: "string", example: "deviceName" },
                         region: { type: "string", example: "region" },
@@ -910,7 +925,8 @@ const AuthEndpoints = {
           },
         },
         401: {
-          description: "Unauthorized. User is not authenticated or token is invalid.",
+          description:
+            "Unauthorized. User is not authenticated or token is invalid.",
           content: {
             "application/json": {
               schema: {
@@ -929,14 +945,19 @@ const AuthEndpoints = {
           },
         },
         500: {
-          description: "Internal server error. Something went wrong while retrieving refresh tokens.",
+          description:
+            "Internal server error. Something went wrong while retrieving refresh tokens.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Something went wrong while retrieving refresh tokens." },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Something went wrong while retrieving refresh tokens.",
+                  },
                   data: {
                     type: "null",
                     example: null,
@@ -954,7 +975,8 @@ const AuthEndpoints = {
     delete: {
       summary: "Delete a refresh token",
       tags: ["Auth"],
-      description: "Delete a specific refresh token associated with the authenticated user.",
+      description:
+        "Delete a specific refresh token associated with the authenticated user.",
       requestBody: {
         required: true,
         content: {
@@ -981,7 +1003,10 @@ const AuthEndpoints = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "Refresh token deleted successfully" },
+                  msg: {
+                    type: "string",
+                    example: "Refresh token deleted successfully",
+                  },
                   data: {
                     type: "null",
                     example: null,
@@ -993,7 +1018,8 @@ const AuthEndpoints = {
           },
         },
         401: {
-          description: "Unauthorized. User is not authenticated or token is invalid.",
+          description:
+            "Unauthorized. User is not authenticated or token is invalid.",
           content: {
             "application/json": {
               schema: {
@@ -1019,7 +1045,10 @@ const AuthEndpoints = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Refresh token ID is required." },
+                  msg: {
+                    type: "string",
+                    example: "Refresh token ID is required.",
+                  },
                   data: {
                     type: "null",
                     example: null,
@@ -1031,14 +1060,19 @@ const AuthEndpoints = {
           },
         },
         500: {
-          description: "Internal server error. Something went wrong while deleting the refresh token.",
+          description:
+            "Internal server error. Something went wrong while deleting the refresh token.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Something went wrong while deleting the refresh token." },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Something went wrong while deleting the refresh token.",
+                  },
                   data: {
                     type: "null",
                     example: null,
@@ -1056,7 +1090,8 @@ const AuthEndpoints = {
     post: {
       summary: "Check SMS status",
       tags: ["Auth"],
-      description: "Check the status of an SMS message sent to the user's phone.",
+      description:
+        "Check the status of an SMS message sent to the user's phone.",
       requestBody: {
         required: true,
         content: {
@@ -1083,7 +1118,10 @@ const AuthEndpoints = {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "success" },
-                  msg: { type: "string", example: "SMS status checked successfully" },
+                  msg: {
+                    type: "string",
+                    example: "SMS status checked successfully",
+                  },
                   data: {
                     type: "object",
                     properties: {
@@ -1097,14 +1135,19 @@ const AuthEndpoints = {
           },
         },
         500: {
-          description: "Internal server error. Something went wrong while checking the SMS status.",
+          description:
+            "Internal server error. Something went wrong while checking the SMS status.",
           content: {
             "application/json": {
               schema: {
                 type: "object",
                 properties: {
                   result: { type: "string", example: "error" },
-                  msg: { type: "string", example: "Something went wrong while checking the SMS status." },
+                  msg: {
+                    type: "string",
+                    example:
+                      "Something went wrong while checking the SMS status.",
+                  },
                   data: {
                     type: "null",
                     example: null,

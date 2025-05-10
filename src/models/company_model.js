@@ -115,6 +115,10 @@ const companySchema = new mongoose.Schema(
       required: false,
       default: [],
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

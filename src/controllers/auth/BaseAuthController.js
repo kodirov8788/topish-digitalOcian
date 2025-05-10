@@ -148,7 +148,11 @@ class BaseAuthController {
       "+998954990501",
       "+998951112233",
     ];
-
+    console.log("Test phone number check:", phoneNumber);
+    console.log(
+      'testNumbers.includes(phoneNumber) || process.env.NODE_ENV !== "production" :',
+      testNumbers.includes(phoneNumber) || process.env.NODE_ENV !== "production"
+    );
     return (
       testNumbers.includes(phoneNumber) || process.env.NODE_ENV !== "production"
     );

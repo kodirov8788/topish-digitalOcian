@@ -31,14 +31,14 @@ class AuthLoginController extends BaseAuthController {
    * @param {*} mobileToken - Token value that could be array, string or undefined
    * @returns {string} - Normalized token as string
    */
-  _normalizeMobileToken(mobileToken) {
-    if (Array.isArray(mobileToken)) {
-      return mobileToken.length > 0 ? String(mobileToken[0]) : "";
-    }
-    return mobileToken === null || mobileToken === undefined
-      ? ""
-      : String(mobileToken);
-  }
+  // _normalizeMobileToken(mobileToken) {
+  //   if (Array.isArray(mobileToken)) {
+  //     return mobileToken.length > 0 ? String(mobileToken[0]) : "";
+  //   }
+  //   return mobileToken === null || mobileToken === undefined
+  //     ? ""
+  //     : String(mobileToken);
+  // }
 
   /**
    * Send login verification code to user's phone
@@ -93,10 +93,10 @@ class AuthLoginController extends BaseAuthController {
       }
 
       // Normalize mobileToken to ensure it's a string - UNCOMMENTED to fix the error
-      user.mobileToken = this._normalizeMobileToken(user.mobileToken);
+      // user.mobileToken = this._normalizeMobileToken(user.mobileToken);
 
       await user.save();
-
+      console.log("phoneNumberWithCountryCode:", phoneNumberWithCountryCode);
       // For test numbers, don't send SMS
       if (this._isTestPhoneNumber(phoneNumberWithCountryCode)) {
         return handleResponse(
@@ -186,7 +186,7 @@ class AuthLoginController extends BaseAuthController {
    */
   async confirmLogin(req, res) {
     try {
-      const { phoneNumber, confirmationCode, mobileToken } = req.body;
+      const { phoneNumber, confirmationCode } = req.body;
 
       if (!phoneNumber || !confirmationCode) {
         return handleResponse(
@@ -198,12 +198,12 @@ class AuthLoginController extends BaseAuthController {
           0
         );
       }
-      console.log("Confirmation code:", confirmationCode);
-      console.log("Phone number:", phoneNumber);
-      console.log("Mobile token:", mobileToken);
+      // console.log("Confirmation code:", confirmationCode);
+      // console.log("Phone number:", phoneNumber);
+      // console.log("Mobile token:", mobileToken);
 
       const phoneNumberWithCountryCode = this._formatPhoneNumber(phoneNumber);
-
+      console.log("confirmationCode:", confirmationCode);
       const user = await Users.findOne({
         phoneNumber: phoneNumberWithCountryCode,
         confirmationCode,
