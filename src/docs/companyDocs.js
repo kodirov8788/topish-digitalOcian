@@ -125,7 +125,7 @@ const CompanyEndpoint = {
                   },
                 },
               },
-              required: ["name", "phoneNumber", "telegramName"],
+              required: ["name", "phoneNumber"],
             },
           },
         },

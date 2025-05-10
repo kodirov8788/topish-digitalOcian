@@ -92,8 +92,8 @@ class AuthLoginController extends BaseAuthController {
         user.loginCodeAttempts = user.loginCodeAttempts.slice(-10);
       }
 
-      // Normalize mobileToken to ensure it's a string
-      // user.mobileToken = this._normalizeMobileToken(user.mobileToken);
+      // Normalize mobileToken to ensure it's a string - UNCOMMENTED to fix the error
+      user.mobileToken = this._normalizeMobileToken(user.mobileToken);
 
       await user.save();
 
@@ -179,7 +179,6 @@ class AuthLoginController extends BaseAuthController {
       );
     }
   }
-
   /**
    * Confirm login with verification code
    * @param {Object} req - Express request object
