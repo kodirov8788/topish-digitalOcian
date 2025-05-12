@@ -12,6 +12,8 @@ class UserRoleController extends BaseController {
     this.removeServerRole = this.removeServerRole.bind(this);
     this.getUsersWithRole = this.getUsersWithRole.bind(this);
     this.checkUserPermission = this.checkUserPermission.bind(this);
+    this.normalizeMobileTokens = this.normalizeMobileTokens.bind(this);
+    this.normalizeRefreshTokens = this.normalizeRefreshTokens.bind(this);
   }
 
   async updateRole(req, res) {
@@ -415,6 +417,150 @@ class UserRoleController extends BaseController {
         500,
         "error",
         "Failed to check permission: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async normalizeMobileTokens(req, res) {
+    try {
+      // Only admins can perform this operation
+      // if ((await this._checkAdminAuth(req, res)) !== true) return;
+
+      // Find users with array-type mobileToken
+      const users = await Users.find({
+        $or: [
+          { mobileToken: { $type: "array" } },
+          { mobileToken: { $exists: true, $ne: null } },
+        ],
+      });
+      let usersMobileToken = users.map((user) => user.mobileToken);
+      console.log("usersMobileToken: ", usersMobileToken);
+      console.log(
+        `Found ${users.length} users that may need refreshTokens normalization`
+      );
+      console.log(
+        `Found ${users.length} users that may need mobileToken normalization`
+      );
+
+      let updated = 0;
+      let skipped = 0;
+      let errors = 0;
+
+      for (const user of users) {
+        try {
+          const originalToken = user.mobileToken;
+
+          // Convert array to string
+          if (
+            Array.isArray(originalToken) ||
+            originalToken === null ||
+            originalToken === undefined
+          ) {
+            // Join array elements with comma or take the first element
+            user.mobileToken = "";
+
+            await user.save();
+            updated++;
+            console.log(
+              `Normalized mobileToken for user ${user._id}: [${originalToken}] -> "${user.mobileToken}"`
+            );
+          } else {
+            // Already a string or null/undefined
+            skipped++;
+          }
+        } catch (userError) {
+          errors++;
+          console.error(
+            `Error normalizing user ${user._id}: ${userError.message}`
+          );
+        }
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "mobileToken normalization completed",
+        {
+          totalProcessed: users.length,
+          updated,
+          skipped,
+          errors,
+        },
+        1
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Failed to normalize mobileTokens: " + error.message,
+        null,
+        0
+      );
+    }
+  }
+  async normalizeRefreshTokens(req, res) {
+    try {
+      // Only admins can perform this operation
+      // if ((await this._checkAdminAuth(req, res)) !== true) return;
+
+      // Find users with array-type refreshTokens
+      const users = await Users.find();
+
+      let updated = 0;
+      let skipped = 0;
+      let errors = 0;
+
+      for (const user of users) {
+        try {
+          const originalTokens = user.refreshTokens;
+
+          // Convert array to string
+          if (
+            Array.isArray(originalTokens) ||
+            originalTokens === null ||
+            originalTokens === undefined
+          ) {
+            // Join array elements with comma or take an empty string
+            user.refreshTokens =
+              originalTokens.length > 0 ? JSON.stringify(originalTokens) : "";
+
+            await user.save();
+            updated++;
+            console.log(`Normalized refreshTokens for user ${user._id}`);
+          } else {
+            // Already a string or null/undefined
+            skipped++;
+          }
+        } catch (userError) {
+          errors++;
+          console.error(
+            `Error normalizing user ${user._id}: ${userError.message}`
+          );
+        }
+      }
+
+      return handleResponse(
+        res,
+        200,
+        "success",
+        "refreshTokens normalization completed",
+        {
+          totalProcessed: users.length,
+          updated,
+          skipped,
+          errors,
+        },
+        1
+      );
+    } catch (error) {
+      return handleResponse(
+        res,
+        500,
+        "error",
+        "Failed to normalize refreshTokens: " + error.message,
         null,
         0
       );

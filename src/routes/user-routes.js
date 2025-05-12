@@ -42,6 +42,8 @@ const {
 const {
   updateRole,
   addServerRoles,
+  normalizeMobileTokens,
+  normalizeRefreshTokens,
 } = require("../controllers/user/userRoleController");
 
 const {
@@ -103,6 +105,8 @@ router.route("/updateAvatar").patch(authMiddleware, updateAvatar);
 // User Role Routes
 router.route("/updateRole").patch(authMiddleware, updateRole);
 router.patch("/roles", authMiddleware, addServerRoles);
+router.patch("/normalizeMobileTokens", authMiddleware, normalizeMobileTokens);
+router.patch("/normalizeRefreshTokens", authMiddleware, normalizeRefreshTokens);
 
 // User Coins Routes
 router.route("/coins").get(authMiddleware, getUserCoins);
