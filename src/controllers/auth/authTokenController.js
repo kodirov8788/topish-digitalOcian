@@ -19,9 +19,15 @@ class AuthTokenController extends BaseAuthController {
    * @param {Object} res - Express response object
    */
   async renewAccessToken(req, res) {
+    console.log("Renewing access token..........");
+    console.log("Renewing access token..........");
+    console.log("Renewing access token..........");
+    console.log("Renewing access token..........");
+    console.log("Renewing access token..........");
+    console.log("Renewing access token..........");
     try {
       const { refreshToken } = req.body;
-
+      console.log("Refresh token from request body:", refreshToken);
       if (!refreshToken) {
         console.warn("No refresh token provided");
         return handleResponse(
@@ -55,17 +61,14 @@ class AuthTokenController extends BaseAuthController {
         );
 
         // Find the user with the matching refresh token
-        const query = Array.isArray(Users.schema.paths.refreshTokens)
-          ? { refreshTokens: { $in: [refreshToken] } }
-          : { refreshTokens: refreshToken };
+        const query = { refreshTokens: refreshToken };
 
         const user = await Users.findOne(query).select("-password");
-
         if (!user) {
           console.warn("User not found for provided refresh token");
           return handleResponse(
             res,
-            404,
+            451,
             "error",
             "User not found for provided refresh token",
             null,
@@ -97,7 +100,7 @@ class AuthTokenController extends BaseAuthController {
 
         return handleResponse(
           res,
-          200,
+          208,
           "success",
           "Access token renewed successfully",
           { accessToken, refreshToken: newRefreshToken }
