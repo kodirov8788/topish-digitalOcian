@@ -13,7 +13,13 @@ const discoverSchema = new mongoose.Schema({
   title: { type: String, required: true }, // Title in one language
   description: { type: String, required: true }, // Description in one language
   industry: { type: String, required: false }, // Industry type
-  category: { type: String, required: false }, // Category type
+  tags: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DiscoverTag",
+      required: false,
+    },
+  ], // Reference to DiscoverTag
   img: { type: String, required: true }, // Main image URL
   location: { type: locationSchema, required: false }, // Location details (country and optional image)
   countryCode: { type: String, required: true }, // Country code

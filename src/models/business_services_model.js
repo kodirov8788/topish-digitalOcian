@@ -59,12 +59,11 @@ const companyServicesSchema = new mongoose.Schema(
       ref: "Users",
       required: true,
     },
-    tags: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "DiscoverTag",
-      },
-    ],
+    category: {
+      type: String,
+      default: "",
+      required: false,
+    },
   },
   {
     timestamps: true, // Automatically manage createdAt and updatedAt fields

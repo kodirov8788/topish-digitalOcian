@@ -68,6 +68,7 @@ class BusinessServicesCTRL {
         status: status || "active",
         location: location || "",
         createdBy: req.user.id,
+        // service_id, image are optional and not required for creation
       });
 
       const savedService = await newService.save();
@@ -154,7 +155,7 @@ class BusinessServicesCTRL {
         .skip((page - 1) * parseInt(limit))
         .limit(parseInt(limit))
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "createdBy", select: "name email" });
+        .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
       const totalCount = await BusinessService.countDocuments({
         category: { $regex: new RegExp(category, "i") },
@@ -192,7 +193,7 @@ class BusinessServicesCTRL {
 
       const services = await BusinessService.find({ company_id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "createdBy", select: "name email" });
+        .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
       if (!services || services.length === 0) {
         return handleResponse(
@@ -232,7 +233,7 @@ class BusinessServicesCTRL {
 
       const service = await BusinessService.findById(id)
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "createdBy", select: "name email" });
+        .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
       if (!service) {
         return handleResponse(
@@ -313,6 +314,7 @@ class BusinessServicesCTRL {
         service.category = updates.category.trim();
       }
       service.location = updates.location || service.location;
+      // service_id, image are not updated here
 
       const updatedService = await service.save();
 
@@ -388,7 +390,7 @@ class BusinessServicesCTRL {
       }
       const services = await BusinessService.find({ createdBy: req.user.id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
+        .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
       if (!services || services.length === 0) {
         return handleResponse(
@@ -425,7 +427,7 @@ class BusinessServicesCTRL {
       const { id } = req.params;
       const services = await BusinessService.find({ createdBy: id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
+        .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
       if (!services || services.length === 0) {
         return handleResponse(
