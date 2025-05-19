@@ -44,34 +44,21 @@ class BusinessServicesCTRL {
       }
 
       // Parse and validate `category`
-      if (category) {
-        try {
-          if (!Array.isArray(category) || category.length === 0) {
-            return handleResponse(
-              res,
-              400,
-              "error",
-              "At least one category is required.",
-              null,
-              0
-            );
-          }
-        } catch (err) {
-          return handleResponse(
-            res,
-            400,
-            "error",
-            "`category` must be a valid JSON array.",
-            null,
-            0
-          );
-        }
+      if (!category || typeof category !== "string" || category.trim() === "") {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Category is required and must be a non-empty string.",
+          null,
+          0
+        );
       }
 
       // Create the new business service
       const newService = new BusinessService({
         company_id,
-        category: category,
+        category: category.trim(),
         title: title,
         sub_title: subTitle || "",
         description: description.trim(),
@@ -115,7 +102,6 @@ class BusinessServicesCTRL {
         .skip((page - 1) * parseInt(limit))
         .limit(parseInt(limit))
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
       const totalCount = await BusinessService.countDocuments();
@@ -151,7 +137,7 @@ class BusinessServicesCTRL {
       const { category } = req.query;
       const { page = 1, limit = 10 } = req.query;
 
-      if (!category) {
+      if (!category || typeof category !== "string" || !category.trim()) {
         return handleResponse(
           res,
           400,
@@ -168,7 +154,6 @@ class BusinessServicesCTRL {
         .skip((page - 1) * parseInt(limit))
         .limit(parseInt(limit))
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "name email" });
 
       const totalCount = await BusinessService.countDocuments({
@@ -207,7 +192,6 @@ class BusinessServicesCTRL {
 
       const services = await BusinessService.find({ company_id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "name email" });
 
       if (!services || services.length === 0) {
@@ -248,7 +232,6 @@ class BusinessServicesCTRL {
 
       const service = await BusinessService.findById(id)
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "name email" });
 
       if (!service) {
@@ -326,7 +309,9 @@ class BusinessServicesCTRL {
       service.currency = updates.currency || service.currency;
       service.duration = updates.duration || service.duration;
       service.status = updates.status || service.status;
-      service.category = updates.category || service.category;
+      if (typeof updates.category === "string" && updates.category.trim()) {
+        service.category = updates.category.trim();
+      }
       service.location = updates.location || service.location;
 
       const updatedService = await service.save();
@@ -403,7 +388,6 @@ class BusinessServicesCTRL {
       }
       const services = await BusinessService.find({ createdBy: req.user.id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
 
       if (!services || services.length === 0) {
@@ -441,7 +425,6 @@ class BusinessServicesCTRL {
       const { id } = req.params;
       const services = await BusinessService.find({ createdBy: id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
 
       if (!services || services.length === 0) {

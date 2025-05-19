@@ -30,10 +30,9 @@ const BusinessServicesEndpoint = {
                     "The ID of the company for which the service is being created.",
                 },
                 category: {
-                  type: "array",
-                  items: { type: "string" },
+                  type: "string",
                   description:
-                    "Array of category IDs referencing BusinessServicesTags.",
+                    "Category of the business service (as a string, not an array or reference).",
                 },
                 location: {
                   type: "string",
@@ -360,8 +359,9 @@ const BusinessServicesEndpoint = {
                   enum: ["active", "inactive"],
                 },
                 category: {
-                  type: "array",
-                  items: { type: "string" },
+                  type: "string",
+                  description:
+                    "Category of the business service (as a string, not an array or reference).",
                 },
               },
               required: ["title", "description"],
