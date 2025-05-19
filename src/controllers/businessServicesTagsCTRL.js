@@ -48,9 +48,9 @@ class BusinessServicesTagsCTRL {
         }
       }
 
-      // Construct tag data
+      // Construct tag data - FIXED: Use plain object instead of Map
       const tagData = {
-        keyText: [{ translations: new Map(Object.entries(keyText)) }],
+        keyText: [{ translations: keyText }], // Store as plain object
         countryCode,
         languages,
         createdBy: user._id,
@@ -78,14 +78,28 @@ class BusinessServicesTagsCTRL {
       );
     }
   }
+
   // Get all tags with pagination
   async getAllTags(req, res) {
     try {
       const { page = 1, limit = 10 } = req.query;
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+
+      if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid pagination parameters.",
+          null,
+          0
+        );
+      }
 
       const tags = await Business_servicesTags.find()
-        .skip((page - 1) * parseInt(limit))
-        .limit(parseInt(limit));
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum);
 
       const totalCount = await Business_servicesTags.countDocuments();
 
@@ -109,10 +123,22 @@ class BusinessServicesTagsCTRL {
       );
     }
   }
+
   // Get a single tag by ID
   async getTagById(req, res) {
     try {
       const { id } = req.params;
+
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid tag ID format.",
+          null,
+          0
+        );
+      }
 
       const tag = await Business_servicesTags.findById(id);
       if (!tag) {
@@ -139,10 +165,22 @@ class BusinessServicesTagsCTRL {
       );
     }
   }
+
   // Update a tag
   async updateTag(req, res) {
     try {
       const { id } = req.params;
+
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid tag ID format.",
+          null,
+          0
+        );
+      }
 
       const tag = await Business_servicesTags.findById(id);
       if (!tag) {
@@ -178,7 +216,8 @@ class BusinessServicesTagsCTRL {
             );
           }
         }
-        tag.keyText = [{ translations: new Map(Object.entries(keyText)) }];
+        // FIXED: Use plain object instead of Map
+        tag.keyText = [{ translations: keyText }];
       }
 
       if (countryCode) {
@@ -211,26 +250,39 @@ class BusinessServicesTagsCTRL {
       );
     }
   }
+
   // Delete a tag
   async deleteTag(req, res) {
     try {
       const { id } = req.params;
+
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid tag ID format.",
+          null,
+          0
+        );
+      }
 
       const tag = await Business_servicesTags.findById(id);
       if (!tag) {
         return handleResponse(res, 404, "error", "Tag not found.", null, 0);
       }
 
-      // if (req.user.id !== tag.createdBy.toString()) {
-      //   return handleResponse(
-      //     res,
-      //     403,
-      //     "error",
-      //     "You are not allowed to delete this tag.",
-      //     null,
-      //     0
-      //   );
-      // }
+      // RESTORED: Security check for tag deletion
+      if (req.user.id !== tag.createdBy.toString()) {
+        return handleResponse(
+          res,
+          403,
+          "error",
+          "You are not allowed to delete this tag.",
+          null,
+          0
+        );
+      }
 
       await Business_servicesTags.findByIdAndDelete(id);
 
@@ -254,10 +306,13 @@ class BusinessServicesTagsCTRL {
       );
     }
   }
+
   // Search tags by keyText
   async searchTags(req, res) {
     try {
       const { query, page = 1, limit = 10 } = req.query;
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
 
       if (!query) {
         return handleResponse(
@@ -270,13 +325,33 @@ class BusinessServicesTagsCTRL {
         );
       }
 
+      if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+        return handleResponse(
+          res,
+          400,
+          "error",
+          "Invalid pagination parameters.",
+          null,
+          0
+        );
+      }
+
+      // FIXED: Updated search query to work with object structure
       const searchQuery = {
-        "keyText.translations": { $regex: query, $options: "i" }, // Search in any language
+        $or: Object.keys(req.query.languages || {}).map((lang) => ({
+          [`keyText.translations.${lang}`]: { $regex: query, $options: "i" },
+        })),
       };
 
+      // If no languages specified, do a general search
+      if (!searchQuery.$or || searchQuery.$or.length === 0) {
+        delete searchQuery.$or;
+        searchQuery["keyText.translations"] = { $regex: query, $options: "i" };
+      }
+
       const tags = await Business_servicesTags.find(searchQuery)
-        .skip((page - 1) * parseInt(limit))
-        .limit(parseInt(limit));
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum);
 
       const totalCount = await Business_servicesTags.countDocuments(
         searchQuery
