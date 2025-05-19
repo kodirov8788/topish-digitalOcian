@@ -13,7 +13,7 @@ class BusinessServicesCTRL {
 
       const {
         company_id,
-        tagIds,
+        category,
         title,
         subTitle,
         description,
@@ -43,16 +43,15 @@ class BusinessServicesCTRL {
         return handleResponse(res, 404, "error", "Company not found.", null, 0);
       }
 
-      // Parse and validate `tagIds`
-      // console.log("tagIds: ", tagIds);
-      if (tagIds) {
+      // Parse and validate `category`
+      if (category) {
         try {
-          if (!Array.isArray(tagIds) || tagIds.length === 0) {
+          if (!Array.isArray(category) || category.length === 0) {
             return handleResponse(
               res,
               400,
               "error",
-              "At least one tag ID is required.",
+              "At least one category is required.",
               null,
               0
             );
@@ -62,7 +61,7 @@ class BusinessServicesCTRL {
             res,
             400,
             "error",
-            "`tagIds` must be a valid JSON array.",
+            "`category` must be a valid JSON array.",
             null,
             0
           );
@@ -72,7 +71,7 @@ class BusinessServicesCTRL {
       // Create the new business service
       const newService = new BusinessService({
         company_id,
-        tags: tagIds,
+        category: category,
         title: title,
         sub_title: subTitle || "",
         description: description.trim(),
@@ -106,103 +105,6 @@ class BusinessServicesCTRL {
       );
     }
   }
-  // async getAll(req, res) {
-  //     try {
-  //       const { page = 1, limit = 10 } = req.query;
-
-  //       const totalCount = await BusinessService.countDocuments();
-  //       const skip = (page - 1) * parseInt(limit);
-
-  //       const services = await BusinessService.aggregate([
-  //         { $sample: { size: totalCount } }, // Shuffle all documents
-  //         { $skip: skip },
-  //         { $limit: parseInt(limit) },
-  //         {
-  //           $lookup: {
-  //             from: "companies",
-  //             localField: "company_id",
-  //             foreignField: "_id",
-  //             as: "company_id",
-  //           },
-  //         },
-  //         { $unwind: "$company_id" },
-  //         {
-  //           $project: {
-  //             "company_id.name": 1,
-  //             "company_id.logo": 1,
-  //             _id: 1,
-  //             tags: 1,
-  //             title: 1,
-  //             sub_title: 1,
-  //             description: 1,
-  //             price: 1,
-  //             currency: 1,
-  //             duration: 1,
-  //             status: 1,
-  //             createdBy: 1,
-  //           },
-  //         },
-  //         {
-  //           $lookup: {
-  //             from: "tags",
-  //             localField: "tags",
-  //             foreignField: "_id",
-  //             as: "tags",
-  //           },
-  //         },
-  //         {
-  //           $lookup: {
-  //             from: "users",
-  //             localField: "createdBy",
-  //             foreignField: "_id",
-  //             as: "createdBy",
-  //           },
-  //         },
-  //         { $unwind: "$createdBy" },
-  //         {
-  //           $project: {
-  //             "createdBy.avatar": 1,
-  //             "createdBy.phoneNumber": 1,
-  //             "createdBy.fullName": 1,
-  //             _id: 1,
-  //             company_id: 1,
-  //             tags: 1,
-  //             title: 1,
-  //             sub_title: 1,
-  //             description: 1,
-  //             price: 1,
-  //             currency: 1,
-  //             duration: 1,
-  //             status: 1,
-  //           },
-  //         },
-  //       ]);
-
-  //       return handleResponse(
-  //         res,
-  //         200,
-  //         "success",
-  //         "Business services retrieved successfully.",
-  //         {
-  //           services,
-  //           totalCount,
-  //           totalPages: Math.ceil(totalCount / limit),
-  //           currentPage: parseInt(page),
-  //         },
-  //         services.length
-  //       );
-  //     } catch (error) {
-  //       console.error("Error in getAll:", error);
-  //       return handleResponse(
-  //         res,
-  //         500,
-  //         "error",
-  //         "An error occurred while retrieving all business services.",
-  //         null,
-  //         0
-  //       );
-  //     }
-  //   }
 
   async getAll(req, res) {
     try {
@@ -213,7 +115,7 @@ class BusinessServicesCTRL {
         .skip((page - 1) * parseInt(limit))
         .limit(parseInt(limit))
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "tags", select: "keyText" })
+        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
       const totalCount = await BusinessService.countDocuments();
@@ -243,35 +145,34 @@ class BusinessServicesCTRL {
       );
     }
   }
-  // above code is old code
 
   async searchTagByParam(req, res) {
     try {
-      const { tag } = req.query;
+      const { category } = req.query;
       const { page = 1, limit = 10 } = req.query;
 
-      if (!tag) {
+      if (!category) {
         return handleResponse(
           res,
           400,
           "error",
-          "Tag parameter is required for searching.",
+          "Category parameter is required for searching.",
           null,
           0
         );
       }
 
       const services = await BusinessService.find({
-        tags: { $regex: new RegExp(tag, "i") },
+        category: { $regex: new RegExp(category, "i") },
       })
         .skip((page - 1) * parseInt(limit))
         .limit(parseInt(limit))
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "tags", select: "keyText" })
+        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "name email" });
 
       const totalCount = await BusinessService.countDocuments({
-        tags: { $regex: new RegExp(tag, "i") },
+        category: { $regex: new RegExp(category, "i") },
       });
 
       return handleResponse(
@@ -299,13 +200,14 @@ class BusinessServicesCTRL {
       );
     }
   }
+
   async getBusinessServices(req, res) {
     try {
       const { company_id } = req.params;
 
       const services = await BusinessService.find({ company_id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "tags", select: "keyText" })
+        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "name email" });
 
       if (!services || services.length === 0) {
@@ -339,13 +241,14 @@ class BusinessServicesCTRL {
       );
     }
   }
+
   async getBusinessServiceById(req, res) {
     try {
       const { id } = req.params;
 
       const service = await BusinessService.findById(id)
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "tags", select: "keyText" })
+        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "name email" });
 
       if (!service) {
@@ -379,6 +282,7 @@ class BusinessServicesCTRL {
       );
     }
   }
+
   async updateBusinessService(req, res) {
     try {
       if (!req.user) {
@@ -415,11 +319,6 @@ class BusinessServicesCTRL {
         );
       }
 
-      // Update the service with provided fields
-      // Object.keys(updates).forEach((key) => {
-      //     service[key] = updates[key];
-      // });
-
       service.title = updates.title || service.title;
       service.sub_title = updates.subTitle || service.sub_title;
       service.description = updates.description || service.description;
@@ -427,7 +326,7 @@ class BusinessServicesCTRL {
       service.currency = updates.currency || service.currency;
       service.duration = updates.duration || service.duration;
       service.status = updates.status || service.status;
-      service.tags = updates.tagIds || service.tags;
+      service.category = updates.category || service.category;
       service.location = updates.location || service.location;
 
       const updatedService = await service.save();
@@ -452,6 +351,7 @@ class BusinessServicesCTRL {
       );
     }
   }
+
   async deleteBusinessService(req, res) {
     try {
       if (!req.user) {
@@ -472,20 +372,6 @@ class BusinessServicesCTRL {
           0
         );
       }
-
-      // Check if the user is authorized to delete the service
-      // const company = await Company.findById(service.company_id);
-      // const isAuthorized = company.createdBy.toString() === req.user.id;
-      // if (!isAuthorized) {
-      //     return handleResponse(
-      //         res,
-      //         403,
-      //         "error",
-      //         "You are not authorized to delete this service.",
-      //         null,
-      //         0
-      //     );
-      // }
 
       await service.deleteOne();
 
@@ -509,6 +395,7 @@ class BusinessServicesCTRL {
       );
     }
   }
+
   async getMyBusinessServices(req, res) {
     try {
       if (!req.user) {
@@ -516,7 +403,7 @@ class BusinessServicesCTRL {
       }
       const services = await BusinessService.find({ createdBy: req.user.id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "tags", select: "keyText" })
+        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
 
       if (!services || services.length === 0) {
@@ -548,13 +435,13 @@ class BusinessServicesCTRL {
       );
     }
   }
-  // write functions to get services by user id
+
   async getServicesByUserId(req, res) {
     try {
       const { id } = req.params;
       const services = await BusinessService.find({ createdBy: id })
         .populate({ path: "company_id", select: "name logo" })
-        .populate({ path: "tags", select: "keyText" })
+        .populate({ path: "category", select: "keyText" })
         .populate({ path: "createdBy", select: "fullName phoneNumber avatar" });
 
       if (!services || services.length === 0) {

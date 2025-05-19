@@ -11,7 +11,7 @@ const BusinessServicesEndpoint = {
       summary: "Create a new business service",
       tags: ["BusinessServices"],
       description:
-        "Allows an authenticated user to create a new business service for a specific company with title, subtitle, tags, and optional price and duration.",
+        "Allows an authenticated user to create a new business service for a specific company with title, subtitle, category, and optional price and duration.",
       security: [
         {
           bearerAuth: [],
@@ -29,11 +29,11 @@ const BusinessServicesEndpoint = {
                   description:
                     "The ID of the company for which the service is being created.",
                 },
-                tagIds: {
+                category: {
                   type: "array",
                   items: { type: "string" },
                   description:
-                    "Array of tag IDs referencing BusinessServiceTags.",
+                    "Array of category IDs referencing BusinessServicesTags.",
                 },
                 location: {
                   type: "string",
@@ -76,7 +76,7 @@ const BusinessServicesEndpoint = {
                   default: "active",
                 },
               },
-              required: ["company_id", "title", "description", "tagIds"],
+              required: ["company_id", "title", "description", "category"],
             },
           },
         },
@@ -142,15 +142,15 @@ const BusinessServicesEndpoint = {
   },
   "/business-services/search": {
     get: {
-      summary: "Search for business services by tag",
+      summary: "Search for business services by category",
       tags: ["BusinessServices"],
-      description: "Searches for business services by a tag.",
+      description: "Searches for business services by a category.",
       parameters: [
         {
-          name: "tag",
+          name: "category",
           in: "query",
           required: true,
-          description: "Tag to search for.",
+          description: "Category to search for.",
           schema: {
             type: "string",
           },
@@ -359,7 +359,7 @@ const BusinessServicesEndpoint = {
                   type: "string",
                   enum: ["active", "inactive"],
                 },
-                tagIds: {
+                category: {
                   type: "array",
                   items: { type: "string" },
                 },

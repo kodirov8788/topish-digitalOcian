@@ -97,6 +97,7 @@ const UsersSchema = new Schema(
     gptPrompt: { type: String, default: "" },
     lastActivity: { type: Date, default: null },
     stories: [{ type: Schema.Types.ObjectId, ref: "Story" }],
+    fullOpenVP: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
