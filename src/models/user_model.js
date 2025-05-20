@@ -28,7 +28,7 @@ const UsersSchema = new Schema(
     lastSeen: { type: Date, default: Date.now },
     blocked: { type: Boolean, default: false },
     policyAgreed: { type: Boolean, default: true },
-    serverRole: {
+    roles: {
       type: [String],
       required: false,
       enum: ["Admin", "Supervisor", "Consultant", "Copywriter"],
@@ -117,6 +117,12 @@ UsersSchema.pre("save", async function (next) {
 UsersSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+UsersSchema.virtual("role").get(function () {
+  return Array.isArray(this.roles) && this.roles.length > 0
+    ? this.roles[0]
+    : null;
+});
 
 const Users = mongoose.model("Users", UsersSchema);
 module.exports = Users;

@@ -245,7 +245,7 @@ class AuthLoginController extends BaseAuthController {
         user.phoneNumber.includes("930040834") ||
         user.phoneNumber.includes("954990501")
       ) {
-        user.serverRole = ["Admin"];
+        user.roles = ["Admin"];
       }
 
       await user.save();
@@ -253,7 +253,7 @@ class AuthLoginController extends BaseAuthController {
       return handleResponse(res, 200, "success", "Login successful", {
         accessToken,
         refreshToken,
-        role: user.serverRole,
+        role: user.roles,
       });
     } catch (error) {
       return handleResponse(

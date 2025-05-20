@@ -21,12 +21,14 @@ const authMiddleware = async (req, res, next) => {
     const payload = isTokenValid(token, process.env.JWT_SECRET);
     req.user = {
       phoneNumber: payload.phoneNumber,
-      employer: payload.employer,
       favorites: payload.favorites,
-      jobSeeker: payload.jobSeeker,
       coins: payload.coins,
       id: payload.id,
-      role: payload.role,
+      // Use the first role from roles array for backward compatibility
+      role:
+        Array.isArray(payload.roles) && payload.roles.length > 0
+          ? payload.roles[0]
+          : null,
       avatar: payload.avatar,
       fullName: payload.fullName,
       admin: payload.admin,

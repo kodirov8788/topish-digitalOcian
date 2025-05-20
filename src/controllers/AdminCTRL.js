@@ -15,8 +15,9 @@ class AdminCTRL {
       return handleResponse(res, 401, "error", "Unauthorized", null, 0);
     }
 
+    console.log("req.user:", req.user);
     // Check if the user has the 'admin' role
-    if (req.user.role !== "Admin") {
+    if (!req.user.roles || !req.user.roles.includes("Admin")) {
       return handleResponse(
         res,
         403,
@@ -87,7 +88,7 @@ class AdminCTRL {
     }
 
     // Check if the user has the 'admin' role
-    if (req.user.role !== "Admin") {
+    if (!req.user.roles || !req.user.roles.includes("Admin")) {
       return handleResponse(
         res,
         403,
@@ -105,14 +106,14 @@ class AdminCTRL {
       const skip = (page - 1) * limit; // Calculate the number of documents to skip
 
       // Fetch only users with the "Admin" role
-      const admins = await Users.find({ role: "Admin" })
+      const admins = await Users.find({ roles: "Admin" })
         .select("-password -refreshTokens")
         .skip(skip) // Skip the documents for the current page
         .limit(limit) // Limit the number of documents returned
         .exec(); // Execute the query
 
       // Count the total admin documents for pagination metadata
-      const total = await Users.countDocuments({ role: "Admin" });
+      const total = await Users.countDocuments({ roles: "Admin" });
 
       // Handle case where no admins are found
       if (admins.length === 0) {
@@ -157,7 +158,7 @@ class AdminCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      if (req.user.role !== "Admin") {
+      if (!req.user.roles || !req.user.roles.includes("Admin")) {
         return handleResponse(
           res,
           403,
@@ -223,7 +224,7 @@ class AdminCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      if (req.user.role !== "Admin") {
+      if (!req.user.roles || !req.user.roles.includes("Admin")) {
         return handleResponse(
           res,
           403,
@@ -240,7 +241,7 @@ class AdminCTRL {
 
       // Adjusted to use $in operator for role matching
       const query = {
-        role: { $in: ["Employer"] },
+        roles: { $in: ["Employer"] },
       };
 
       const searchedUsers = await Users.find(query)
@@ -289,7 +290,7 @@ class AdminCTRL {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }
 
-      if (req.user.role !== "Admin") {
+      if (!req.user.roles || !req.user.roles.includes("Admin")) {
         return handleResponse(
           res,
           403,
@@ -440,7 +441,7 @@ class AdminCTRL {
         return handleResponse(res, 401, "error", "Unauthorized");
       }
 
-      if (req.user.role !== "Admin") {
+      if (!req.user.roles || !req.user.roles.includes("Admin")) {
         return handleResponse(
           res,
           403,
@@ -532,7 +533,7 @@ class AdminCTRL {
         return handleResponse(res, 401, "error", "Unauthorized");
       }
 
-      if (req.user.role !== "Admin") {
+      if (!req.user.roles || !req.user.roles.includes("Admin")) {
         return handleResponse(
           res,
           403,

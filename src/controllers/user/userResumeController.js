@@ -35,7 +35,7 @@ class UserResumeController extends BaseController {
         // Check if the current user is an admin
         const currentUser = await this._getUser(req.user.id);
         const isAdmin =
-          currentUser.serverRole && currentUser.serverRole.includes("Admin");
+          currentUser.roles && currentUser.roles.includes("Admin");
 
         // If not admin, check if the profile is visible
         if (

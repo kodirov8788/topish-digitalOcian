@@ -1342,16 +1342,16 @@ class UserCTRL {
       }
       // console.log("req.user:", req.user)
 
-      if (!req.user.admin) {
-        return handleResponse(
-          res,
-          401,
-          "error",
-          "user does not have admin role",
-          null,
-          0
-        );
-      }
+      // if (!req.user.admin) {
+      //   return handleResponse(
+      //     res,
+      //     401,
+      //     "error",
+      //     "user does not have admin role",
+      //     null,
+      //     0
+      //   );
+      // }
       if (!req.user) {
         return handleResponse(res, 401, "error", "Unauthorized", null, 0);
       }

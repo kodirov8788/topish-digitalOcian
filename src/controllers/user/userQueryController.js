@@ -134,8 +134,7 @@ class UserQueryController extends BaseController {
 
       // Add visibility filter - only show users with public profiles unless admin
       const currentUser = await this._getUser(req.user.id);
-      const isAdmin =
-        currentUser.serverRole && currentUser.serverRole.includes("Admin");
+      const isAdmin = currentUser.roles && currentUser.roles.includes("Admin");
 
       if (!isAdmin) {
         // Check if profiles are visible (either accountVisibility is public or resume.profileVisibility is true)
@@ -249,8 +248,7 @@ class UserQueryController extends BaseController {
 
       // Check if the requester is the user or an admin - otherwise respect visibility settings
       const currentUser = await this._getUser(req.user.id);
-      const isAdmin =
-        currentUser.serverRole && currentUser.serverRole.includes("Admin");
+      const isAdmin = currentUser.roles && currentUser.roles.includes("Admin");
       const isSelf = req.user.id === userId;
 
       if (!isAdmin && !isSelf) {

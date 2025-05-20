@@ -333,7 +333,7 @@ class AuthRegistrationController extends BaseAuthController {
         201,
         "success",
         "User registered successfully.",
-        { accessToken, refreshToken, role: existingUser.serverRole }
+        { accessToken, refreshToken, role: existingUser.roles }
       );
     } catch (error) {
       return handleResponse(

@@ -121,7 +121,7 @@ class BaseAuthController {
       return false;
     }
 
-    if (!user.serverRole || !user.serverRole.includes("Admin")) {
+    if (!user.roles || !user.roles.includes("Admin")) {
       handleResponse(
         res,
         403,

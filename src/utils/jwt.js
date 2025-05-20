@@ -16,15 +16,13 @@ const generateTokens = (user) => {
     phoneNumber: user.phoneNumber,
     coins: user.coins,
     id: user.id,
-    role: user.role,
+    // Use the first role from roles array for backward compatibility
+    role:
+      Array.isArray(user.roles) && user.roles.length > 0 ? user.roles[0] : null,
     favorites: user.favorites,
-    employer: user.employer,
-    jobSeeker: user.jobSeeker,
-    service: user.service,
     avatar: user.avatar,
     fullName: user.fullName,
-    admin: user.admin,
-    roles: user.roles
+    roles: user.roles,
   };
 
   // Create access token
@@ -52,15 +50,13 @@ const createTokenUser = (user) => ({
   phoneNumber: user.phoneNumber,
   coins: user.coins,
   id: user.id,
-  role: user.role,
+  // Use the first role from roles array for backward compatibility
+  role:
+    Array.isArray(user.roles) && user.roles.length > 0 ? user.roles[0] : null,
   favorites: user.favorites,
-  employer: user.employer,
-  jobSeeker: user.jobSeeker,
-  service: user.service,
   avatar: user.avatar,
   fullName: user.fullName,
-  admin: user.admin,
-  roles: user.roles
+  roles: user.roles,
 });
 
 module.exports = {

@@ -104,7 +104,7 @@ class UserRoleController extends BaseController {
       if ((await this._checkAdminAuth(req, res)) !== true) return;
 
       const { userId, roles } = req.body;
-
+      console.log("addServerRoles:", userId, roles);
       // Validate userId
       if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
         return handleResponse(
@@ -136,7 +136,7 @@ class UserRoleController extends BaseController {
         "Consultant",
         "Copywriter",
       ];
-
+      console.log("validServerRoles:", validServerRoles);
       // Filter out any invalid roles
       const validRoles = roles.filter((role) =>
         validServerRoles.includes(role)
@@ -160,8 +160,9 @@ class UserRoleController extends BaseController {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      const previousRoles = [...user.serverRole];
-      user.serverRole = validRoles;
+      const previousRoles = [...user.roles];
+      user.roles = validRoles;
+      console.log("validRoles:", validRoles);
       await user.save();
 
       return handleResponse(
@@ -172,7 +173,7 @@ class UserRoleController extends BaseController {
         {
           userId,
           previousRoles,
-          currentRoles: user.serverRole,
+          currentRoles: user.roles,
         },
         1
       );
@@ -226,7 +227,7 @@ class UserRoleController extends BaseController {
       }
 
       // Check if user has the role
-      if (!user.serverRole || !user.serverRole.includes(role)) {
+      if (!user.roles || !user.roles.includes(role)) {
         return handleResponse(
           res,
           400,
@@ -241,7 +242,7 @@ class UserRoleController extends BaseController {
       if (role === "Admin" && userId === req.user.id) {
         // Check if there are other admins in the system
         const adminCount = await Users.countDocuments({
-          serverRole: "Admin",
+          roles: "Admin",
           _id: { $ne: userId },
         });
 
@@ -258,8 +259,8 @@ class UserRoleController extends BaseController {
       }
 
       // Remove the role
-      const previousRoles = [...user.serverRole];
-      user.serverRole = user.serverRole.filter((r) => r !== role);
+      const previousRoles = [...user.roles];
+      user.roles = user.roles.filter((r) => r !== role);
       await user.save();
 
       return handleResponse(
@@ -270,7 +271,7 @@ class UserRoleController extends BaseController {
         {
           userId,
           previousRoles,
-          currentRoles: user.serverRole,
+          currentRoles: user.roles,
         },
         1
       );
@@ -291,7 +292,7 @@ class UserRoleController extends BaseController {
       // Only admins can view all users with specific roles
       if ((await this._checkAdminAuth(req, res)) !== true) return;
 
-      const { role, serverRole } = req.query;
+      const { role, roles } = req.query;
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
@@ -303,8 +304,8 @@ class UserRoleController extends BaseController {
         query.role = role;
       }
 
-      if (serverRole) {
-        query.serverRole = serverRole;
+      if (roles) {
+        query.roles = roles;
       }
 
       // Get total count for pagination
@@ -327,8 +328,8 @@ class UserRoleController extends BaseController {
         200,
         "success",
         `Retrieved users with ${role ? "role " + role : ""}${
-          role && serverRole ? " and " : ""
-        }${serverRole ? "server role " + serverRole : ""}`,
+          role && roles ? " and " : ""
+        }${roles ? "server role " + roles : ""}`,
         {
           users,
           pagination: {
@@ -377,7 +378,7 @@ class UserRoleController extends BaseController {
         return handleResponse(res, 404, "error", "User not found", null, 0);
       }
 
-      // Check permissions based on serverRole
+      // Check permissions based on roles
       let hasPermission = false;
 
       // Define permission mappings to server roles
@@ -390,7 +391,7 @@ class UserRoleController extends BaseController {
       };
 
       if (permissionMap[permission]) {
-        for (const role of user.serverRole) {
+        for (const role of user.roles) {
           if (permissionMap[permission].includes(role)) {
             hasPermission = true;
             break;
@@ -407,7 +408,7 @@ class UserRoleController extends BaseController {
           userId,
           permission,
           hasPermission,
-          userRoles: user.serverRole,
+          userRoles: user.roles,
         },
         1
       );

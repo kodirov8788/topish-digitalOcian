@@ -27,8 +27,7 @@ class BaseController {
       handleResponse(res, 404, "error", "User not found", null, 0);
       return false;
     }
-
-    if (!user.serverRole || !user.serverRole.includes("Admin")) {
+    if (!user.roles || !user.roles.includes("Admin")) {
       handleResponse(
         res,
         403,
