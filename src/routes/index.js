@@ -28,6 +28,7 @@ const businessServicessTagsRoutes = require("./business_servicesTags-route");
 const appVersionRoutes = require("./app-version-routes");
 const gptRouter = require("./gpt-routes");
 const authMiddleware = require("../middleware/auth-middleware");
+const searchRoutes = require("./search_routes");
 
 router.use("/api/v1/auth", authRouter);
 router.use("/api/v1/google", deleteAuthPublic);
@@ -54,6 +55,7 @@ router.use("/api/v1/business-services", businessServicesRouter);
 router.use("/api/v1/discoverTags", discoverTagsRoutes);
 router.use("/api/v1/business-servicesTags", businessServicessTagsRoutes);
 router.use("/api/v1/app-version", authMiddleware, appVersionRoutes);
+router.use("/api/v1/search", searchRoutes);
 router.use("/api/v1/gpt", authMiddleware, gptRouter);
 //routes
 router.get("/", (req, res) => {

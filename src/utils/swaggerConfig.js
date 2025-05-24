@@ -47,6 +47,7 @@ const { DiscoverTagsEndpoint } = require("../docs/discoverTagsDocs");
 const {
   Business_servicesTagsEndpoint,
 } = require("../docs/business_servicesTagsDocs");
+const { SearchEndpoints } = require("../docs/searchDocs");
 const { SearchJobEndpoints } = require("../docs/SearchJobDocs");
 const { IndustryEndpoints } = require("../docs/IndustryDocs");
 const { AppVersionDocs } = require("../docs/appVersionDocs");
@@ -136,6 +137,7 @@ const swaggerOptions = {
       ...ExpectedSalaryEndpoints,
       ...AppVersionDocs,
       ...GPTDocs,
+      ...SearchEndpoints,
     },
   },
   apis: ["./routes/*.js"],
