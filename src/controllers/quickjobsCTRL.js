@@ -132,7 +132,7 @@ class QuickJobsCTRL {
         page = 1,
         limit = 10,
         sort,
-        recentJob, // Added recentJob parameter as boolean
+        recentJob,
       } = req.query;
 
       let queryObject = {};
@@ -156,8 +156,26 @@ class QuickJobsCTRL {
         }
       }
 
-      if (location) {
-        queryObject.location = { $regex: location, $options: "i" };
+      // Improved location search
+      if (location && location.trim() !== "") {
+        const cleanLocation = location.trim().toLowerCase();
+
+        // Create a more flexible location search pattern
+        // This will match if any part of the location (separated by commas, spaces)
+        // contains the search term
+        const locationParts = cleanLocation.split(/[\s,]+/).filter(Boolean);
+
+        if (locationParts.length > 0) {
+          // Create a regex pattern that matches any of the location parts
+          // with word boundaries to avoid partial word matches
+          const locationRegexParts = locationParts.map(
+            (part) => `(?:^|[\\s,])${part}(?:$|[\\s,])`
+          );
+
+          queryObject.location = {
+            $regex: new RegExp(locationRegexParts.join("|"), "i"),
+          };
+        }
       }
 
       // Handle recentJob filter as a boolean
@@ -166,10 +184,11 @@ class QuickJobsCTRL {
         queryObject.createdAt = { $gte: daysAgo };
       }
 
-      // Pagination
-      const skip = (page - 1) * parseInt(limit, 10);
-
+      // Add status filter (uncomment if needed)
       // queryObject.postingStatus = "Approved";
+
+      // Pagination
+      const skip = (parseInt(page) - 1) * parseInt(limit, 10);
 
       let query = QuickJobs.find(queryObject)
         .skip(skip)
@@ -183,20 +202,28 @@ class QuickJobsCTRL {
       }
 
       const userIds = searchedJob.map((job) => job.createdBy);
+
+      // Get all users in one query
       const users = await Users.find({ _id: { $in: userIds } }).select(
         "-password -refreshTokens"
       );
+
+      // Create user lookup map
       const userMap = users.reduce((acc, user) => {
         acc[user._id.toString()] = user;
         return acc;
       }, {});
 
+      // Get all companies in one query
       const companies = await Company.find({
         "workers.userId": { $in: userIds },
       });
+
+      // Create company lookup map
       const companyMap = companies.reduce((acc, company) => {
         company.workers.forEach((worker) => {
-          acc[worker.userId.toString()] = {
+          const workerId = worker.userId.toString();
+          acc[workerId] = {
             name: company.name,
             logo: company.logo,
           };
@@ -204,8 +231,11 @@ class QuickJobsCTRL {
         return acc;
       }, {});
 
+      // Process job results
       let NewSearchedJob = searchedJob.map((job) => {
-        const user = userMap[job.createdBy.toString()];
+        const jobCreatorId = job.createdBy.toString();
+        const user = userMap[jobCreatorId];
+
         if (!user) {
           return {
             ...job._doc,
@@ -218,10 +248,35 @@ class QuickJobsCTRL {
             ...job._doc,
             hr_name: user.employer ? user.fullName : "No employer name",
             hr_avatar: user.avatar || "default_avatar.png",
-            issuedBy: companyMap[job.createdBy.toString()] || null,
+            issuedBy: companyMap[jobCreatorId] || null,
           };
         }
       });
+
+      // If location search was performed, prioritize exact matches
+      if (location && location.trim() !== "") {
+        NewSearchedJob.sort((a, b) => {
+          const aLocation = (a.location || "").toLowerCase();
+          const bLocation = (b.location || "").toLowerCase();
+          const searchLoc = location.toLowerCase();
+
+          // Exact matches first
+          const aExact = aLocation === searchLoc;
+          const bExact = bLocation === searchLoc;
+
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+
+          // Then starts with matches
+          const aStartsWith = aLocation.startsWith(searchLoc);
+          const bStartsWith = bLocation.startsWith(searchLoc);
+
+          if (aStartsWith && !bStartsWith) return -1;
+          if (!aStartsWith && bStartsWith) return 1;
+
+          return 0;
+        });
+      }
 
       const totalJobs = await QuickJobs.countDocuments(queryObject);
       const pagination = {
