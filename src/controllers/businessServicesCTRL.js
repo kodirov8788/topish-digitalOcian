@@ -195,11 +195,11 @@ class BusinessServicesCTRL {
         .populate({ path: "company_id", select: "name logo" })
         .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
-      if (!services || services.length === 0) {
+      if (services.length === 0) {
         return handleResponse(
           res,
-          404,
-          "error",
+          200,
+          "success",
           "No business services found for this company.",
           [],
           0
@@ -392,12 +392,12 @@ class BusinessServicesCTRL {
         .populate({ path: "company_id", select: "name logo" })
         .populate({ path: "createdBy", select: "avatar phoneNumber fullName" });
 
-      if (!services || services.length === 0) {
+      if (services.length === 0) {
         return handleResponse(
           res,
-          404,
-          "error",
-          "No business services found for this user",
+          200,
+          "success",
+          "No business services found for this company.",
           [],
           0
         );
